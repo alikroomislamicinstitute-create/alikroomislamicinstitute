@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="js/admin_functions.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al-Ikroom Islamic Institute | Home</title>
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* ===== THEME VARIABLES ===== */
+        :root {
+            --primary-green: #1b6e5f;
+            --dark-navy: #0a143c;
+            --bg-light: #f4f7f6;
+            --text-color: #0a143c;
+            --card-bg: #ffffff;
+            --header-bg: rgba(255, 255, 255, 0.98);
+            --hero-bg: rgba(255, 255, 255, 0.5);
+            --stat-text: #ffffff;
+            --accent-teal: #2ab098; /* Replaced Yellow with Teal */
+        }
+
+        [data-theme="dark"] {
+            --primary-green: #2ab098;
+            --dark-navy: #050a1f;
+            --bg-light: #0f172a;
+            --text-color: #f1f5f9;
+            --card-bg: #1e293b;
+            --header-bg: rgba(15, 23, 42, 0.98);
+            --hero-bg: rgba(15, 23, 42, 0.7);
+            --stat-text: #ffffff;
+        }
+
+        /* ===== GLOBAL STYLES ===== */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            margin: 0;
+            font-family: 'Times New Roman', Times, serif;
+            color: var(--text-color);
+            background: var(--bg-light);
+            /* Subtle Islamic Pattern Overlay */
+            background-image: url('https://www.transparenttextures.com/patterns/arabesque.png');
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* ===== UPGRADED ANNOUNCEMENT STYLES ===== */
+        #announcement-section {
+            padding: 80px 5%;
+            background: linear-gradient(to bottom, var(--bg-light), var(--card-bg));
+            position: relative;
+        }
+
+        #news-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .news-item {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(27, 110, 95, 0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease-out both;
+        }
+
+        .news-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: var(--primary-green);
+            transition: 0.3s;
+        }
+
+        .news-item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(27, 110, 95, 0.12);
+            border-color: var(--primary-green);
+        }
+
+        .news-item:hover::before {
+            width: 10px;
+        }
+
+        .news-date-badge {
+            display: inline-block;
+            background: rgba(27, 110, 95, 0.1);
+            color: var(--primary-green);
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .news-item h4 { 
+            margin: 0 0 12px 0; 
+            color: var(--primary-green); 
+            font-size: 1.4rem;
+            line-height: 1.3;
+        }
+
+        .news-item p { 
+            margin: 0; 
+            line-height: 1.6; 
+            opacity: 0.8;
+            font-size: 1rem;
+        }
+
+        body[dir="rtl"] .news-item {
+            border-left: none;
+            border-radius: 20px;
+        }
+        body[dir="rtl"] .news-item::before {
+            left: auto;
+            right: 0;
+        }
+
+        /* ===== Keyframe Animations ===== */
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeInUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes pulse-teal {
+            0% { box-shadow: 0 0 0 0 rgba(42, 176, 152, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(42, 176, 152, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(42, 176, 152, 0); }
+        }
+
+        /* ===== Navigation ===== */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 5%; position: sticky; top: 0;
+            background: var(--header-bg); z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-bottom: 3px solid var(--primary-green);
+            animation: slideDown 0.6s ease-out;
+        }
+
+        .header-brand { display: flex; align-items: center; gap: 12px; }
+        .logo { height: 45px; width: auto; object-fit: contain; }
+        header h1 { font-size: 1.1rem; color: var(--primary-green); text-transform: uppercase; letter-spacing: 1px; margin: 0; }
+
+        nav { display: flex; align-items: center; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        nav a { margin: 0 12px; font-weight: 600; color: var(--text-color); text-decoration: none; position: relative; transition: 0.3s; }
+        nav a::after { content: ''; position: absolute; width: 0; height: 2px; bottom: 0; left: 0; background: var(--primary-green); transition: 0.3s; }
+        nav a:hover::after, nav a.active::after { width: 100%; }
+
+        .menu-toggle { display: none; flex-direction: column; cursor: pointer; gap: 5px; border: none; background: none; padding: 5px; z-index: 1001; }
+        .menu-toggle span { height: 3px; width: 25px; background: var(--primary-green); border-radius: 3px; transition: 0.3s; }
+        .menu-toggle.open span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+        .menu-toggle.open span:nth-child(2) { opacity: 0; }
+        .menu-toggle.open span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+        #langToggle {
+            margin-left: 15px; padding: 8px 16px; border: none; border-radius: 50px;
+            cursor: pointer; background: var(--primary-green); color: #fff; font-weight: bold;
+            transition: 0.3s; box-shadow: 0 4px 10px rgba(27, 110, 95, 0.2);
+        }
+
+        #themeToggle {
+            background: none; border: none; cursor: pointer; color: var(--primary-green);
+            font-size: 1.2rem; margin-left: 15px; transition: 0.3s;
+        }
+
+        /* ===== HERO SECTION ===== */
+        .hero {
+            position: relative; min-height: 90vh; display: flex; align-items: center; justify-content: center;
+            text-align: center; padding: 60px 20px;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 20%, rgba(0,0,0,0.4) 100%), 
+                        url('https://images.pexels.com/photos/8164381/pexels-photo-8164381.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1');
+            background-size: cover; background-position: center; background-attachment: fixed;
+            animation: scaleIn 0.8s ease-out;
+        }
+
+        .hero-content {
+            max-width: 850px; z-index: 2; background: var(--hero-bg); backdrop-filter: blur(10px);
+            padding: 50px 30px; border-radius: 40px; border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1); animation: fadeInUp 1s ease-out 0.2s both;
+        }
+
+        .bismillah { font-size: 2rem; color: var(--primary-green); margin-bottom: 20px; display: block; font-weight: 600; }
+        .hero h2 { font-size: clamp(2.2rem, 6vw, 3.5rem); color: var(--primary-green); line-height: 1.1; margin: 0 0 15px 0; font-weight: 700; }
+        .hero p.tagline { font-size: 1.3rem; margin-bottom: 35px; color: var(--text-color); font-weight: 500; }
+
+        .cta-group { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+        .cta-btn { padding: 16px 40px; border-radius: 50px; text-decoration: none; font-weight: 700; transition: all 0.3s ease; font-size: 1.1rem; display: inline-block; }
+        .btn-primary { background: var(--primary-green); color: white; box-shadow: 0 8px 20px rgba(27, 110, 95, 0.2); }
+        .btn-primary:hover { background: #145247; transform: translateY(-3px); }
+        .btn-secondary { background: var(--dark-navy); color: white; box-shadow: 0 8px 20px rgba(10, 20, 60, 0.2); }
+        .btn-secondary:hover { background: #050a1f; transform: translateY(-3px); }
+
+        /* ===== NEW ENROLL BUTTON STYLE ===== */
+        .btn-enroll {
+            background: linear-gradient(135deg, var(--primary-green), var(--accent-teal));
+            color: white !important;
+            padding: 12px 28px;
+            border-radius: 15px; /* Squircle shape */
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-block;
+            margin-top: 20px;
+            border: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: pulse-teal 2s infinite;
+        }
+        .btn-enroll:hover {
+            transform: scale(1.05) translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        /* ===== UPDATED FORMAL BUTTON DESIGN (MOBILE FIXED) ===== */
+        .btn-formal-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 40px;
+            background: transparent;
+            color: var(--primary-green);
+            border: 2px solid var(--primary-green);
+            border-radius: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            width: auto;
+            max-width: 90%;
+            margin: 0 auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .btn-formal-secondary:hover {
+            background: var(--primary-green);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(27, 110, 95, 0.2);
+        }
+
+        /* ===== ISLAMIC FEATURES ROW ===== */
+        .features-row {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px; padding: 40px 5%; margin-top: -50px; position: relative; z-index: 10;
+        }
+        .feature-box {
+            background: var(--card-bg); padding: 25px; border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-bottom: 4px solid var(--accent-teal);
+            text-align: center; min-height: 200px; display: flex; flex-direction: column; justify-content: center;
+        }
+        .feature-box h3 { color: var(--primary-green); margin-bottom: 10px; font-size: 1.2rem; }
+        .feature-box p { font-size: 0.95rem; margin: 5px 0; }
+
+        .stats-bar { background: var(--primary-green); color: var(--stat-text); display: flex; justify-content: space-around; padding: 60px 10%; flex-wrap: wrap; gap: 30px; text-align: center; }
+        .stat-item h2 { font-size: 3rem; margin: 0; font-weight: 700; color: #fff; }
+
+        .about-mosque {
+            padding: 100px 5%; background: linear-gradient(rgba(10, 20, 60, 0.7), rgba(10, 20, 60, 0.7)),
+            url('https://arabiconline.eu/wp-content/uploads/2023/08/sur_mosque.jpg') center/cover no-repeat;
+            background-attachment: fixed; text-align: center; color: #fff;
+        }
+        .about-content-box {
+            max-width: 800px; margin: 0 auto; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(12px);
+            padding: 50px 30px; border-radius: 35px; border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .section-title { text-align: center; margin: 80px 0 40px; font-size: 2.5rem; position: relative; padding-bottom: 15px; color: var(--primary-green); }
+        .section-title::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 80px; height: 4px; background: var(--primary-green); border-radius: 2px; }
+
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; padding: 0 8% 40px; }
+        .card {
+            background: var(--card-bg); padding: 40px 30px; border-radius: 25px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: 0.3s; border: 1px solid rgba(0,0,0,0.05);
+        }
+        .card:hover { transform: translateY(-10px); border-bottom: 6px solid var(--primary-green); }
+        .card i { font-size: 3rem; color: var(--primary-green); margin-bottom: 20px; }
+
+        /* ===== TESTIMONIALS SECTION ===== */
+        .testimonials-section { background: var(--dark-navy); color: white; padding: 80px 5%; text-align: center; }
+        .testimonial-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 40px; }
+        .testimonial-card { background: rgba(255,255,255,0.05); padding: 30px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.1); }
+        .testimonial-card p { font-style: italic; font-size: 1.1rem; }
+        .testimonial-card .author { margin-top: 15px; display: block; font-weight: bold; color: var(--primary-green); }
+
+        /* ===== BLOG / KNOWLEDGE SECTION ===== */
+        .blog-section { padding: 80px 5%; background: var(--bg-light); }
+        .blog-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; }
+        .blog-card { background: var(--card-bg); border-radius: 20px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.05); transition: 0.3s; display: flex; flex-direction: column; }
+        .blog-card:hover { transform: scale(1.02); }
+        .blog-image { height: 180px; background: var(--primary-green); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; }
+        .blog-info { padding: 25px; flex-grow: 1; display: flex; flex-direction: column; }
+        .blog-info h4 { color: var(--primary-green); margin: 0 0 10px 0; font-size: 1.2rem; line-height: 1.4; }
+        .blog-info p { font-size: 0.95rem; line-height: 1.5; opacity: 0.8; margin-bottom: 15px; }
+
+        footer { background: var(--dark-navy); color: #fff; padding: 80px 8% 40px; }
+        .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; }
+        .footer-col h4 { color: var(--primary-green); margin-bottom: 20px; font-weight: 700; }
+        .footer-col a, .footer-col p { color: #d1d5db; text-decoration: none; margin-bottom: 10px; display: block; font-size: 0.95rem; }
+        .social-icons { display: flex; gap: 15px; margin-top: 15px; }
+        .social-icons a { width: 40px; height: 40px; background: rgba(255,255,255,0.1); display: flex; justify-content: center; align-items: center; border-radius: 50%; color: #fff; transition: 0.3s; }
+        .social-icons a:hover { background: var(--primary-green); transform: translateY(-5px); }
+
+        .chat-bubble { position: fixed; bottom: 30px; right: 30px; width: 65px; height: 65px; background: #25d366; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2rem; box-shadow: 0 10px 25px rgba(0,0,0,0.2); cursor: pointer; z-index: 2000; }
+
+        @media (max-width: 900px) {
+            .menu-toggle { display: flex; }
+            nav {
+                display: flex; flex-direction: column; position: absolute;
+                top: 100%; left: 0; width: 100%; background: var(--card-bg);
+                max-height: 0; opacity: 0; overflow: hidden;
+                transform: translateY(-10px); padding: 0;
+                box-shadow: 0 10px 20px rgba(0,0,0,0.1); border-bottom: 4px solid var(--primary-green);
+                transition: all 0.4s ease;
+            }
+            nav.active { max-height: 600px; opacity: 1; transform: translateY(0); padding: 30px 0; }
+            nav a { margin: 12px 0; text-align: center; opacity: 0; transform: translateX(-20px); transition: 0.3s; }
+            nav.active a { opacity: 1; transform: translateX(0); }
+            #langToggle { margin: 15px auto 0; width: 150px; }
+            #themeToggle { margin: 15px auto 0; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+  <div class="header-brand">
+    <img src="Al-Ikroom Logo.png" alt="Logo" class="logo">
+    <h1 id="navTitle">Al-Ikroom Islamic Institute</h1>
+  </div>
+  <button class="menu-toggle" id="mobile-menu" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
+  <nav id="nav-links">
+    <a href="index.html" class="active" id="navHome">Home</a>
+    <a href="login.html" id="navLogin">Login</a>
+    <a href="register.html" id="navReg">Register</a>
+    <a href="courses.html" id="navCourses">Courses</a>
+    <a href="about.html" id="navAbout">About</a>
+    <a href="contact.html" id="navContact">Contact</a>
+    <button id="langToggle">العربية</button>
+    <button id="themeToggle" title="Toggle Theme">
+      <i class="fas fa-moon"></i>
+    </button>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-content">
+    <span class="bismillah" id="heroBismillah">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ</span>
+    <h2 id="heroTitle">Welcome to Al-Ikroom Islamic Institute</h2>
+    <p class="tagline" id="heroTagline">Empowering the Ummah through Authentic Knowledge & Modern Learning</p>
+    <div class="cta-group">
+      <a href="register.html" class="btn-primary cta-btn" id="heroBtnReg">Register Now</a>
+      <a href="courses.html" class="btn-secondary cta-btn" id="heroBtnExp">Explore Courses</a>
+    </div>
+  </div>
+</section>
+
+<div class="features-row">
+    <div class="feature-box">
+        <h3><i class="fas fa-clock"></i> Prayer Times (Nigeria)</h3>
+        <div id="prayerTimesContainer">&nbsp;</div>
+    </div>
+    <div class="feature-box">
+        <h3><i class="fas fa-quran"></i> Daily Ayah</h3>
+        <p id="dailyAyahText">&nbsp;</p>
+        <small id="dailyAyahRef"></small>
+    </div>
+    <div class="feature-box">
+        <h3><i class="fas fa-calendar-alt"></i> Islamic Calendar</h3>
+        <p id="hijriDate">&nbsp;</p>
+        <small id="gregorianDate" style="opacity:0.7"></small>
+    </div>
+</div>
+
+<section id="announcement-section" style="display:none;">
+    <div style="max-width: 1200px; margin: auto;">
+        <h2 class="section-title" id="newsTitle"><i class="fas fa-bullhorn"></i> Latest Announcements</h2>
+        <div id="news-container">
+            </div>
+    </div>
+</section>
+
+<div class="stats-bar">
+  <div class="stat-item">
+    <h2 class="counter" data-target="1500">0</h2>
+    <p id="statStudents">Students Enrolled</p>
+  </div>
+  <div class="stat-item">
+    <h2 class="counter" data-target="12">0</h2>
+    <p id="statCourses">Courses Offered</p>
+  </div>
+  <div class="stat-item">
+    <h2 class="counter" data-target="50">0</h2>
+    <p id="statTeachers">Teachers Trained</p>
+  </div>
+</div>
+
+<section class="about-mosque">
+  <div class="about-content-box">
+    <h2 id="aboutTitle">About the Institute</h2>
+    <p id="aboutText" style="line-height: 1.8; font-size: 1.15rem;">Our mission is to spread the authentic knowledge of Islam through modern technology. We prioritize Tajweed and Arabic fluency to help students connect deeply with the Holy Quran from anywhere in the world.</p>
+    <div style="margin-top: 30px;">
+      <a href="about.html" class="cta-btn btn-primary" style="background: #fff; color: #1b6e5f;" id="readMore">Read More</a>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 class="section-title" id="coursesTitle">Our Core Courses</h2>
+  <div class="grid-container">
+    <div class="card">
+      <i class="fas fa-book-open"></i>
+      <h3 id="c1Title">Quran Memorization</h3>
+      <p id="c1Text">Comprehensive Hifdh programs with personalized tracking for all age groups.</p>
+      <a href="register.html" class="btn-enroll">Enroll Now</a>
+    </div>
+    <div class="card">
+      <i class="fas fa-microphone-alt"></i>
+      <h3 id="c2Title">Tajweed Studies</h3>
+      <p id="c2Text">Master the rules of recitation and perfect your makhraj with certified experts.</p>
+      <a href="register.html" class="btn-enroll">Enroll Now</a>
+    </div>
+    <div class="card">
+      <i class="fas fa-language"></i>
+      <h3 id="c4Title">Arabic Studies</h3>
+      <p id="c4Text">Unlock the language of the Quran through our structured grammar and speaking modules.</p>
+      <a href="register.html" class="btn-enroll">Enroll Now</a>
+    </div>
+  </div>
+  <div style="text-align: center; margin-bottom: 80px; padding: 0 20px;">
+      <a href="courses.html" class="btn-formal-secondary" id="allCoursesBtn">Check out other Courses formally</a>
+  </div>
+</section>
+
+<section class="testimonials-section">
+    <h2 class="section-title" style="color: white; border-color: white;">What Our Students Say</h2>
+    <div class="testimonial-container">
+        <div class="testimonial-card">
+            <p>"The teachers are incredibly patient. My son finished his first Juzz in record time thanks to their guidance."</p>
+            <span class="author">— Amina (Parent)</span>
+        </div>
+        <div class="testimonial-card">
+            <p>"The online platform is so smooth. I can attend Tajweed classes from London without any issues."</p>
+            <span class="author">— Ibrahim (Student)</span>
+        </div>
+        <div class="testimonial-card">
+            <p>"Al-Ikroom changed my relationship with the Quran. I finally understand what I am reciting!"</p>
+            <span class="author">— Yusuf (Adult Learner)</span>
+        </div>
+        <div class="testimonial-card">
+            <p>"Authentic knowledge and a very disciplined environment. Highly recommended for busy professionals."</p>
+            <span class="author">— Dr. Sulaiman (Adult Student)</span>
+        </div>
+        <div class="testimonial-card">
+            <p>"The Arabic course is well-structured. I never thought I could speak basic Arabic in just 3 months!"</p>
+            <span class="author">— Maryam (Linguistics Student)</span>
+        </div>
+        <div class="testimonial-card">
+            <p>"A blessing for our community. The quality of teachers here matches international standards."</p>
+            <span class="author">— Imam Hassan (Community Leader)</span>
+        </div>
+    </div>
+</section>
+
+<section class="blog-section">
+    <h2 class="section-title">Knowledge Hub</h2>
+    <div class="blog-grid" id="knowledgeHubContainer">
+        <div class="blog-card">
+            <div class="blog-info"><p>Loading scholarly articles...</p></div>
+        </div>
+    </div>
+</section>
+
+<div class="chat-bubble" onclick="window.open('https://wa.me/2347070103300', '_blank')">
+  <i class="fab fa-whatsapp"></i>
+</div>
+
+<footer>
+  <div class="footer-grid">
+    <div class="footer-col">
+      <h4 id="f1Title">Contact Info</h4>
+      <p id="f1_mail"><i class="fas fa-envelope"></i> alikroomislamicinstitute@gmail.com</p>
+      <p id="f1_phone"><i class="fas fa-phone"></i> +234 707 010 3300</p>
+      <p id="f1_loc"><i class="fas fa-map-marker-alt"></i> Ilorin, Nigeria / Global Online</p>
+    </div>
+    <div class="footer-col">
+      <h4 id="f2Title">Quick Links</h4>
+      <a href="about.html" id="fl1">About Us</a>
+      <a href="courses.html" id="fl2">Our Courses</a>
+      <a href="register.html" id="fl3">Student Portal</a>
+    </div>
+    <div class="footer-col">
+      <h4 id="f3Title">Follow Us</h4>
+      <div class="social-icons">
+        <a href="https://www.facebook.com/share/1atZAaSHKk/" target="_blank"><i class="fab fa-facebook-f"></i></a>
+        <a href="https://www.instagram.com/alikroomislamicinstitute?igsh=MWwxbmN5ZTlpc2Z1Ng==" target="_blank"><i class="fab fa-instagram"></i></a>
+        <a href="https://www.youtube.com/@Al-IkroomIslamicInstitute-z4i" target="_blank"><i class="fab fa-youtube"></i></a>
+      </div>
+    </div>
+  </div>
+  <div style="text-align: center; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 50px; padding-top: 20px;">
+    <p id="footerCopy">&copy; 2026 Al-Ikroom Islamic Institute | All Rights Reserved</p>
+  </div>
+</footer>
+
+
+<script>
+// Paste the custom-alerts logic directly here
+(function() {
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .als-alert-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 9999; }
+        .als-alert-overlay.active { display: flex; }
+        .als-alert-box { background: var(--card-bg, #fff); padding: 35px; border-radius: 35px; text-align: center; max-width: 420px; width: 90%; border-top: 6px solid var(--primary-green); }
+        .als-alert-btn { width: 100%; padding: 14px; background: var(--primary-green); color: #fff; border: none; border-radius: 50px; cursor: pointer; margin-top: 20px; }
+    `;
+    document.head.appendChild(style);
+
+    window.alert = function(message) {
+        const overlay = document.createElement('div');
+        overlay.className = 'als-alert-overlay active';
+        overlay.innerHTML = `
+            <div class="als-alert-box">
+                <i class="fas fa-exclamation-circle" style="font-size:3rem; color:var(--primary-green);"></i>
+                <div style="font-size:1.4rem; font-weight:700; margin: 15px 0; color:var(--primary-green);">Notification</div>
+                <div style="line-height:1.5;">${message}</div>
+                <button class="als-alert-btn">Understood</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        overlay.querySelector('button').onclick = () => document.body.removeChild(overlay);
+    };
+})();
+</script>
+
+
+<script>
+/* Theme Toggle Logic */
+const themeToggle = document.getElementById('themeToggle');
+const htmlElement = document.documentElement;
+
+const savedTheme = localStorage.getItem('theme') || 'light';
+htmlElement.setAttribute('data-theme', savedTheme);
+updateThemeIcon(savedTheme);
+
+themeToggle.addEventListener('click', () => {
+    const currentTheme = htmlElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    htmlElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+});
+
+function updateThemeIcon(theme) {
+    const icon = themeToggle.querySelector('i');
+    if (theme === 'dark') {
+        icon.classList.replace('fa-moon', 'fa-sun');
+    } else {
+        icon.classList.replace('fa-sun', 'fa-moon');
+    }
+}
+
+function toggleMenu() {
+    const nav = document.getElementById('nav-links');
+    const btn = document.getElementById('mobile-menu');
+    nav.classList.toggle('active');
+    btn.classList.toggle('open');
+}
+
+/* Statistics Counter Logic */
+let started = false;
+window.addEventListener('scroll', () => {
+  if(window.scrollY > 300 && !started) {
+    document.querySelectorAll('.counter').forEach(counter => {
+      const update = () => {
+        const target = +counter.getAttribute('data-target');
+        const count = +counter.innerText;
+        if (count < target) {
+          counter.innerText = Math.ceil(count + (target/80));
+          setTimeout(update, 30);
+        } else counter.innerText = target + "+";
+      };
+      update();
+    });
+    started = true;
+  }
+});
+
+/* NEWS FETCH LOGIC */
+async function loadNews() {
+    try {
+        const res = await fetch('https://alikroomislamicinstitute.onrender.com/api/news'); 
+        const data = await res.json();
+        
+        if (data.news && data.news.length > 0) {
+            const container = document.getElementById('news-container');
+            const section = document.getElementById('announcement-section');
+            
+            section.style.display = 'block';
+            container.innerHTML = data.news.map((n, index) => `
+                <div class="news-item" style="animation-delay: ${index * 0.1}s">
+                    <span class="news-date-badge">${new Date(n.date).toDateString()}</span>
+                    <h4>${n.title}</h4>
+                    <p>${n.content}</p>
+                </div>
+            `).join('');
+        }
+    } catch (err) { console.error("News load failed", err); }
+}
+
+/* DYNAMIC ISLAMIC DATA LOGIC (MWL Method for Nigeria) */
+async function initIslamicData() {
+    const hubContainer = document.getElementById('knowledgeHubContainer');
+    try {
+        // Muslim World League (Method 3) for Ilorin, Nigeria
+        const prayerRes = await fetch('https://api.aladhan.com/v1/timingsByCity?city=Ilorin&country=Nigeria&method=3');
+        const pData = await prayerRes.json();
+        const t = pData.data.timings;
+        const d = pData.data.date;
+
+        document.getElementById('prayerTimesContainer').innerHTML = `
+            <p><strong>Fajr:</strong> ${t.Fajr} | <strong>Dhuhr:</strong> ${t.Dhuhr}</p>
+            <p><strong>Asr:</strong> ${t.Asr} | <strong>Maghrib:</strong> ${t.Maghrib}</p>
+            <p><strong>Isha:</strong> ${t.Isha}</p>
+        `;
+        document.getElementById('hijriDate').innerText = `${d.hijri.day} ${d.hijri.month.en} ${d.hijri.year} AH`;
+        document.getElementById('gregorianDate').innerText = d.readable;
+
+        // Daily Ayah (Randomized Daily)
+        const ayahRes = await fetch('https://api.alquran.cloud/v1/ayah/' + (Math.floor(Math.random() * 6236) + 1) + '/en.asad');
+        const aData = await ayahRes.json();
+        document.getElementById('dailyAyahText').innerText = `"${aData.data.text}"`;
+        document.getElementById('dailyAyahRef').innerText = `— ${aData.data.surah.englishName} [${aData.data.numberInSurah}]`;
+
+        /* UPDATED KNOWLEDGE HUB (YAQEEN INSTITUTE DYNAMIC FETCH) */
+        // Using rss2json to parse the Yaqeen RSS feed safely
+        const rssUrl = encodeURIComponent('https://yaqeeninstitute.org/feed');
+        const hubRes = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`);
+        const hData = await hubRes.json();
+        
+        if (hData.status === 'ok' && hData.items && hData.items.length > 0) {
+            hubContainer.innerHTML = hData.items.slice(0, 3).map(item => `
+                <div class="blog-card">
+                    <div class="blog-image"><i class="fas fa-scroll"></i></div>
+                    <div class="blog-info">
+                        <h4>${item.title}</h4>
+                        <p>${item.description.replace(/<[^>]*>?/gm, '').substring(0, 120)}...</p>
+                        <a href="${item.link}" target="_blank" style="margin-top:auto; color: var(--primary-green); font-weight: bold; text-decoration:none;">Read Article →</a>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            throw new Error("Empty feed");
+        }
+    } catch (err) { 
+        console.error("Dynamic Data Error:", err); 
+        hubContainer.innerHTML = '<div class="blog-card" style="grid-column: 1/-1; padding: 40px;"><p style="text-align:center; opacity:0.6;">Unable to fetch scholarly articles at this time. Please check back later.</p></div>';
+    }
+}
+
+/* Language Toggle Data */
+const langData = {
+  ar: {
+    title: "معهد الإكرام الإسلامي", home: "الرئيسية", login: "دخول", reg: "حساب جديد", courses: "الدورات", about: "عن المعهد", contact: "اتصل بنا",
+    heroT: "مرحباً بكم في معهد الإكرام الإسلامي", heroTag: "تمكين الأمة من خلال المعرفة الأصيلة والتعلم الحديث",
+    btnReg: "سجل الآن", btnExp: "استكشف الدورات", s1: "طلاب مسجلون", s2: "دورات مقدمة", s3: "معلمون مدربون",
+    abtTitle: "عن المعهد", abtText: "مهمتنا هي نشر المعرفة الأصلية للإسلام من خلال التكنولوجيا الحديثة. نحن نعطي الأورووية للتجويد والطلاقة العربية لمساعدة الطلاب على التواصل بعمق مع القرآن الكريم.",
+    cTitle: "دوراتنا الأساسية", c1t: "تحفيظ القرآن", c2t: "دراسات التجويد", c4t: "اللغة العربية",
+    f1: "معلومات الاتصال", f2: "روابط سريعة", f3: "تابعنا", read: "اقرأ أكثر", copy: "© ٢٠٢٦ معهد الإكرام الإسلامي | جميع الحقوق محفوظة",
+    fl1: "عن المعهد", fl2: "دوراتنا", fl3: "بوابة الطالب", news: "آخر الإعلانات", allC: "تحقق من الدورات الأخرى رسميا"
+  },
+  en: {
+    title: "Al-Ikroom Islamic Institute", home: "Home", login: "Login", reg: "Register", courses: "Courses", about: "About", contact: "Contact",
+    heroT: "Welcome to Al-Ikroom Islamic Institute", heroTag: "Empowering the Ummah through Authentic Knowledge & Modern Learning",
+    btnReg: "Register Now", btnExp: "Explore Courses", s1: "Students Enrolled", s2: "Courses Offered", s3: "Teachers Trained",
+    abtTitle: "About the Institute", abtText: "Our mission is to spread the authentic knowledge of Islam through modern technology. We prioritize Tajweed and Arabic fluency to help students connect deeply with the Holy Quran from anywhere in the world.",
+    cTitle: "Our Core Courses", c1t: "Quran Memorization", c2t: "Tajweed Studies", c4t: "Arabic Studies",
+    f1: "Contact Info", f2: "Quick Links", f3: "Follow Us", read: "Read More", copy: "© 2026 Al-Ikroom Islamic Institute | All Rights Reserved",
+    fl1: "About Us", fl2: "Our Courses", fl3: "Student Portal", news: "Latest Announcements", allC: "Check out other Courses formally"
+  }
+};
+
+const langBtn = document.getElementById("langToggle");
+let isArabic = false;
+
+langBtn.onclick = () => {
+  isArabic = !isArabic;
+  const d = langData[isArabic ? 'ar' : 'en'];
+  
+  document.body.dir = isArabic ? 'rtl' : 'ltr';
+  langBtn.textContent = isArabic ? "English" : "العربية";
+  
+  document.getElementById('navTitle').textContent = d.title;
+  document.getElementById('navHome').textContent = d.home;
+  document.getElementById('navLogin').textContent = d.login;
+  document.getElementById('navReg').textContent = d.reg;
+  document.getElementById('navCourses').textContent = d.courses;
+  document.getElementById('navAbout').textContent = d.about;
+  document.getElementById('navContact').textContent = d.contact;
+  document.getElementById('heroTitle').textContent = d.heroT;
+  document.getElementById('heroTagline').textContent = d.heroTag;
+  document.getElementById('heroBtnReg').textContent = d.btnReg;
+  document.getElementById('heroBtnExp').textContent = d.btnExp;
+  document.getElementById('statStudents').textContent = d.s1;
+  document.getElementById('statCourses').textContent = d.s2;
+  document.getElementById('statTeachers').textContent = d.s3;
+  document.getElementById('aboutTitle').textContent = d.abtTitle;
+  document.getElementById('aboutText').textContent = d.abtText;
+  document.getElementById('readMore').textContent = d.read;
+  document.getElementById('coursesTitle').textContent = d.cTitle;
+  document.getElementById('c1Title').textContent = d.c1t;
+  document.getElementById('c2Title').textContent = d.c2t;
+  document.getElementById('c4Title').textContent = d.c4t;
+  document.getElementById('f1Title').textContent = d.f1;
+  document.getElementById('f2Title').textContent = d.f2;
+  document.getElementById('f3Title').textContent = d.f3;
+  document.getElementById('footerCopy').textContent = d.copy;
+  document.getElementById('fl1').textContent = d.fl1;
+  document.getElementById('fl2').textContent = d.fl2;
+  document.getElementById('fl3').textContent = d.fl3;
+  document.getElementById('allCoursesBtn').textContent = d.allC;
+  document.getElementById('newsTitle').innerHTML = `<i class="fas fa-bullhorn"></i> ${d.news}`;
+};
+
+/* SYNC LOGIC & INIT */
+window.addEventListener('load', () => {
+    loadNews();
+    initIslamicData();
+});
+</script>
+<script src="js/global.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About Us - Al-Ikroom Islamic Institute</title>
+<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  /* ===== THEME VARIABLES ===== */
+  :root {
+    --primary-green: #1b6e5f;
+    --dark-navy: #0a143c;
+    --bg-light: #f4f7f6;
+    --text-color: #0a143c;
+    --card-bg: #ffffff;
+    --header-bg: rgba(255, 255, 255, 0.98);
+    --hero-gradient: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(245,255,250,0.9) 100%);
+    --info-card-bg: #f0fdfa;
+  }
+
+  [data-theme="dark"] {
+    --primary-green: #2ab098;
+    --dark-navy: #050a1f;
+    --bg-light: #0f172a;
+    --text-color: #f1f5f9;
+    --card-bg: #1e293b;
+    --header-bg: rgba(15, 23, 42, 0.98);
+    --hero-gradient: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.9) 100%);
+    --info-card-bg: #1e293b;
+  }
+
+  /* ===== GLOBAL STYLES ===== */
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  
+  body {
+    margin: 0;
+    font-family: 'Times New Roman', Times, serif;
+    color: var(--text-color);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-light);
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+
+  /* ===== Keyframe Animations (Synchronized with Index) ===== */
+  @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes fadeInUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  /* ===== Header & Nav ===== */
+  header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 5%; position: sticky; top: 0;
+    background: var(--header-bg); z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-bottom: 3px solid var(--primary-green);
+    animation: slideDown 0.6s ease-out;
+  }
+
+  .header-brand { display: flex; align-items: center; gap: 12px; }
+  .logo { height: 45px; width: auto; object-fit: contain; }
+  header h1 { font-size: 1.1rem; color: var(--primary-green); text-transform: uppercase; letter-spacing: 1px; margin: 0; font-weight: 700; }
+
+  nav { display: flex; align-items: center; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+  nav a {
+    margin: 0 12px;
+    font-weight: 600;
+    color: var(--text-color);
+    text-decoration: none;
+    position: relative;
+    transition: 0.3s;
+}
+nav a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background: var(--primary-green);
+    transition: 0.3s;
+}
+nav a:hover::after,
+nav a.active::after {
+    width: 100%;
+}
+
+  /* Hamburger Style */
+  .menu-toggle { display: none; flex-direction: column; cursor: pointer; gap: 5px; border: none; background: none; padding: 5px; z-index: 1001; }
+ .menu-toggle span {
+    height: 3px;
+    width: 25px;
+    background: var(--primary-green);
+    border-radius: 3px;
+    transition: 0.3s;
+}
+.menu-toggle.open span:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+}
+.menu-toggle.open span:nth-child(2) {
+    opacity: 0;
+}
+.menu-toggle.open span:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+}
+.menu-toggle.open span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+  .menu-toggle.open span:nth-child(2) { opacity: 0; }
+  .menu-toggle.open span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+  #langToggle {
+    margin-left: 15px; padding: 8px 16px; border: none; border-radius: 50px;
+    cursor: pointer; background: var(--primary-green); color: #fff; font-weight: bold;
+    font-family: inherit; transition: 0.3s;
+  }
+
+  #themeToggle { background: none; border: none; cursor: pointer; color: var(--primary-green); font-size: 1.2rem; margin-left: 15px; transition: 0.3s; }
+
+  /* ===== Hero Section ===== */
+  .hero {
+    text-align: center; padding: 100px 20px;
+    background: var(--hero-gradient), 
+                url('https://images.rawpixel.com/image_png_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTA2L3Jhd3BpeGVsX29mZmljZV8zN19hX3N0dWRpb19waG90b19vZl9hX211c2xpbV9ib3lfc3R1ZGVudF9zdHVkeV8zNWQ4NzRmNS1jMzEwLTRhZmQtYjM2Ni1kYmYxMTk5Y2JjMjYucG5n.png') 
+                center/cover no-repeat fixed;
+    animation: scaleIn 0.8s ease-out;
+  }
+  .hero h2 { font-size: 2.8rem; color: var(--primary-green); margin-bottom: 10px; animation: fadeInUp 0.8s ease-out; }
+  .hero p { font-size: 1.2rem; color: var(--text-color); max-width: 800px; margin: 0 auto; line-height: 1.6; animation: fadeInUp 1s ease-out; }
+
+  /* ===== About Content Section ===== */
+  .about-content {
+    max-width: 1100px; margin: -50px auto 60px; padding: 60px 5%;
+    background: var(--card-bg); border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    z-index: 5; position: relative;
+    animation: fadeInUp 1.2s ease-out;
+  }
+
+  .section-title { text-align: center; color: var(--primary-green); font-size: 2rem; margin-bottom: 40px; }
+  .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-bottom: 60px; }
+
+  .info-card {
+    background: var(--info-card-bg); padding: 35px; border-radius: 20px; border-left: 5px solid var(--primary-green);
+    transition: 0.3s;
+  }
+  .info-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+  body[dir="rtl"] .info-card { border-left: none; border-right: 5px solid var(--primary-green); }
+
+  .teaching-methods { background: var(--dark-navy); color: white; padding: 40px; border-radius: 24px; margin-bottom: 60px; }
+  .teaching-methods h3 { color: var(--primary-green); text-align: center; font-size: 1.8rem; margin-top: 0; }
+  .teaching-methods ul { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+  .teaching-methods li { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; border-left: 3px solid var(--primary-green); transition: 0.3s; }
+  .teaching-methods li:hover { background: rgba(255,255,255,0.2); }
+  body[dir="rtl"] .teaching-methods li { border-left: none; border-right: 3px solid var(--primary-green); }
+
+  .teachers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; }
+  .teacher-card {
+    text-align: center; padding: 25px; background: var(--card-bg); border: 2px solid rgba(0,0,0,0.05);
+    border-radius: 20px; transition: 0.5s ease;
+  }
+  .teacher-card:hover { transform: scale(1.05); border-color: var(--primary-green); }
+  .teacher-card img { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary-green); margin-bottom: 15px; object-fit: cover; }
+
+  footer { text-align: center; padding: 30px; background: var(--dark-navy); color: white; margin-top: auto; font-size: 0.9rem; }
+
+ @media (max-width: 900px) {
+    .menu-toggle { display: flex; }
+    nav {
+        display: flex; flex-direction: column; position: absolute;
+        top: 100%; left: 0; width: 100%; background: var(--card-bg);
+        max-height: 0; opacity: 0; overflow: hidden;
+        transform: translateY(-10px); padding: 0;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1); border-bottom: 4px solid var(--primary-green);
+        transition: all 0.4s ease;
+    }
+    nav.active { max-height: 600px; opacity: 1; transform: translateY(0); padding: 30px 0; }
+    nav a { margin: 12px 0; text-align: center; opacity: 0; transform: translateX(-20px); transition: 0.3s; }
+    nav.active a { opacity: 1; transform: translateX(0); }
+    #langToggle { margin: 15px auto 0; width: 150px; }
+    #themeToggle { margin: 15px auto 0; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-brand">
+    <img src="Al-Ikroom Logo.png" alt="Logo" class="logo">
+    <h1 id="instituteName">Al-Ikroom Islamic Institute</h1>
+  </div>
+  <button class="menu-toggle" id="mobile-menu" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
+<nav id="nav-links">
+  <a href="index.html" id="navHome">Home</a>
+  <a href="login.html" id="navLogin">Login</a>
+  <a href="register.html" id="navReg">Register</a>
+  <a href="courses.html" id="navCourses">Courses</a>
+  <a href="about.html" id="navReg" class="active">About Us</a>
+  <a href="contact.html" id="navContact">Contact</a>
+  <button id="langToggle">العربية</button>
+  <button id="themeToggle" title="Toggle Theme">
+    <i class="fas fa-moon"></i>
+  </button>
+</nav>
+</header>
+
+<section class="hero">
+  <h2 id="heroTitle">About Us</h2>
+  <p id="introText">Welcome to Al-Ikroom Islamic Institute, your gateway to connecting with Islam from the comfort of your home. We nurture knowledge, faith, and discipline with modern online learning.</p>
+</section>
+
+<section class="about-content">
+  <h2 class="section-title" id="whoTitle">Who We Are</h2>
+  
+  <div class="grid-container">
+    <div class="info-card">
+      <h3 id="missionTitle">Our Mission</h3>
+      <p id="missionText">To make Islamic knowledge accessible to all through flexible online learning that fosters spiritual growth and excellence in recitation.</p>
+    </div>
+    <div class="info-card">
+      <h3 id="visionTitle">Our Vision</h3>
+      <p id="visionText">To raise a global community of Muslims who understand and practice Islam with knowledge, sincerity, and proper Tajweed.</p>
+    </div>
+  </div>
+
+  <div class="teaching-methods">
+    <h3 id="teachingTitle">Our Teaching Approach</h3>
+    <ul id="teachingList">
+      <li id="list1">📖 Personalized Qur’an recitation plans</li>
+      <li id="list2">🌐 Classes in multiple languages</li>
+      <li id="list3">🕰 Flexible schedules for all timezones</li>
+      <li id="list4">🎓 Experienced teachers with Ijazah</li>
+      <li id="list5">🏆 Interactive monthly competitions</li>
+    </ul>
+  </div>
+
+  <h3 class="section-title" id="teachersTitle">Meet Our Educators</h3>
+<div class="teachers-grid">
+
+  <div class="teacher-card">
+    <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="Ustadh">
+    <h4 id="teacher1Name">Ustadh Abdullah</h4>
+    <p id="teacher1Desc">Hifdh & Tajweed Specialist</p>
+  </div>
+
+  <div class="teacher-card">
+    <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="Ustadha">
+    <h4 id="teacher2Name">Ustadha Amina</h4>
+    <p id="teacher2Desc">Arabic & Islamic Studies Expert</p>
+  </div>
+
+  <div class="teacher-card">
+    <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="Shaykh">
+    <h4 id="teacher3Name">Shaykh Musa</h4>
+    <p id="teacher3Desc">Hadith & Fiqh Consultant</p>
+  </div>
+
+  <!-- New Teachers -->
+
+  <div class="teacher-card">
+    <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="Ustadh">
+    <h4 id="teacher4Name">Ustadh Ibrahim</h4>
+    <p id="teacher4Desc">Qur’an Recitation Coach</p>
+  </div>
+
+  <div class="teacher-card">
+    <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="Ustadha">
+    <h4 id="teacher5Name">Ustadha Khadijah</h4>
+    <p id="teacher5Desc">Tajweed & Memorization Tutor</p>
+  </div>
+
+  <div class="teacher-card">
+    <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="Shaykh">
+    <h4 id="teacher6Name">Shaykh Yusuf</h4>
+    <p id="teacher6Desc">Islamic Jurisprudence Scholar</p>
+  </div>
+
+  <div class="teacher-card">
+    <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="Ustadh">
+    <h4 id="teacher7Name">Ustadh Hassan</h4>
+    <p id="teacher7Desc">Qur’an & Tafsir Instructor</p>
+  </div>
+
+  <div class="teacher-card">
+    <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="Ustadha">
+    <h4 id="teacher8Name">Ustadha Fatimah</h4>
+    <p id="teacher8Desc">Beginner Arabic Teacher</p>
+  </div>
+
+  <div class="teacher-card">
+    <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="Shaykh">
+    <h4 id="teacher9Name">Shaykh Umar</h4>
+    <p id="teacher9Desc">Hadith Sciences Specialist</p>
+  </div>
+
+  <div class="teacher-card">
+    <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="Ustadh">
+    <h4 id="teacher10Name">Ustadh Bilal</h4>
+    <p id="teacher10Desc">Advanced Tajweed Instructor</p>
+  </div>
+
+</div>
+</section>
+
+<footer>
+  <p id="footerCopy">&copy; 2026 Al-Ikroom Islamic Institute | Dedicated to Excellence</p>
+</footer>
+
+<script>
+/* Theme Toggle Logic (Consistent with Index) */
+const themeToggle = document.getElementById('themeToggle');
+const htmlElement = document.documentElement;
+
+const savedTheme = localStorage.getItem('theme') || 'light';
+htmlElement.setAttribute('data-theme', savedTheme);
+updateThemeIcon(savedTheme);
+
+themeToggle.addEventListener('click', () => {
+    const currentTheme = htmlElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    htmlElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+});
+
+function updateThemeIcon(theme) {
+    const icon = themeToggle.querySelector('i');
+    if (theme === 'dark') {
+        icon.classList.replace('fa-moon', 'fa-sun');
+    } else {
+        icon.classList.replace('fa-sun', 'fa-moon');
+    }
+}
+
+function toggleMenu() {
+    const nav = document.getElementById('nav-links');
+    const btn = document.getElementById('mobile-menu');
+    nav.classList.toggle('active');
+    btn.classList.toggle('open');
+}
+
+/* Arabic Translation Logic */
+const langBtn = document.getElementById('langToggle');
+let isArabic = false;
+
+const translations = {
+  ar: {
+    instName: "معهد الإكرام الإسلامي",
+    nav: ["الرئيسية", "دخول", "تسجيل", "الدورات", "عن المعهد", "اتصل بنا"],
+    hero: "من نحن",
+    intro: "مرحبًا بكم في معهد الإكرام الإسلامي، بوابتكم للتواصل مع الإسلام من منازلكم. نحن ننمي المعرفة والإيمان والانضباط من خلال التعلم الحديث عبر الإنترنت.",
+    who: "من نحن",
+    missionT: "مهمتنا",
+    missionP: "جعل المعرفة الإسلامية متاحة للجميع من خلال تعلم مرن عبر الإنترنت يعزز النمو الروحي والتميز في التلاوة.",
+    visionT: "رؤيتنا",
+    visionP: "بناء مجتمع عالمي من المسلمين الذين يفهمون ويمارسون الإسلام بمعرفة وإخلاص وتجويد صحيح.",
+    approach: "نهجنا التعليمي",
+    list: [
+      "📖 خطط تلاوة القرآن الشخصية",
+      "🌐 دروس بلغات متعددة",
+      "🕰 جداول مرنة لجميع المناطق الزمنية",
+      "🎓 معلمون ذوو خبرة وحاصلون على إجازة",
+      "🏆 مسابقات شهرية تفاعلية"
+    ],
+    teachers: "معلمونا",
+    t1: ["الأستاذ عبد الله", "متخصص في الحفظ والتجويد"],
+    t2: ["الأستاذة أمينة", "خبيرة اللغة العربية والدراسات الإسلامية"],
+    t3: ["الشيخ موسى", "مستشار الحديث والفقه"],
+    footer: "&copy; ٢٠٢٦ معهد الإكرام الإسلامي | التميز شعارنا"
+  },
+  en: {
+    instName: "Al-Ikroom Islamic Institute",
+    nav: ["Home", "Login", "Register", "Courses", "About", "Contact"],
+    hero: "About Us",
+    intro: "Welcome to Al-Ikroom Islamic Institute, your gateway to connecting with Islam from the comfort of your home. We nurture knowledge, faith, and discipline with modern online learning.",
+    who: "Who We Are",
+    missionT: "Our Mission",
+    missionP: "To make Islamic knowledge accessible to all through flexible online learning that fosters spiritual growth and excellence in recitation.",
+    visionT: "Our Vision",
+    visionP: "To raise a global community of Muslims who understand and practice Islam with knowledge, sincerity, and proper Tajweed.",
+    approach: "Our Teaching Approach",
+    list: [
+      "📖 Personalized Qur’an recitation plans",
+      "🌐 Classes in multiple languages",
+      "🕰 Flexible schedules for all timezones",
+      "🎓 Experienced teachers with Ijazah",
+      "🏆 Interactive monthly competitions"
+    ],
+    teachers: "Meet Our Educators",
+    t1: ["Ustadh Abdullah", "Hifdh & Tajweed Specialist"],
+    t2: ["Ustadha Amina", "Arabic & Islamic Studies Expert"],
+    t3: ["Shaykh Musa", "Hadith & Fiqh Consultant"],
+    footer: "&copy; 2026 Al-Ikroom Islamic Institute | Dedicated to Excellence"
+  }
+};
+
+langBtn.addEventListener('click', () => {
+  isArabic = !isArabic;
+  const lang = isArabic ? 'ar' : 'en';
+  document.body.dir = isArabic ? 'rtl' : 'ltr';
+  langBtn.textContent = isArabic ? "English" : "العربية";
+
+  document.getElementById('instituteName').textContent = translations[lang].instName;
+  document.getElementById('navHome').textContent = translations[lang].nav[0];
+  document.getElementById('navLogin').textContent = translations[lang].nav[1];
+  document.getElementById('navRegister').textContent = translations[lang].nav[2];
+  document.getElementById('navCourses').textContent = translations[lang].nav[3];
+  document.getElementById('navAbout').textContent = translations[lang].nav[4];
+  document.getElementById('navContact').textContent = translations[lang].nav[5];
+  document.getElementById('heroTitle').textContent = translations[lang].hero;
+  document.getElementById('introText').textContent = translations[lang].intro;
+  document.getElementById('whoTitle').textContent = translations[lang].who;
+  document.getElementById('missionTitle').textContent = translations[lang].missionT;
+  document.getElementById('missionText').textContent = translations[lang].missionP;
+  document.getElementById('visionTitle').textContent = translations[lang].visionT;
+  document.getElementById('visionText').textContent = translations[lang].visionP;
+  document.getElementById('teachingTitle').textContent = translations[lang].approach;
+  document.getElementById('list1').textContent = translations[lang].list[0];
+  document.getElementById('list2').textContent = translations[lang].list[1];
+  document.getElementById('list3').textContent = translations[lang].list[2];
+  document.getElementById('list4').textContent = translations[lang].list[3];
+  document.getElementById('list5').textContent = translations[lang].list[4];
+  document.getElementById('teachersTitle').textContent = translations[lang].teachers;
+  document.getElementById('teacher1Name').textContent = translations[lang].t1[0];
+  document.getElementById('teacher1Desc').textContent = translations[lang].t1[1];
+  document.getElementById('teacher2Name').textContent = translations[lang].t2[0];
+  document.getElementById('teacher2Desc').textContent = translations[lang].t2[1];
+  document.getElementById('teacher3Name').textContent = translations[lang].t3[0];
+  document.getElementById('teacher3Desc').textContent = translations[lang].t3[1];
+  document.getElementById('footerCopy').innerHTML = translations[lang].footer;
+});
+</script>
+<script src="js/global.js"></script>
+</body>
+</html>

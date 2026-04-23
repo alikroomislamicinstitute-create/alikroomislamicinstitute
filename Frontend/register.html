@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register | Al-Ikroom Islamic Institute</title>
+<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  /* ===== THEME VARIABLES ===== */
+  :root {
+    --primary-green: #1b6e5f;
+    --dark-navy: #0a143c;
+    --bg-light: #f4f7f6;
+    --white-glass: rgba(255, 255, 255, 0.9);
+    --text-color: #0a143c;
+    --header-bg: rgba(255, 255, 255, 0.98);
+    --input-bg: #fff;
+    --input-border: #edf2f1;
+    --error-red: #e74c3c;
+    --card-bg: rgba(255, 255, 255, 0.9);
+  }
+
+  [data-theme="dark"] {
+    --primary-green: #2ab098;
+    --dark-navy: #050a1f;
+    --bg-light: #0f172a;
+    --white-glass: rgba(30, 41, 59, 0.85);
+    --text-color: #f1f5f9;
+    --header-bg: rgba(15, 23, 42, 0.98);
+    --input-bg: #0f172a;
+    --input-border: #334155;
+    --card-bg: rgba(30, 41, 59, 0.9);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  
+  body {
+    margin: 0; 
+    font-family: 'Times New Roman', Times, serif;
+    color: var(--text-color); background: var(--bg-light);
+    min-height: 100vh; display: flex; flex-direction: column;
+    overflow-x: hidden; transition: background 0.3s, color 0.3s;
+  }
+
+  /* ===== Synchronized Animations ===== */
+  @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 5%; position: sticky; top: 0;
+    background: var(--header-bg); z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-bottom: 3px solid var(--primary-green);
+    animation: slideDown 0.6s ease-out;
+  }
+
+  .header-brand { display: flex; align-items: center; gap: 12px; }
+  .logo { height: 45px; width: auto; object-fit: contain; }
+  header h1 { font-size: 1.1rem; color: var(--primary-green); text-transform: uppercase; letter-spacing: 1px; margin: 0; }
+
+  nav { display: flex; align-items: center; }
+  nav a {
+    margin: 0 12px;
+    font-weight: 600;
+    color: var(--text-color);
+    text-decoration: none;
+    position: relative;
+    transition: 0.3s;
+}
+nav a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background: var(--primary-green);
+    transition: 0.3s;
+}
+nav a:hover::after,
+nav a.active::after {
+    width: 100%;
+}
+
+  .menu-toggle { display: none; flex-direction: column; cursor: pointer; gap: 5px; border: none; background: none; }
+  .menu-toggle span {
+    height: 3px;
+    width: 25px;
+    background: var(--primary-green);
+    border-radius: 3px;
+    transition: 0.3s;
+}
+.menu-toggle.open span:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+}
+.menu-toggle.open span:nth-child(2) {
+    opacity: 0;
+}
+.menu-toggle.open span:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+}
+
+  #langToggle, #themeToggle {
+    margin-left: 10px; padding: 8px 16px; border: none; border-radius: 50px;
+    cursor: pointer; background: var(--primary-green); color: #fff; font-weight: bold; transition: 0.3s;
+  }
+  #themeToggle { background: none; color: var(--primary-green); font-size: 1.2rem; padding: 8px; width: 45px; }
+
+  .main-content {
+    flex: 1; display: flex; justify-content: center; align-items: center;
+    padding: 60px 20px;
+    background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)), 
+                url('https://images.pexels.com/photos/8164381/pexels-photo-8164381.jpeg?auto=compress&cs=tinysrgb&w=1260') center/cover fixed;
+  }
+
+  .form-card {
+    max-width: 550px; width: 100%; background: var(--card-bg);
+    backdrop-filter: blur(15px); padding: 40px; border-radius: 30px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1);
+    animation: scaleIn 0.8s ease-out;
+  }
+
+  .form-card h2 { color: var(--primary-green); text-align: center; margin-bottom: 30px; }
+  .form-group { margin-bottom: 20px; }
+  .form-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; color: var(--text-color); }
+  
+  .form-control {
+    width: 100%; padding: 12px 18px; border-radius: 15px;
+    border: 2px solid var(--input-border); background: var(--input-bg); color: var(--text-color); transition: 0.3s; font-family: inherit;
+  }
+
+  .name-row { display: flex; gap: 10px; flex-direction: column; }
+  .name-row .form-group { flex: 1; }
+
+  .tile-grid { display: flex; gap: 12px; flex-wrap: wrap; }
+  .tile-item {
+    flex: 1; min-width: 100px; padding: 15px; border: 2px solid var(--input-border);
+    border-radius: 18px; text-align: center; cursor: pointer; transition: 0.3s;
+    background: var(--input-bg); color: var(--text-color); font-weight: 600; font-size: 0.9rem;
+  }
+  .tile-item i { display: block; margin-bottom: 8px; font-size: 1.2rem; color: var(--primary-green); }
+  .tile-item.active { border-color: var(--primary-green); background: rgba(27, 110, 95, 0.1); }
+
+  .course-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; max-height: 200px; overflow-y: auto; }
+  .course-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px;
+    border: 1px solid var(--input-border); border-radius: 12px; background: var(--input-bg);
+    cursor: pointer; font-size: 0.85rem;
+  }
+
+  .pass-container { position: relative; }
+  .toggle-btn { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--primary-green); z-index: 5; }
+
+  .btn-submit {
+    width: 100%; padding: 16px; background: var(--primary-green); color: #fff;
+    border: none; border-radius: 50px; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: 0.3s;
+    display: flex; justify-content: center; align-items: center; gap: 10px;
+  }
+
+  .btn-submit.loading { opacity: 0.8; pointer-events: none; }
+  .btn-loader { width: 18px; height: 18px; border: 3px solid #fff; border-top: 3px solid transparent; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  .hidden { display: none !important; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 900px) {
+    .menu-toggle { display: flex; }
+    nav {
+        display: flex; flex-direction: column; position: absolute;
+        top: 100%; left: 0; width: 100%; background: var(--card-bg);
+        max-height: 0; opacity: 0; overflow: hidden;
+        transform: translateY(-10px); padding: 0;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1); border-bottom: 4px solid var(--primary-green);
+        transition: all 0.4s ease;
+    }
+    nav.active { max-height: 600px; opacity: 1; transform: translateY(0); padding: 30px 0; }
+    nav a { margin: 12px 0; text-align: center; opacity: 0; transform: translateX(-20px); transition: 0.3s; }
+    nav.active a { opacity: 1; transform: translateX(0); }
+    #langToggle { margin: 15px auto 0; width: 150px; }
+    #themeToggle { margin: 15px auto 0; }
+}
+</style>
+</head>
+<body dir="ltr">
+
+<header>
+  <div class="header-brand">
+    <img src="Al-Ikroom Logo.png" alt="Logo" class="logo">
+    <h1 id="navTitle">Al-Ikroom Islamic Institute</h1>
+  </div>
+  <button class="menu-toggle" id="mobile-menu" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
+<nav id="nav-links">
+  <a href="index.html" id="navHome">Home</a>
+  <a href="login.html" id="navLogin">Login</a>
+  <a href="register.html" id="navReg" class="active">Register</a>
+  <a href="courses.html" id="navCourses">Courses</a>
+  <a href="about.html" id="navAbout">About</a>
+  <a href="contact.html" id="navContact">Contact</a>
+  <button id="langToggle">العربية</button>
+  <button id="themeToggle" title="Toggle Theme">
+    <i class="fas fa-moon"></i>
+  </button>
+</nav>
+</header>
+
+<main class="main-content">
+  <div class="form-card">
+    <h2 id="regHeading">Join the Institute</h2>
+    
+    <div id="roleSelectionArea">
+      <div class="form-group">
+        <label id="lblSelectRole">Identify Your Role</label>
+        <div class="tile-grid">
+          <div class="tile-item" onclick="selectTile('userRole', 'student', this)">
+            <i class="fas fa-user-graduate"></i><br>
+            <span id="roleStudent">Student</span>
+          </div>
+          <div class="tile-item" onclick="selectTile('userRole', 'teacher', this)">
+            <i class="fas fa-chalkboard-teacher"></i><br>
+            <span id="roleTeacher">Teacher</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="verifyGateway" style="text-align: center; margin: 20px 0;">
+        <p id="txtAlreadyReg" style="font-size: 0.9rem; margin-bottom: 10px;">Registered but not verified?</p>
+        <button type="button" class="tile-item" style="width: 100%; border-style: dashed; background: rgba(27, 110, 95, 0.05); cursor: pointer;" onclick="showVerifySection()">
+          <i class="fas fa-check-double"></i> <span id="btnGoVerify">Verify email or phone here</span>
+        </button>
+      </div>
+    </div>
+
+    <input type="hidden" id="userRole" value="">
+
+    <div id="verificationSection" class="hidden" style="margin-top: 20px; border-top: 2px solid var(--primary-green); padding-top: 20px;">
+      <h3 id="verifyHeading" style="text-align: center; color: var(--primary-green);">Account Verification</h3>
+      <div class="form-group">
+        <label id="lblVerifyId">Email or Phone Number</label>
+        <input type="text" id="verifyIdentifier" class="form-control" placeholder="example@mail.com">
+      </div>
+      <div class="form-group">
+        <label id="lblVerifyCode">6-Digit Code</label>
+        <input type="text" id="verifyCode" class="form-control" placeholder="483921" maxlength="6">
+      </div>
+      <button type="button" class="btn-submit" onclick="verifyOTP()">
+        <span id="btnSubmitVerify">Verify Now</span>
+      </button>
+      <button type="button" id="btnBackToReg" style="background:none; border:none; color: var(--text-color); margin-top:15px; cursor:pointer; width:100%;" onclick="hideVerifySection()">
+        ← Back to Registration
+      </button>
+    </div>
+
+    <form id="registrationForm" class="hidden">
+      <div class="form-group">
+          <label id="lblVoucher" style="color: var(--primary-green);"><i class="fas fa-key"></i> Registration Voucher Key</label>
+          <input type="text" id="regVoucher" class="form-control" placeholder="Enter your unique code" required>
+      </div>
+
+      <div class="name-row">
+        <div class="form-group">
+          <label id="lblFirstName">First Name</label>
+          <input type="text" id="regFirstName" class="form-control" placeholder="First" required>
+        </div>
+        <div class="form-group">
+          <label id="lblMiddleName">Middle Name</label>
+          <input type="text" id="regMiddleName" class="form-control" placeholder="Optional">
+        </div>
+        <div class="form-group">
+          <label id="lblLastName">Last Name</label>
+          <input type="text" id="regLastName" class="form-control" placeholder="Last" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label id="lblGender">Gender</label>
+        <div class="tile-grid">
+          <div class="tile-item" onclick="selectTile('regGender', 'Male', this)">
+            <i class="fas fa-mars"></i> <span id="optMale">Male</span>
+          </div>
+          <div class="tile-item" onclick="selectTile('regGender', 'Female', this)">
+            <i class="fas fa-venus"></i> <span id="optFemale">Female</span>
+          </div>
+        </div>
+        <input type="hidden" id="regGender" name="gender">
+      </div>
+
+      <div class="form-group">
+        <label id="lblNationality">Nationality</label>
+        <input type="text" id="regNationality" class="form-control" placeholder="e.g. Nigerian" required>
+      </div>
+
+      <div class="form-group">
+        <label id="lblEmail">Email Address</label>
+        <input type="email" id="regEmail" class="form-control" placeholder="example@mail.com" required>
+      </div>
+
+      <div class="form-group">
+        <label id="lblPhone">Phone Number</label>
+        <div style="display: flex; gap: 10px;">
+          <select id="regCountryCode" class="form-control" style="width: 130px; font-size: 0.8rem;">
+            <option value="">Loading...</option>
+          </select>
+          <input type="tel" id="regPhone" class="form-control" placeholder="8012345678" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label id="lblCourse">Courses of Interest</label>
+        <div class="course-grid" id="dynamicCourseGrid">
+            <p style="font-size: 0.8rem; opacity: 0.6; padding: 10px;">Loading courses...</p>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label id="lblPass">Password</label>
+        <div class="pass-container">
+            <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+            <i class="fas fa-eye toggle-btn" onclick="togglePass('password')"></i>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label id="lblConfirmPass">Confirm Password</label>
+        <div class="pass-container">
+            <input type="password" id="confirmPassword" class="form-control" placeholder="••••••••" required>
+            <i class="fas fa-eye toggle-btn" onclick="togglePass('confirmPassword')"></i>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" id="btnRegister">
+        <span class="btn-text">Complete Registration</span>
+        <span class="btn-loader hidden"></span>
+      </button>
+
+      <p style="text-align: center; margin-top: 25px; font-size: 0.9rem;">
+        Already have an account? <a href="login.html" style="color: var(--primary-green); font-weight: bold; text-decoration: none;">Login here</a>
+      </p>
+    </form>
+  </div>
+</main>
+
+<script>
+/* Custom Alert Logic */
+(function() {
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .als-alert-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 9999; }
+        .als-alert-overlay.active { display: flex; }
+        .als-alert-box { background: var(--card-bg, #fff); padding: 35px; border-radius: 35px; text-align: center; max-width: 420px; width: 90%; border-top: 6px solid var(--primary-green); }
+        .als-alert-btn { width: 100%; padding: 14px; background: var(--primary-green); color: #fff; border: none; border-radius: 50px; cursor: pointer; margin-top: 20px; }
+    `;
+    document.head.appendChild(style);
+
+    window.alert = function(message) {
+        const overlay = document.createElement('div');
+        overlay.className = 'als-alert-overlay active';
+        overlay.innerHTML = `
+            <div class="als-alert-box">
+                <i class="fas fa-exclamation-circle" style="font-size:3rem; color:var(--primary-green);"></i>
+                <div style="font-size:1.4rem; font-weight:700; margin: 15px 0; color:var(--primary-green);">Notification</div>
+                <div style="line-height:1.5;">${message}</div>
+                <button class="als-alert-btn">Understood</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        overlay.querySelector('button').onclick = () => document.body.removeChild(overlay);
+    };
+})();
+
+function toggleMenu() {
+    const nav = document.getElementById('nav-links');
+    const btn = document.getElementById('mobile-menu');
+    nav.classList.toggle('active');
+    btn.classList.toggle('open');
+}
+
+window.togglePass = (id) => {
+    const input = document.getElementById(id);
+    input.type = input.type === 'password' ? 'text' : 'password';
+};
+
+window.selectTile = (id, val, el) => {
+    document.getElementById(id).value = val;
+    el.parentElement.querySelectorAll('.tile-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+    if(id === 'userRole') {
+      document.getElementById('registrationForm').classList.remove('hidden');
+    }
+};
+
+/* Verification Section UI Toggles */
+window.showVerifySection = () => {
+    document.getElementById('roleSelectionArea').classList.add('hidden');
+    document.getElementById('registrationForm').classList.add('hidden');
+    document.getElementById('verificationSection').classList.remove('hidden');
+};
+
+window.hideVerifySection = () => {
+    document.getElementById('roleSelectionArea').classList.remove('hidden');
+    document.getElementById('verificationSection').classList.add('hidden');
+};
+
+/* Verification Action Placeholder */
+async function verifyOTP() {
+    const identifier = document.getElementById('verifyIdentifier').value;
+    const code = document.getElementById('verifyCode').value;
+
+    if (!identifier || !code) {
+        return alert("Enter email/phone and code");
+    }
+
+    try {
+        const res = await fetch('https://alikroomislamicinstitute.onrender.com/api/auth/verify-manual', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ identifier, code })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            alert("✅ Account verified successfully!");
+            window.location.href = 'login.html';
+        } else {
+            alert(data.message || "Verification failed");
+        }
+
+    } catch (err) {
+        console.error(err);
+        alert("Server error");
+    }
+}
+
+/* Synchronized Theme Logic */
+const themeToggle = document.getElementById('themeToggle');
+const applyTheme = (theme) => {
+    document.documentElement.setAttribute('data-theme', theme);
+    const icon = themeToggle.querySelector('i');
+    if(theme === 'dark') {
+        if(icon) icon.classList.replace('fa-moon', 'fa-sun');
+    } else {
+        if(icon) icon.classList.replace('fa-sun', 'fa-moon');
+    }
+    localStorage.setItem('theme', theme);
+};
+themeToggle.onclick = () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+};
+applyTheme(localStorage.getItem('theme') || 'light');
+
+/* Arabic Toggle Logic Updated */
+const langBtn = document.getElementById("langToggle");
+let isAr = false;
+const translations = {
+    en: {
+      title: "Al-Ikroom Islamic Institute", home: "Home", login: "Login", reg: "Register", courses: "Courses", about: "About", contact: "Contact",
+      heading: "Join the Institute", roleL: "Identify Your Role", student: "Student", teacher: "Teacher",
+      voucher: "Registration Voucher Key", vPlaceholder: "Enter your unique code", first: "First Name", middle: "Middle Name", last: "Last Name",
+      gender: "Gender", male: "Male", female: "Female", nation: "Nationality", email: "Email Address", phone: "Phone Number", course: "Courses of Interest",
+      pass: "Password", confirmPass: "Confirm Password", btn: "Complete Registration",
+      alreadyReg: "Registered but not verified?", goVerify: "Verify email or phone here",
+      vHeading: "Account Verification", vId: "Email or Phone Number", vCode: "6-Digit Code", vSubmit: "Verify Now", vBack: "← Back to Registration"
+    },
+    ar: {
+      title: "معهد الإكرام الإسلامي", home: "الرئيسية", login: "دخول", reg: "تسجيل", courses: "الدورات", about: "عن المعهد", contact: "اتصل بنا",
+      heading: "انضم إلى المعهد", roleL: "حدد دورك", student: "طالب", teacher: "معلم",
+      voucher: "مفتاح قسيمة التسجيل", vPlaceholder: "أدخل الكود الخاص بك", first: "الاسم الأول", middle: "الاسم الأوسط", last: "اسم العائلة",
+      gender: "الجنس", male: "ذكر", female: "أنثى", nation: "الجنسية", email: "البريد الإلكتروني", phone: "رقم الهاتف", course: "الدورات المهتم بها",
+      pass: "كلمة المرور", confirmPass: "تأكيد كلمة المرور", btn: "إتمام التسجيل",
+      alreadyReg: "مسجل ولكن لم يتم التفعيل؟", goVerify: "تفعيل البريد أو الهاتف هنا",
+      vHeading: "تفعيل الحساب", vId: "البريد الإلكتروني أو رقم الهاتف", vCode: "الكود المكون من 6 أرقام", vSubmit: "تفعيل الآن", vBack: "← العودة إلى التسجيل"
+    }
+};
+
+langBtn.onclick = () => {
+    isAr = !isAr;
+    const d = translations[isAr ? 'ar' : 'en'];
+    document.body.dir = isAr ? 'rtl' : 'ltr';
+    langBtn.textContent = isAr ? "English" : "العربية";
+    document.getElementById('navTitle').textContent = d.title;
+    document.getElementById('navHome').textContent = d.home;
+    document.getElementById('navLogin').textContent = d.login;
+    document.getElementById('navReg').textContent = d.reg;
+    document.getElementById('navCourses').textContent = d.courses;
+    document.getElementById('navAbout').textContent = d.about;
+    document.getElementById('navContact').textContent = d.contact;
+    document.getElementById('regHeading').textContent = d.heading;
+    document.getElementById('lblSelectRole').textContent = d.roleL;
+    document.getElementById('roleStudent').textContent = d.student;
+    document.getElementById('roleTeacher').textContent = d.teacher;
+    document.getElementById('lblVoucher').innerHTML = `<i class="fas fa-key"></i> ${d.voucher}`;
+    document.getElementById('regVoucher').placeholder = d.vPlaceholder;
+    document.getElementById('lblFirstName').textContent = d.first;
+    document.getElementById('lblMiddleName').textContent = d.middle;
+    document.getElementById('lblLastName').textContent = d.last;
+    document.getElementById('lblGender').textContent = d.gender;
+    document.getElementById('optMale').textContent = d.male;
+    document.getElementById('optFemale').textContent = d.female;
+    document.getElementById('lblNationality').textContent = d.nation;
+    document.getElementById('lblEmail').textContent = d.email;
+    document.getElementById('lblPhone').textContent = d.phone;
+    document.getElementById('lblCourse').textContent = d.course;
+    document.getElementById('lblPass').textContent = d.pass;
+    document.getElementById('lblConfirmPass').textContent = d.confirmPass;
+    document.getElementById('btnRegister').querySelector('.btn-text').textContent = d.btn;
+    
+    // New Sections
+    document.getElementById('txtAlreadyReg').textContent = d.alreadyReg;
+    document.getElementById('btnGoVerify').textContent = d.goVerify;
+    document.getElementById('verifyHeading').textContent = d.vHeading;
+    document.getElementById('lblVerifyId').textContent = d.vId;
+    document.getElementById('lblVerifyCode').textContent = d.vCode;
+    document.getElementById('btnSubmitVerify').textContent = d.vSubmit;
+    document.getElementById('btnBackToReg').textContent = d.vBack;
+};
+
+/* Dynamic Country Codes */
+async function fetchCountryCodes() {
+    try {
+        const response = await fetch('https://restcountries.com/v3.1/all?fields=idd,flag,name');
+        const countries = await response.json();
+        const select = document.getElementById('regCountryCode');
+        select.innerHTML = '';
+        countries.sort((a,b) => a.name.common.localeCompare(b.name.common)).forEach(c => {
+            if(c.idd.root) {
+                const code = c.idd.root + (c.idd.suffixes ? c.idd.suffixes[0] : "");
+                const opt = document.createElement('option');
+                opt.value = code;
+                opt.textContent = `${c.flag} ${code}`;
+                if(code === "+234") opt.selected = true;
+                select.appendChild(opt);
+            }
+        });
+    } catch (e) {
+        document.getElementById('regCountryCode').innerHTML = '<option value="+234">🇳🇬 +234</option>';
+    }
+}
+
+/* Dynamic Course Fetcher */
+async function fetchCoursesForRegistration() {
+    try {
+        const response = await fetch('https://alikroomislamicinstitute.onrender.com/api/auth/courses');
+        const data = await response.json();
+        const grid = document.getElementById('dynamicCourseGrid');
+        
+        if (data.success && data.courses) {
+            grid.innerHTML = ''; 
+            data.courses.forEach(course => {
+                const label = document.createElement('label');
+                label.className = 'course-item';
+                label.innerHTML = `
+                  <input type="checkbox" value="${course._id}" class="course-checkbox"> 
+                  <span class="c-name" data-ar="${course.arTitle || ''}">${course.title}</span>
+                `;
+                grid.appendChild(label);
+            });
+        }
+    } catch (err) {
+        console.error("Course fetch failed", err);
+        document.getElementById('dynamicCourseGrid').innerHTML = '<p style="color:red">Failed to load courses.</p>';
+    }
+}
+
+/* Initialization */
+window.addEventListener('load', () => {
+    fetchCoursesForRegistration();
+    fetchCountryCodes();
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('verified') === 'true') {
+        alert("Verification Successful! Redirecting to login...");
+        setTimeout(() => { window.location.href = 'login.html'; }, 3000);
+    }
+});
+
+/* Registration Logic */
+document.getElementById('registrationForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnRegister');
+    const btnText = btn.querySelector('.btn-text');
+    const loader = btn.querySelector('.btn-loader');
+    const pass = document.getElementById('password').value;
+    const confirmPass = document.getElementById('confirmPassword').value;
+    
+    if (pass !== confirmPass) return alert("Passwords do not match!");
+
+    btn.classList.add('loading');
+    btnText.textContent = "Processing...";
+    loader.classList.remove('hidden');
+
+    const selectedRole = document.getElementById('userRole').value;
+    const selectedCourseIds = Array.from(document.querySelectorAll('.course-checkbox:checked')).map(cb => cb.value);
+
+    const formData = {
+        firstName: document.getElementById('regFirstName').value,
+        middleName: document.getElementById('regMiddleName').value,
+        lastName: document.getElementById('regLastName').value,
+        email: document.getElementById('regEmail').value,
+        phone: document.getElementById('regCountryCode').value + document.getElementById('regPhone').value,
+        password: pass,
+        gender: document.getElementById('regGender').value,
+        nationality: document.getElementById('regNationality').value,
+        role: selectedRole,
+        voucherKey: document.getElementById('regVoucher').value,
+        enrolledCourses: selectedRole === 'student' ? selectedCourseIds : [],
+        managedCourses: selectedRole === 'teacher' ? selectedCourseIds : []
+    };
+
+    try {
+        const response = await fetch('https://alikroomislamicinstitute.onrender.com/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        const data = await response.json();
+        if (data.success) {
+            alert("Registration successful! A verification code will be sent to you manually by the admin.");
+        } else {
+            alert("Error: " + data.message);
+        }
+    } catch (err) {
+        alert("Network error. Please try again later.");
+    } finally {
+        btn.classList.remove('loading');
+        btnText.textContent = isAr ? translations.ar.btn : translations.en.btn;
+        loader.classList.add('hidden');
+    }
+});
+</script>
+<script src="js/global.js"></script>
+</body>
+</html>

@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Manager - Al-Ikroom</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-green: #1b6e5f;
+            --accent-sage: #82b366;
+            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --glass-border: rgba(0, 0, 0, 0.08);
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --danger: #e11d48;
+        }
+
+        [data-theme="dark"] {
+            --primary-green: #2ab098;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+            --card-bg: #1e293b;
+            --text-color: #f1f5f9;
+            --glass-bg: rgba(30, 41, 59, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body { 
+            margin: 0; 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--bg-gradient); 
+            color: var(--text-color); 
+            min-height: 100vh;
+            padding: 0;
+            transition: 0.3s;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 0.8rem 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: var(--primary-green);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: default;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .theme-toggle, .nav-btn-icon {
+            background: none;
+            border: 1px solid var(--glass-border);
+            color: var(--primary-green);
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+            text-decoration: none;
+        }
+
+        .theme-toggle:hover, .nav-btn-icon:hover {
+            background: rgba(27, 110, 95, 0.05);
+        }
+
+        .container { 
+            width: 100%;
+            max-width: 1200px; 
+            padding: 15px; 
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+
+        .glass-card {
+            background: var(--glass-bg); 
+            padding: 20px; 
+            border-radius: 20px;
+            border: 1px solid var(--glass-border); 
+            backdrop-filter: blur(12px);
+            box-shadow: var(--shadow); 
+            height: fit-content;
+            box-sizing: border-box;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .grid-layout { 
+            display: flex;
+            flex-direction: column;
+            gap: 20px; 
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        @media (min-width: 1024px) { 
+            .grid-layout { 
+                display: grid;
+                grid-template-columns: 1.3fr 0.7fr; 
+            } 
+            .full-width-card { grid-column: 1 / -1; }
+        }
+
+        .section-title { 
+            font-weight: 800; 
+            color: var(--primary-green); 
+            margin-bottom: 15px; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            font-size: 1.1rem; 
+        }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; color: var(--primary-green); }
+        
+        input, select, textarea { 
+            width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--glass-border); 
+            background: var(--card-bg); color: var(--text-color); font-family: inherit; box-sizing: border-box;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%231b6e5f' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            padding-right: 40px !important;
+            cursor: pointer;
+        }
+
+        [data-theme="dark"] select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%232ab098' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 3px rgba(27, 110, 95, 0.1);
+        }
+
+        .btn-primary { 
+            background: var(--primary-green); color: white; border: none; padding: 14px; 
+            border-radius: 12px; cursor: pointer; font-weight: 700; width: 100%; transition: 0.3s;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .history-item {
+            background: var(--card-bg); padding: 12px; border-radius: 12px; 
+            border-left: 4px solid var(--accent-sage); margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .table-wrapper { 
+            overflow-x: auto; 
+            border-radius: 12px; 
+            background: var(--card-bg);
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { text-align: left; padding: 12px; color: var(--primary-green); border-bottom: 2px solid var(--glass-border); font-size: 0.85rem; }
+        td { padding: 12px; border-bottom: 1px solid var(--glass-border); font-size: 0.85rem; }
+
+        .question-block {
+            background: var(--card-bg); 
+            margin-bottom: 15px; 
+            border: 1px solid var(--glass-border); 
+            padding: 15px;
+            border-radius: 15px;
+        }
+        
+        .options-grid {
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 10px; 
+            margin-top: 12px;
+        }
+
+        @media (min-width: 600px) {
+            .options-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .quiz-details-grid {
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 12px;
+        }
+
+        @media (min-width: 600px) {
+            .quiz-details-grid { grid-template-columns: 1fr 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-logo">
+        <i class="fa-solid fa-graduation-cap"></i> Al-Ikroom
+    </div>
+
+    <div class="nav-right">
+        <a href="dashboard-teacher.html" class="nav-btn-icon" title="Dashboard">
+            <i class="fa-solid fa-house"></i>
+        </a>
+        <button class="theme-toggle" id="themeToggle">
+            <i class="fa-solid fa-moon"></i>
+        </button>
+    </div>
+</nav>
+
+<main class="container">
+    <div class="grid-layout">
+        <div class="glass-card">
+            <h3 class="section-title" id="formHeader"><i class="fa-solid fa-plus-circle"></i> New Quiz</h3>
+            
+            <div class="quiz-details-grid">
+                <div class="form-group">
+                    <label>Quiz Title</label>
+                    <input type="text" id="quizTitle" placeholder="e.g. Arabic Grammar 1">
+                </div>
+                <div class="form-group">
+                    <label>Duration (Mins)</label>
+                    <input type="number" id="quizDuration" value="30">
+                </div>
+                <div class="form-group">
+                    <label>Target Course</label>
+                    <select id="quizCourseSelect">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group" style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: rgba(27, 110, 95, 0.05); padding: 15px; border-radius: 15px; border: 1px dashed var(--primary-green);">
+                <div style="grid-column: 1 / -1; font-weight: 800; font-size: 0.75rem; color: var(--primary-green); text-transform: uppercase; margin-bottom: 5px;">
+                    <i class="fa-solid fa-clock"></i> Access Permissions
+                </div>
+                <div>
+                    <label>Student Start Time</label>
+                    <input type="datetime-local" id="quizStartTime" required>
+                </div>
+                <div>
+                    <label>Submission Deadline</label>
+                    <input type="datetime-local" id="quizEndTime" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fa-solid fa-users"></i> Target Students</label>
+                <div style="border: 1px solid var(--glass-border); border-radius: 12px; padding: 12px; background: var(--card-bg);">
+                    <input type="text" id="studentSearch" placeholder="Search..." 
+                           style="margin-bottom: 10px; padding: 10px; font-size: 0.9rem;">
+                    
+                    <div id="checkboxList" style="max-height: 200px; overflow-y: auto;">
+                        <div class="student-item" style="padding: 8px 0;">
+                            <label style="display: flex; align-items: center; gap: 10px; margin: 0; cursor: pointer;">
+                                <input type="checkbox" id="selectAllStudents" value="all" checked style="width: 18px; height: 18px; cursor: pointer;"> 
+                                <strong>All Students</strong>
+                            </label>
+                        </div>
+                        <div id="individualStudents"></div>
+                    </div>
+                </div>
+            </div>
+
+            <hr style="opacity: 0.1; margin: 20px 0;">
+            <h3 class="section-title"><i class="fa-solid fa-list-check"></i> Questions</h3>
+
+            <div id="questionsWrapper">
+                <p style="text-align: center; opacity: 0.5; font-size: 0.9rem;">No questions added.</p>
+            </div>
+
+            <div style="display: flex; gap: 10px; flex-direction: column; margin-top: 20px;">
+                <button type="button" onclick="addNewQuestion()" class="btn-primary" style="background: var(--accent-sage);">
+                    <i class="fa-solid fa-plus"></i> Add Question
+                </button>
+                <button type="button" id="quizSubmitBtn" onclick="saveFullQuiz()" class="btn-primary">
+                    <i class="fa-solid fa-floppy-disk"></i> Publish Quiz
+                </button>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <h3 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> History</h3>
+            <div id="quizHistoryList">
+                <p style="text-align: center; opacity: 0.5;">Loading...</p>
+            </div>
+        </div>
+
+        <div class="glass-card full-width-card">
+            <h3 class="section-title"><i class="fa-solid fa-chart-simple"></i> Performance</h3>
+            <div class="table-wrapper">
+                <table id="quizResultsTable">
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Quiz</th>
+                            <th>Course</th>
+                            <th>Score</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quizResultsTableBody">
+                        <tr><td colspan="6" style="text-align: center; padding: 20px;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+// Custom Alert Logic
+(function() {
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .als-alert-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 9999; }
+        .als-alert-overlay.active { display: flex; }
+        .als-alert-box { background: var(--card-bg, #fff); padding: 35px; border-radius: 35px; text-align: center; max-width: 420px; width: 90%; border-top: 6px solid var(--primary-green); }
+        .als-alert-btn { width: 100%; padding: 14px; background: var(--primary-green); color: #fff; border: none; border-radius: 50px; cursor: pointer; margin-top: 20px; }
+    `;
+    document.head.appendChild(style);
+
+    window.alert = function(message) {
+        const overlay = document.createElement('div');
+        overlay.className = 'als-alert-overlay active';
+        overlay.innerHTML = `
+            <div class="als-alert-box">
+                <i class="fas fa-exclamation-circle" style="font-size:3rem; color:var(--primary-green);"></i>
+                <div style="font-size:1.4rem; font-weight:700; margin: 15px 0; color:var(--primary-green);">Notification</div>
+                <div style="line-height:1.5;">${message}</div>
+                <button class="als-alert-btn">Understood</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        overlay.querySelector('button').onclick = () => document.body.removeChild(overlay);
+    };
+})();
+</script>
+
+<script>
+    const API_BASE = "https://alikroomislamicinstitute.onrender.com/api/teacher";
+    const themeToggle = document.getElementById('themeToggle');
+
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+
+    themeToggle.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeIcon(newTheme);
+    });
+
+    function updateThemeIcon(theme) {
+        const icon = themeToggle.querySelector('i');
+        icon.className = theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+    }
+
+    function getAuthHeaders() {
+        return {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+        };
+    }
+
+    let questionCount = 0;
+    let courseData = []; 
+    let editingQuizId = null;
+
+    async function initPage() {
+        await fetchTeacherProfile();
+        await loadCourseStudentData(); 
+        await loadQuizHistory(); 
+        await loadQuizResults();
+    }
+
+    async function fetchTeacherProfile() {
+        try {
+            const response = await fetch(`${API_BASE}/dashboard-data`, { headers: getAuthHeaders() });
+            const data = await response.json();
+            if (data.success) {
+                const options = (data.managedCourses || []).map(c => {
+                    const name = typeof c === 'string' ? c : c.name;
+                    return `<option value="${name}">${name}</option>`;
+                }).join('');
+                document.getElementById('quizCourseSelect').innerHTML = '<option value="" disabled selected>Select Course</option>' + options;
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    async function loadCourseStudentData() {
+        try {
+            const response = await fetch(`${API_BASE}/my-courses-students`, { headers: getAuthHeaders() });
+            courseData = await response.json();
+        } catch (err) { console.error(err); }
+    }
+
+    document.getElementById('quizCourseSelect').addEventListener('change', (e) => {
+        populateStudentList(e.target.value);
+    });
+
+    function populateStudentList(selectedCourseName) {
+        const container = document.getElementById('individualStudents');
+        const selectAllBox = document.getElementById('selectAllStudents');
+        const courseMatch = courseData.find(c => c.courseName === selectedCourseName);
+        const students = courseMatch ? courseMatch.students : [];
+
+        if (students.length === 0) {
+            container.innerHTML = '<p style="padding:10px; color:#888; font-size:0.8rem;">No students enrolled.</p>';
+            return;
+        }
+
+        container.innerHTML = students.map(s => `
+            <div class="student-item" style="padding: 5px 0;">
+                <label style="display:flex; align-items:center; gap:10px; font-weight:normal; color:var(--text-color);">
+                    <input type="checkbox" class="student-checkbox" value="${s._id}" ${selectAllBox.checked ? 'disabled' : ''}>
+                    <span>${s.name}</span>
+                </label>
+            </div>
+        `).join('');
+
+        selectAllBox.onchange = (ev) => {
+            document.querySelectorAll('.student-checkbox').forEach(box => {
+                if(ev.target.checked) box.checked = false;
+                box.disabled = ev.target.checked;
+            });
+        };
+    }
+
+    function addNewQuestion() {
+        questionCount++;
+        const wrapper = document.getElementById('questionsWrapper');
+        if(questionCount === 1) wrapper.innerHTML = '';
+
+        const qHtml = `
+            <div class="question-block" id="qBlock-${questionCount}">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <span style="font-weight: 800; color: var(--primary-green); font-size:0.9rem;">Q${questionCount}</span>
+                    <button onclick="removeQuestion(${questionCount})" style="color: var(--danger); background: none; border: none; cursor: pointer;"><i class="fa-solid fa-trash"></i></button>
+                </div>
+                <textarea id="qText-${questionCount}" rows="2" placeholder="Question text..."></textarea>
+                <div class="options-grid">
+                    <input type="text" id="q${questionCount}-optA" placeholder="A">
+                    <input type="text" id="q${questionCount}-optB" placeholder="B">
+                    <input type="text" id="q${questionCount}-optC" placeholder="C">
+                    <input type="text" id="q${questionCount}-optD" placeholder="D">
+                </div>
+                <div style="margin-top: 10px;">
+                    <label>Correct Answer:</label>
+                    <select id="q${questionCount}-correct" style="padding: 8px;">
+                        <option value="0">A</option><option value="1">B</option>
+                        <option value="2">C</option><option value="3">D</option>
+                    </select>
+                </div>
+            </div>
+        `;
+        wrapper.insertAdjacentHTML('beforeend', qHtml);
+    }
+
+    function removeQuestion(id) {
+        const el = document.getElementById(`qBlock-${id}`);
+        if(el) el.remove();
+    }
+
+    async function deleteQuiz(quizId) {
+        if (!confirm("Are you sure you want to delete this quiz?")) return;
+        try {
+            const response = await fetch(`${API_BASE}/assessments/${quizId}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+            const data = await response.json();
+            if (data.success) {
+                const element = document.getElementById(`item-${quizId}`);
+                if (element) element.remove();
+                alert("Quiz deleted successfully");
+            } else {
+                alert("Error: " + data.message);
+            }
+        } catch (err) {
+            console.error("Delete Error:", err);
+            alert("Failed to delete quiz.");
+        }
+    }
+
+    async function editQuiz(quizId) {
+        try {
+            const response = await fetch(`${API_BASE}/my-assessments`, { headers: getAuthHeaders() });
+            const data = await response.json();
+            const quiz = data.assessments.find(a => a._id === quizId);
+
+            if (!quiz) return alert("Quiz not found");
+
+            editingQuizId = quizId;
+            
+            document.getElementById('formHeader').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Editing: ${quiz.title}`;
+            document.getElementById('quizTitle').value = quiz.title;
+            document.getElementById('quizDuration').value = quiz.duration;
+            document.getElementById('quizCourseSelect').value = quiz.courseName;
+            
+            if (quiz.startTime) document.getElementById('quizStartTime').value = new Date(quiz.startTime).toISOString().slice(0, 16);
+            if (quiz.deadline) document.getElementById('quizEndTime').value = new Date(quiz.deadline).toISOString().slice(0, 16);
+
+            // Handle Target Students checkboxes
+            const selectAllBox = document.getElementById('selectAllStudents');
+            populateStudentList(quiz.courseName);
+
+            if (!quiz.eligibleStudents || quiz.eligibleStudents.length === 0) {
+                selectAllBox.checked = true;
+                document.querySelectorAll('.student-checkbox').forEach(box => box.disabled = true);
+            } else {
+                selectAllBox.checked = false;
+                document.querySelectorAll('.student-checkbox').forEach(box => {
+                    box.disabled = false;
+                    if (quiz.eligibleStudents.includes(box.value)) box.checked = true;
+                });
+            }
+
+            const wrapper = document.getElementById('questionsWrapper');
+            wrapper.innerHTML = '';
+            questionCount = 0;
+
+            quiz.quizData.forEach((q, index) => {
+                addNewQuestion();
+                const i = index + 1;
+                document.getElementById(`qText-${i}`).value = q.questionText;
+                document.getElementById(`q${i}-optA`).value = q.options[0];
+                document.getElementById(`q${i}-optB`).value = q.options[1];
+                document.getElementById(`q${i}-optC`).value = q.options[2];
+                document.getElementById(`q${i}-optD`).value = q.options[3];
+                document.getElementById(`q${i}-correct`).value = q.correctAnswer;
+            });
+
+            document.getElementById('quizSubmitBtn').innerHTML = '<i class="fa-solid fa-pen"></i> Update Quiz';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        } catch (err) {
+            console.error(err);
+            alert("Failed to load quiz for editing");
+        }
+    }
+
+    async function loadQuizResults() {
+        try {
+            const response = await fetch(`${API_BASE}/quiz-results`, { headers: getAuthHeaders() });
+            const data = await response.json();
+            if (data.success) {
+                const tbody = document.getElementById('quizResultsTableBody');
+                if (data.results.length > 0) {
+                    tbody.innerHTML = data.results.map(r => `
+                        <tr>
+                            <td>
+                                <div style="font-weight: 700; color: var(--primary-green);">${r.studentName}</div>
+                                <div style="font-size: 0.75rem; opacity: 0.6;">${r.registrationNumber}</div>
+                            </td>
+                            <td>${r.quizTitle}</td>
+                            <td>${r.courseName}</td>
+                            <td><strong>${r.score}</strong> / ${r.totalPossible}</td>
+                            <td>${new Date(r.submittedAt).toLocaleDateString()}</td>
+                            <td>
+                                <button onclick="deleteSubmission('${r.assessmentId}', '${r.submissionId}')" style="color: var(--danger); background: none; border: none; cursor: pointer;">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">No results found.</td></tr>';
+                }
+            }
+        } catch (err) { 
+            console.error("Error loading results:", err);
+            document.getElementById('quizResultsTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">Error loading performance data.</td></tr>'; 
+        }
+    }
+
+    async function deleteSubmission(assessmentId, submissionId) {
+        if (!confirm("Are you sure you want to delete this student's result? This action cannot be undone.")) return;
+        try {
+            const res = await fetch(`${API_BASE}/quiz-submission/${assessmentId}/${submissionId}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert("Submission deleted successfully");
+                loadQuizResults();
+            } else {
+                alert("Error: " + (data.message || "Failed to delete"));
+            }
+        } catch (err) {
+            console.error("Delete error:", err);
+            alert("Failed to connect to server.");
+        }
+    }
+
+    async function loadQuizHistory() {
+        const historyList = document.getElementById('quizHistoryList');
+        try {
+            const response = await fetch(`${API_BASE}/my-assessments`, { headers: getAuthHeaders() });
+            const data = await response.json();
+            if (data.success) {
+                const quizzes = data.assessments.filter(a => a.type === 'Quiz');
+                historyList.innerHTML = quizzes.length > 0 ? quizzes.map(item => `
+                    <div class="history-item" id="item-${item._id}">
+                        <div style="overflow:hidden;">
+                            <div style="font-weight: 800; font-size: 0.85rem; white-space:nowrap; text-overflow:ellipsis;">${item.title}</div>
+                            <small style="opacity: 0.6;">${item.courseName}</small>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button onclick="editQuiz('${item._id}')" style="color: var(--primary-green); background:none; border:none; cursor:pointer;">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="deleteQuiz('${item._id}')" style="color: var(--danger); background:none; border:none; cursor:pointer;">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('') : '<p style="text-align:center; opacity:0.5; font-size:0.9rem;">No history.</p>';
+            }
+        } catch (err) { historyList.innerHTML = '<p style="color:red; text-align:center;">Error.</p>'; }
+    }
+
+    async function saveFullQuiz() {
+        const btn = document.getElementById('quizSubmitBtn');
+        const title = document.getElementById('quizTitle').value;
+        const courseName = document.getElementById('quizCourseSelect').value;
+        const startTimeInput = document.getElementById('quizStartTime').value;
+        const endTimeInput = document.getElementById('quizEndTime').value;
+        
+        if (!title || !courseName || !startTimeInput || !endTimeInput) {
+            return alert("Fill all fields including Start and End times.");
+        }
+
+        // Restored .toISOString() for hour shifting/UTC handling
+        const startTimeISO = new Date(startTimeInput).toISOString();
+        const endTimeISO = new Date(endTimeInput).toISOString();
+
+        const questions = [];
+        for (let i = 1; i <= questionCount; i++) {
+            const qBlock = document.getElementById(`qBlock-${i}`);
+            if (!qBlock) continue;
+            questions.push({
+                questionText: document.getElementById(`qText-${i}`).value,
+                options: [
+                    document.getElementById(`q${i}-optA`).value || "A",
+                    document.getElementById(`q${i}-optB`).value || "B",
+                    document.getElementById(`q${i}-optC`).value || "C",
+                    document.getElementById(`q${i}-optD`).value || "D"
+                ],
+                correctAnswer: parseInt(document.getElementById(`q${i}-correct`).value),
+                points: 1
+            });
+        }
+
+        if (questions.length === 0) return alert("Add at least one question.");
+        
+        btn.disabled = true;
+        btn.innerHTML = editingQuizId ? '<i class="fa-solid fa-spinner fa-spin"></i> Updating...' : '<i class="fa-solid fa-spinner fa-spin"></i> Publishing...';
+
+        try {
+            const payload = {
+                title, 
+                courseName, 
+                type: 'Quiz', 
+                deadline: endTimeISO, 
+                duration: parseInt(document.getElementById('quizDuration').value) || 30,
+                quizData: questions,
+                startTime: startTimeISO, 
+                endTime: endTimeISO,     
+                eligibleStudents: document.getElementById('selectAllStudents').checked ? ['all'] : 
+                                 Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb => cb.value)
+            };
+
+            const url = editingQuizId ? `${API_BASE}/assessments/${editingQuizId}` : `${API_BASE}/create-assessment`;
+            const method = editingQuizId ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: getAuthHeaders(),
+                body: JSON.stringify(payload)
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                alert(editingQuizId ? "Quiz Updated Successfully!" : "Quiz Published Successfully!");
+                editingQuizId = null;
+                location.reload();
+            } else {
+                alert("Error: " + result.message);
+            }
+        } catch (err) { 
+            alert("Failed to save."); 
+        } finally { 
+            btn.disabled = false; 
+            btn.innerHTML = editingQuizId ? '<i class="fa-solid fa-floppy-disk"></i> Update Quiz' : '<i class="fa-solid fa-floppy-disk"></i> Publish Quiz'; 
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', initPage);
+
+    async function clearMonthlyRoster(courseName) {
+        if (!confirm(`Are you sure you want to delete ALL attendance records for ${courseName} from this month?`)) return;
+        try {
+            const response = await fetch(`${API_BASE}/clear-monthly-attendance/${encodeURIComponent(courseName)}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert(result.message);
+                location.reload();
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+</script>
+</body>
+</html>

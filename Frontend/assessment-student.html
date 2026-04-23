@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Assessments - Al-Ikroom</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Light Theme Tokens */
+            --primary-green: #1b6e5f;
+            --accent-sage: #82b366;
+            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --glass-border: rgba(0, 0, 0, 0.08);
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --danger: #e11d48;
+            --nav-bg: rgba(255, 255, 255, 0.8);
+        }
+
+        [data-theme="dark"] {
+            /* Dark Theme Tokens */
+            --primary-green: #2ab098;
+            --accent-sage: #a3cfbb;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+            --card-bg: #1e293b;
+            --text-color: #f1f5f9;
+            --glass-bg: rgba(30, 41, 59, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --nav-bg: rgba(15, 23, 42, 0.8);
+            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        body { 
+            margin: 0; 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--bg-gradient); 
+            color: var(--text-color); 
+            min-height: 100vh;
+            padding-bottom: 50px; 
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+
+        /* Navbar Style Matching Dashboard */
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 5%;
+            background: var(--nav-bg);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            margin-bottom: 30px;
+        }
+
+        .theme-toggle {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--primary-green);
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: 0.3s;
+        }
+        .theme-toggle:hover { transform: rotate(15deg) scale(1.1); }
+
+        .container { padding: 0 5%; max-width: 1200px; margin: 0 auto; }
+
+        .page-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 30px; flex-wrap: wrap; gap: 15px;
+        }
+
+        .back-link {
+            text-decoration: none; color: var(--primary-green); font-weight: 700;
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--glass-bg); padding: 10px 18px; border-radius: 12px;
+            border: 1px solid var(--glass-border); transition: 0.3s;
+        }
+        .back-link:hover { transform: translateX(-5px); background: var(--primary-green); color: white; }
+
+        .grid-layout { display: grid; grid-template-columns: 1fr; gap: 25px; }
+        @media (min-width: 1024px) { .grid-layout { grid-template-columns: 1.3fr 0.7fr; } }
+
+        .glass-card {
+            background: var(--glass-bg); padding: 25px; border-radius: 24px;
+            border: 1px solid var(--glass-border); backdrop-filter: blur(12px);
+            box-shadow: var(--shadow); height: fit-content; margin-bottom: 20px;
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+
+        .section-title { font-weight: 800; color: var(--primary-green); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 1.2rem; }
+
+        .assessment-item {
+            background: var(--card-bg); padding: 20px; border-radius: 18px; 
+            border: 1px solid var(--glass-border); margin-bottom: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .assessment-item:hover { transform: translateY(-5px); box-shadow: var(--shadow); border-color: var(--primary-green); }
+
+        .badge {
+            padding: 5px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 700;
+            text-transform: uppercase;
+        }
+        .badge-quiz { background: #dcfce7; color: #166534; }
+        [data-theme="dark"] .badge-quiz { background: #064e3b; color: #34d399; }
+        .badge-file { background: #e0f2fe; color: #075985; }
+        [data-theme="dark"] .badge-file { background: #0c4a6e; color: #38bdf8; }
+
+        .btn-action {
+            background: var(--primary-green); color: white; border: none; padding: 12px 24px;
+            border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s;
+            font-family: inherit;
+        }
+        .btn-action:hover { opacity: 0.9; transform: scale(1.05); box-shadow: 0 10px 20px -10px var(--primary-green); }
+        .btn-action:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; transform: none; opacity: 0.6; }
+
+        .btn-cancel {
+            background: transparent; color: var(--text-color); border: 1px solid var(--glass-border);
+            padding: 12px 24px; border-radius: 12px; font-weight: 600; cursor: pointer;
+            transition: 0.3s; width: 100%; margin-top: 10px; font-family: inherit;
+        }
+        .btn-cancel:hover { background: rgba(225, 29, 72, 0.05); color: var(--danger); border-color: var(--danger); }
+
+        .hidden { display: none !important; }
+        
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000; padding: 20px;
+        }
+        .modal-content {
+            background: var(--card-bg); width: 100%; max-width: 450px;
+            padding: 35px; border-radius: 28px; position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes modalPop {
+            from { opacity: 0; transform: translateY(20px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Quiz UI Enhancements */
+        .quiz-option-card {
+            display: flex; align-items: center; gap: 12px; background: var(--card-bg); 
+            padding: 15px; border-radius: 12px; cursor: pointer; border: 1px solid var(--glass-border); 
+            transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .quiz-option-card:hover { border-color: var(--primary-green); background: rgba(27, 110, 95, 0.05); }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: var(--glass-border);
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-green), var(--accent-sage));
+            width: 0%;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .quiz-option-card input[type="radio"]:checked + span {
+            color: var(--primary-green);
+            font-weight: 700;
+        }
+
+        .quiz-option-card:has(input[type="radio"]:checked) {
+            border-color: var(--primary-green);
+            background: rgba(27, 110, 95, 0.1);
+            transform: scale(1.02);
+        }
+
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .quiz-step:not(.hidden) {
+            animation: fadeInRight 0.4s ease-out;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="top-nav">
+    <div style="font-weight: 800; color: var(--primary-green); font-size: 1.4rem;">
+        <i class="fa-solid fa-graduation-cap"></i> My Assessments
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">
+        <i class="fa-solid fa-moon"></i>
+    </button>
+</nav>
+
+<main class="container" id="main-view">
+    <div class="page-header">
+        <a href="dashboard-student.html" class="back-link">
+            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <h2 class="section-title" style="margin:0;">My Assessments</h2>
+    </div>
+
+    <div class="grid-layout">
+        <div class="left-col">
+            <div class="glass-card">
+                <h3 class="section-title"><i class="fa-solid fa-clock"></i> Active Tasks</h3>
+                <div id="activeList">
+                    <p style="opacity:0.6; text-align:center; padding:20px;">Fetching assessments...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-col">
+            <div class="glass-card">
+                <h3 class="section-title"><i class="fa-solid fa-check-double"></i> Completed</h3>
+                <div id="completedList">
+                    <p style="opacity:0.5; font-size:0.8rem; text-align:center;">No submissions yet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div id="submissionModal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <h3 class="section-title" style="margin-top:0;"><i class="fa-solid fa-upload"></i> Submit Work</h3>
+        <p id="modalTaskTitle" style="font-weight:800; color: var(--primary-green); margin-bottom:5px; font-size: 1.1rem;"></p>
+        <p id="modalTaskDesc" style="font-size:0.85rem; opacity:0.7; margin-bottom:25px; line-height:1.4;"></p>
+        
+        <form id="submissionForm">
+            <input type="hidden" id="submitId">
+            <div id="fileUploadArea" style="border: 2px dashed var(--glass-border); padding: 30px; text-align: center; border-radius: 20px; margin-bottom: 25px; background: rgba(0,0,0,0.02);">
+                <i class="fa-solid fa-file-pdf" style="font-size: 2rem; color: var(--primary-green); margin-bottom: 15px; opacity: 0.5;"></i>
+                <input type="file" id="submitFile" style="width: 100%; font-size: 0.85rem;" required>
+            </div>
+            <button type="submit" class="btn-action" style="width:100%;">Upload Submission</button>
+            <button type="button" class="btn-cancel" onclick="closeModal()">Cancel & Close</button>
+        </form>
+    </div>
+</div>
+
+<main class="container hidden" id="quiz-view">
+    <div class="glass-card" style="max-width: 800px; margin: 0 auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+                <h2 id="activeQuizTitle" class="section-title" style="margin:0;">Quiz</h2>
+                <p id="question-progress" style="font-size: 0.85rem; opacity: 0.7; margin-top: 5px;">Question 1 of 1</p>
+            </div>
+            <div id="timer" style="font-weight: 800; color: var(--danger); font-size: 1.3rem; background: rgba(225,29,72,0.1); padding: 5px 15px; border-radius: 10px;">00:00</div>
+        </div>
+
+        <div id="quizContent"></div>
+
+        <div style="display: flex; gap: 15px; margin-top: 30px; border-top: 1px solid var(--glass-border); padding-top: 20px;">
+            <button id="prevBtn" class="btn-cancel" style="margin-top:0; flex: 1;" onclick="changeQuestion(-1)">
+                <i class="fa-solid fa-chevron-left"></i> Previous
+            </button>
+            <button id="nextBtn" class="btn-action" style="flex: 1;" onclick="changeQuestion(1)">
+                Next <i class="fa-solid fa-chevron-right"></i>
+            </button>
+            <button id="submitQuizBtn" class="btn-action hidden" style="flex: 1; background: var(--accent-sage);">
+                Finish & Submit
+            </button>
+        </div>
+    </div>
+</main>
+
+<script>
+// Custom Alerts Logic
+(function() {
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .als-alert-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 9999; }
+        .als-alert-overlay.active { display: flex; }
+        .als-alert-box { background: var(--card-bg, #fff); padding: 35px; border-radius: 35px; text-align: center; max-width: 420px; width: 90%; border-top: 6px solid var(--primary-green); }
+        .als-alert-btn { width: 100%; padding: 14px; background: var(--primary-green); color: #fff; border: none; border-radius: 50px; cursor: pointer; margin-top: 20px; }
+    `;
+    document.head.appendChild(style);
+
+    window.alert = function(message) {
+        const overlay = document.createElement('div');
+        overlay.className = 'als-alert-overlay active';
+        overlay.innerHTML = `
+            <div class="als-alert-box">
+                <i class="fas fa-exclamation-circle" style="font-size:3rem; color:var(--primary-green);"></i>
+                <div style="font-size:1.4rem; font-weight:700; margin: 15px 0; color:var(--primary-green);">Notification</div>
+                <div style="line-height:1.5;">${message}</div>
+                <button class="als-alert-btn">Understood</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        overlay.querySelector('button').onclick = () => document.body.removeChild(overlay);
+    };
+})();
+</script>
+
+<script>
+    const API_BASE = "https://alikroomislamicinstitute.onrender.com/api/student";
+    let currentQuizId = null;
+    let timerInterval;
+    let allAssessments = [];
+    let serverTimeOffset = 0; 
+    
+    let currentQuestionIndex = 0;
+    let totalQuestions = 0;
+
+    // --- THEME ENGINE ---
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        applyTheme(newTheme);
+    }
+
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        const btn = document.getElementById('theme-btn');
+        btn.innerHTML = theme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+    }
+
+    async function init() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        applyTheme(savedTheme);
+        await loadAssessments();
+    }
+
+    // --- CORE LOGIC ---
+    async function loadAssessments() {
+        const activeContainer = document.getElementById('activeList');
+        const completedContainer = document.getElementById('completedList');
+        
+        try {
+            const res = await fetch(`${API_BASE}/assessments`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                // SYNC: Calculate offset between user device and global server time
+                if (data.serverTime) {
+                    serverTimeOffset = new Date(data.serverTime) - new Date();
+                }
+
+                allAssessments = data.pending;
+                if (data.pending.length === 0) {
+                    activeContainer.innerHTML = '<p style="opacity:0.6; text-align:center;">No pending assessments found.</p>';
+                } else {
+                    activeContainer.innerHTML = data.pending.map(asm => {
+                        const hasAttachment = asm.fileUrl && asm.type !== 'Quiz';
+                        const fullFileUrl = hasAttachment ? `https://alikroomislamicinstitute.onrender.com${asm.fileUrl}` : '#';
+                        
+                        // CURRENT TIME CALCULATION
+                        const now = new Date(Date.now() + serverTimeOffset);
+                        const start = asm.startTime ? new Date(asm.startTime) : null;
+                        const end = asm.endTime ? new Date(asm.endTime) : new Date(asm.deadline);
+
+                        let isLocked = false;
+                        let scheduleMsg = '';
+                        let btnText = asm.type === 'Quiz' ? 'Start CBT' : 'Submit';
+
+                        if (asm.type === 'Quiz' && start) {
+                            // Formatting for display (Automatically handles student's local timezone)
+                            const timeString = start.toLocaleTimeString([], { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                            });
+
+                            if (now < start) {
+                                isLocked = true;
+                                scheduleMsg = `<span style="color:var(--danger); font-size:0.75rem; font-weight:700;"><i class="fa-solid fa-lock"></i> Opens at ${timeString}</span>`;
+                            } else if (now > end) {
+                                isLocked = true;
+                                scheduleMsg = `<span style="color:var(--danger); font-size:0.75rem; font-weight:700;"><i class="fa-solid fa-clock-rotate-left"></i> Session Closed</span>`;
+                            } else {
+                                scheduleMsg = `<span style="color:var(--accent-sage); font-size:0.75rem; font-weight:700;"><i class="fa-solid fa-unlock"></i> Available until ${new Date(end).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>`;
+                            }
+                        }
+
+                        return `
+                            <div class="assessment-item" style="flex-direction: column; align-items: flex-start; gap: 15px;">
+                                <div style="width: 100%; display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div>
+                                        <span class="badge ${asm.type === 'Quiz' ? 'badge-quiz' : 'badge-file'}">${asm.type}</span>
+                                        <div style="font-weight: 800; margin-top: 8px; font-size:1.1rem;">${asm.title}</div>
+                                        <small style="opacity:0.6;">${asm.courseName} • Due: ${new Date(asm.deadline).toLocaleDateString()}</small>
+                                        <div style="margin-top:5px;">${scheduleMsg}</div>
+                                    </div>
+                                    <button class="btn-action" ${isLocked ? 'disabled style="background:#cbd5e1; color:#64748b;"' : ''} onclick="handleAction('${asm._id}', '${asm.type}')">
+                                        ${isLocked ? 'Locked' : btnText}
+                                    </button>
+                                </div>
+                                ${hasAttachment ? `
+                                <div style="display: flex; gap: 10px; width: 100%; border-top: 1px solid var(--glass-border); padding-top: 15px;">
+                                    <a href="${fullFileUrl}" target="_blank" class="btn-cancel" style="flex: 1; text-align: center; text-decoration: none; margin-top:0; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                        <i class="fa-solid fa-eye"></i> View Question
+                                    </a>
+                                    <a href="${fullFileUrl}" download class="btn-cancel" style="flex: 1; text-align: center; text-decoration: none; margin-top:0; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                        <i class="fa-solid fa-download"></i> Download
+                                    </a>
+                                </div>
+                                ` : ''}
+                            </div>`;
+                    }).join('');
+                }
+
+                if (data.completed.length === 0) {
+                    completedContainer.innerHTML = '<p style="opacity:0.5; font-size:0.8rem; text-align:center;">No submissions yet.</p>';
+                } else {
+                    completedContainer.innerHTML = data.completed.map(asm => {
+                        const submitDate = new Date(asm.submittedAt);
+                        const hoursSinceSubmission = (new Date() - submitDate) / (1000 * 60 * 60);
+                        const showScore = asm.type === 'Quiz' && hoursSinceSubmission <= 24;
+
+                        return `
+                            <div class="assessment-item" style="padding: 15px; margin-bottom: 10px; opacity: 0.8;">
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 700; font-size: 0.9rem;">${asm.title}</div>
+                                    <div style="font-size: 0.75rem; opacity: 0.6;">${asm.courseName}</div>
+                                    <div style="font-size: 0.7rem; color: var(--primary-green); margin-top: 5px;">
+                                        <i class="fa-solid fa-circle-check"></i> Submitted ${submitDate.toLocaleDateString()}
+                                    </div>
+                                </div>
+                                ${showScore ? `
+                                    <div style="text-align: right;">
+                                        <div style="font-weight: 800; color: var(--primary-green); font-size: 1.1rem;">${asm.score}/${asm.totalPossible}</div>
+                                        <div style="font-size: 0.6rem; text-transform: uppercase; opacity: 0.5;">Score (24h)</div>
+                                    </div>
+                                ` : (asm.type === 'Quiz' ? `
+                                    <div style="font-size: 0.7rem; opacity: 0.5; font-style: italic;">Score expired</div>
+                                ` : '')}
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+        } catch (err) {
+            activeContainer.innerHTML = '<p style="color:var(--danger); text-align:center;">Unable to connect to server.</p>';
+        }
+    }
+
+    function handleAction(id, type) {
+        if (type === 'Quiz') startQuiz(id);
+        else openSubmissionModal(id);
+    }
+
+    function openSubmissionModal(id) {
+        const assessment = allAssessments.find(a => a._id === id);
+        if (assessment) {
+            document.getElementById('modalTaskTitle').innerText = assessment.title;
+            document.getElementById('modalTaskDesc').innerText = assessment.description || `Please upload your completed file.`;
+            document.getElementById('submitId').value = id;
+            document.getElementById('submissionModal').classList.remove('hidden');
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('submissionModal').classList.add('hidden');
+        document.getElementById('submissionForm').reset();
+    }
+
+    document.getElementById('submissionForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('submitId').value;
+        const formData = new FormData();
+        formData.append('file', document.getElementById('submitFile').files[0]);
+
+        try {
+            const res = await fetch(`${API_BASE}/submit-assessment/${id}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                body: formData
+            });
+            const result = await res.json();
+            if (result.success) { alert("Success! Your submission has been received."); location.reload(); }
+            else alert("Upload failed: " + result.message);
+        } catch (err) { alert("Server error during upload."); }
+    };
+
+    // --- UPDATED QUIZ FUNCTIONS ---
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function startQuiz(id) {
+        const quiz = allAssessments.find(a => a._id === id);
+        if (!quiz) return;
+
+        // FINAL SECURITY CHECK BEFORE STARTING
+        const now = new Date(Date.now() + serverTimeOffset);
+        const start = quiz.startTime ? new Date(quiz.startTime) : null;
+        const end = quiz.endTime ? new Date(quiz.endTime) : new Date(quiz.deadline);
+
+        if (start && now < start) {
+            alert(`Patience! This quiz isn't open yet. It starts at ${start.toLocaleTimeString()}`);
+            return;
+        }
+        if (now > end) {
+            alert("Sorry, the time window for this quiz has closed.");
+            return;
+        }
+
+        if (!confirm(`Ready to start? You have ${quiz.duration || 30} minutes.`)) return;
+        
+        currentQuizId = id;
+        document.getElementById('main-view').classList.add('hidden');
+        document.getElementById('quiz-view').classList.remove('hidden');
+        document.getElementById('activeQuizTitle').innerText = quiz.title;
+
+        // SHUFFLE QUESTIONS
+        const shuffledQuestions = shuffleArray([...quiz.quizData]);
+        renderQuizQuestions(shuffledQuestions);
+        startTimer(quiz.duration || 30);
+    }
+
+    function renderQuizQuestions(questions) {
+        totalQuestions = questions.length;
+        currentQuestionIndex = 0;
+        
+        // Check for saved answers in LocalStorage
+        const savedAnswers = JSON.parse(localStorage.getItem(`quiz_progress_${currentQuizId}`)) || {};
+
+        const container = document.getElementById('quizContent');
+        // Inject Progress Bar and Question Container
+        container.innerHTML = `
+            <div class="progress-container"><div class="progress-bar" id="quizProgress"></div></div>
+            <div id="questionsWrapper"></div>
+        `;
+        
+        const wrapper = document.getElementById('questionsWrapper');
+        wrapper.innerHTML = questions.map((q, idx) => {
+            const savedValue = savedAnswers[idx] !== undefined ? savedAnswers[idx] : -1;
+            
+            return `
+            <div class="quiz-question quiz-step ${idx === 0 ? '' : 'hidden'}" id="step-${idx}">
+                <p style="font-weight: 700; font-size: 1.2rem; margin-bottom: 20px; line-height: 1.5;">
+                    <span style="color: var(--primary-green)">Q${idx + 1}.</span> ${q.questionText}
+                </p>
+                <div style="display: grid; gap: 12px;">
+                    ${q.options.map((opt, i) => `
+                        <label class="quiz-option-card">
+                            <input type="radio" name="q-${idx}" value="${i}" 
+                                ${savedValue == i ? 'checked' : ''} 
+                                onchange="saveProgress(${idx}, ${i})"
+                                style="accent-color: var(--primary-green); width: 20px; height: 20px;"> 
+                            <span>${opt}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>`;
+        }).join('');
+
+        updateNavigation();
+    }
+
+    function saveProgress(qIdx, choiceIdx) {
+        let saved = JSON.parse(localStorage.getItem(`quiz_progress_${currentQuizId}`)) || {};
+        saved[qIdx] = choiceIdx;
+        localStorage.setItem(`quiz_progress_${currentQuizId}`, JSON.stringify(saved));
+    }
+
+    function changeQuestion(step) {
+        const currentStep = document.getElementById(`step-${currentQuestionIndex}`);
+        if (currentStep) currentStep.classList.add('hidden');
+        
+        currentQuestionIndex += step;
+        
+        const nextStep = document.getElementById(`step-${currentQuestionIndex}`);
+        if (nextStep) nextStep.classList.remove('hidden');
+        
+        updateNavigation();
+    }
+
+    function updateNavigation() {
+        const nextBtn = document.getElementById('nextBtn');
+        const submitBtn = document.getElementById('submitQuizBtn');
+        const progressText = document.getElementById('question-progress');
+        const progressBar = document.getElementById('quizProgress');
+
+        const progressPercent = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+        if(progressBar) progressBar.style.width = `${progressPercent}%`;
+        progressText.innerText = `Question ${currentQuestionIndex + 1} of ${totalQuestions}`;
+
+        const prevBtn = document.getElementById('prevBtn');
+        prevBtn.disabled = (currentQuestionIndex === 0);
+        prevBtn.style.opacity = (currentQuestionIndex === 0) ? "0.5" : "1";
+
+        if (currentQuestionIndex === totalQuestions - 1) {
+            nextBtn.classList.add('hidden');
+            submitBtn.classList.remove('hidden');
+        } else {
+            nextBtn.classList.remove('hidden');
+            submitBtn.classList.add('hidden');
+        }
+    }
+
+    function startTimer(minutes) {
+        let seconds = minutes * 60;
+        timerInterval = setInterval(() => {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            const timerEl = document.getElementById('timer');
+            if (timerEl) {
+                timerEl.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+            if (seconds <= 0) { 
+                clearInterval(timerInterval); 
+                alert("Time is up! Submitting automatically.");
+                submitQuiz(); 
+            }
+            seconds--;
+        }, 1000);
+    }
+
+    async function submitQuiz() {
+        const answers = [];
+        document.querySelectorAll('.quiz-question').forEach((q, index) => {
+            const selected = document.querySelector(`input[name="q-${index}"]:checked`);
+            answers.push(selected ? parseInt(selected.value) : -1);
+        });
+
+        try {
+            const res = await fetch(`${API_BASE}/submit-quiz/${currentQuizId}`, {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ answers })
+            });
+            const data = await res.json();
+            if (data.success) { 
+                localStorage.removeItem(`quiz_progress_${currentQuizId}`);
+                alert(`Quiz Result: ${data.score} / ${data.totalPossible}`); 
+                location.reload(); 
+            } else { 
+                alert("Error: " + data.message); 
+            }
+        } catch (err) { alert("Error submitting quiz."); }
+    }
+
+    document.getElementById('submitQuizBtn').onclick = () => { 
+        if(confirm("Submit your answers?")) submitQuiz(); 
+    };
+
+    document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

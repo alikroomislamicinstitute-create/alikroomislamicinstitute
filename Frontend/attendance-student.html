@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance - Student Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-green: #1b6e5f;
+            --accent-sage: #82b366;
+            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --glass-border: rgba(0, 0, 0, 0.08);
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            --danger: #e11d48;
+            --success: #166534;
+            --inactive-bg: #f1f5f9;
+            --inactive-text: #19924d;
+            --header-bg: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+        }
+
+        [data-theme="dark"] {
+            --primary-green: #2ab098;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+            --card-bg: #1e293b;
+            --text-color: #f1f5f9;
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --inactive-bg: rgba(42, 176, 152, 0.1); 
+            --inactive-text: #2ab098;
+            --header-bg: #1e293b;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--bg-gradient); 
+            color: var(--text-color); 
+            margin: 0; 
+            padding: 0; 
+            min-height: 100vh;
+            transition: background 0.3s ease;
+        }
+
+        /* --- SHARED HEADER STYLING --- */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--header-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-green);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .logo-text {
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: var(--primary-green);
+            letter-spacing: -0.5px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .action-btn {
+            background: var(--inactive-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-color);
+            padding: 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-btn:hover {
+            background: var(--primary-green);
+            color: white;
+        }
+
+        /* --- CONTENT STYLING --- */
+        .container { 
+            max-width: 800px; 
+            margin: 20px auto; 
+            padding: 0 15px;
+        }
+
+        .card { 
+            background: var(--card-bg); 
+            padding: 2rem; 
+            border-radius: 24px; 
+            border: 1px solid var(--glass-border); 
+            box-shadow: var(--shadow); 
+            margin-bottom: 2rem; 
+        }
+        
+        h2, h3 { color: var(--primary-green); font-weight: 800; margin-top: 0; }
+
+        .status-badge { 
+            padding: 6px 14px; 
+            border-radius: 20px; 
+            font-weight: 700; 
+            font-size: 0.75rem; 
+            text-transform: uppercase; 
+        }
+
+        .status-active { background: #dcfce7; color: var(--success); border: 1px solid #bbf7d0; animation: pulse 2s infinite; }
+        
+        .status-inactive { 
+            background: var(--inactive-bg); 
+            color: var(--inactive-text); 
+            border: 1px solid var(--glass-border); 
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        .teacher-note-box {
+            background: rgba(27, 110, 95, 0.05);
+            border-left: 4px solid var(--primary-green);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        select, textarea { 
+            width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--glass-border); 
+            font-family: inherit; margin-top: 8px; background: var(--card-bg); color: var(--text-color);
+            box-sizing: border-box;
+            font-size: 16px; 
+        }
+
+        .btn-checkin { 
+            width: 100%; 
+            max-width: 400px;
+            padding: 16px; 
+            border-radius: 12px; 
+            border: none; 
+            background: var(--primary-green); 
+            color: white; 
+            font-weight: 800; 
+            cursor: pointer; 
+            margin: 20px auto 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: 0.3s; 
+            font-size: 1rem;
+        }
+
+        .btn-checkin:disabled { opacity: 0.6; cursor: not-allowed; background: #94a3b8; }
+        .btn-checkin:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(27, 110, 95, 0.3); }
+
+        .btn-notify {
+            background: var(--danger); color: white; border: none; padding: 12px 24px; 
+            border-radius: 10px; cursor: pointer; font-weight: 700; margin-top: 15px; width: 100%;
+        }
+
+        @media (max-width: 600px) {
+            .card { padding: 1.5rem; }
+            .logo-text { font-size: 1.1rem; }
+            header { padding: 0.75rem 1rem; }
+            .status-badge { font-size: 0.65rem; padding: 4px 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo-section">
+        <div class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+        <div class="logo-text">Al-Ikroom</div>
+    </div>
+    <div class="header-actions">
+        <button class="action-btn" id="themeToggle" onclick="toggleTheme()" title="Toggle Theme">
+            <i class="fa-solid fa-moon"></i>
+        </button>
+        <button class="action-btn" onclick="location.href='dashboard-student.html'" title="Dashboard">
+            <i class="fa-solid fa-house"></i>
+        </button>
+    </div>
+</header>
+
+<div class="container">
+    <div id="noticeBoard" class="card" style="display: none; border-left: 5px solid var(--primary-green); margin-bottom: 20px;">
+        <div class="card-header" style="color: var(--primary-green); font-weight: 800; margin-bottom: 10px;">
+            <i class="fas fa-bullhorn"></i> Important Instructor Notes
+        </div>
+        <div id="noticeList" class="card-body">
+            </div>
+    </div>
+
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+            <div>
+                <h2><i class="fa-solid fa-id-card-clip"></i> Attendance</h2>
+                <span class="status-badge status-inactive" id="liveStatus" style="margin-top: 5px;">Scanning...</span>
+            </div>
+        </div>
+        
+        <div class="card-body text-center" style="margin-top: 20px;">
+            <div id="sessionInfo" class="session-info" style="padding: 20px; background: var(--inactive-bg); border-radius: 12px; margin-bottom: 15px;">
+                <i class="fas fa-sync fa-spin"></i> Checking for active sessions...
+            </div>
+            
+            <div id="teacherNoteBox" class="teacher-note-box" style="text-align: left; margin-bottom: 15px;">
+                <strong style="display: block; margin-bottom: 5px; font-size: 0.75rem; color: var(--primary-green);">MESSAGE FROM USTADH:</strong>
+                <span id="teacherNoteText"></span>
+            </div>
+
+            <button id="checkInBtn" class="btn-checkin" onclick="submitAttendance()" disabled>
+                <i class="fas fa-check-circle"></i> Mark Presence Now
+            </button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3><i class="fa-solid fa-bell"></i> Report Absence</h3>
+        <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 15px;">Notify the instructor if you'll miss a class.</p>
+        
+        <label style="font-weight: 700; font-size: 0.85rem; opacity: 0.8;">SELECT COURSE</label>
+        <select id="reportCourseSelect">
+            <option value="">-- Choose Course --</option>
+        </select>
+
+        <label style="font-weight: 700; font-size: 0.85rem; opacity: 0.8; display: block; margin-top: 15px;">REASON FOR ABSENCE</label>
+        <textarea id="absenceReason" rows="3" placeholder="Briefly explain why..."></textarea>
+        
+        <button class="btn-notify" onclick="sendAbsenceReport()">
+            <i class="fa-solid fa-paper-plane"></i> Submit Absence Report
+        </button>
+    </div>
+</div>
+</body>
+</html>
+<script>
+    const API_BASE = 'https://alikroomislamicinstitute.onrender.com/api'; // Ensure this points to your Node server
+    let activeSessionData = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+        fetchStudentCourses();
+    });
+
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeIcon(newTheme);
+    }
+
+    function updateThemeIcon(theme) {
+        const icon = document.querySelector('#themeToggle i');
+        icon.className = theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+    }
+
+ // --- Updated fetchStudentCourses to populate the Absence Dropdown ---
+async function fetchStudentCourses() {
+    try {
+        const response = await fetch(`${API_BASE}/student/my-dashboard`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        const data = await response.json();
+        const reportSelect = document.getElementById('reportCourseSelect');
+        
+        if (data.success && data.enrolledCourses) {
+            // Reset dropdown
+            reportSelect.innerHTML = '<option value="">-- Choose Course --</option>';
+            
+            data.enrolledCourses.forEach(c => {
+                // Your controller puts the title inside c.course.title 
+                // or uses c.title as a fallback
+                const courseTitle = c.course ? c.course.title : c.title;
+                
+                if (courseTitle) {
+                    const option = document.createElement('option');
+                    option.value = courseTitle;
+                    option.textContent = courseTitle;
+                    reportSelect.appendChild(option);
+                }
+            });
+        } else {
+            reportSelect.innerHTML = '<option value="">No enrolled courses found</option>';
+        }
+    } catch (err) {
+        console.error("Error populating course dropdown:", err);
+    }
+}
+// --- Logic to send the Absence Report to the Teacher ---
+async function sendAbsenceReport() {
+    const course = document.getElementById('reportCourseSelect').value;
+    const reason = document.getElementById('absenceReason').value;
+    
+    if (!course) return alert("Please select a course.");
+    if (!reason.trim()) return alert("Please provide a reason.");
+
+    try {
+        // CHANGE: Use ${API_BASE} and ensure the endpoint matches your backend route
+        const response = await fetch(`${API_BASE}/student/notify-absence`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ courseName: course, reason: reason })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            alert("Report sent to Ustadh.");
+            document.getElementById('absenceReason').value = '';
+        } else {
+            alert(data.message || "Failed to send report.");
+        }
+    } catch (err) { 
+        console.error("Absence Report Error:", err);
+        alert("Failed to connect to server."); 
+    }
+}
+
+    async function checkSessionStatus() {
+        const courseName = document.getElementById('courseSelect').value;
+        const statusBadge = document.getElementById('liveStatus');
+        const checkInBtn = document.getElementById('checkInBtn');
+        const noteBox = document.getElementById('teacherNoteBox');
+        const noteText = document.getElementById('teacherNoteText');
+        const info = document.getElementById('sessionInfo');
+
+        if (!courseName) { resetUI(); return; }
+
+        try {
+            const response = await fetch(`${API_BASE}/api/attendance/check-active?course=${encodeURIComponent(courseName)}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const data = await response.json();
+
+            if (data.active) {
+                activeSessionData = data.session;
+                statusBadge.className = 'status-badge status-active';
+                statusBadge.textContent = 'Active Session';
+                checkInBtn.disabled = false;
+                info.textContent = `Started at ${new Date(data.session.startTime).toLocaleTimeString()}`;
+                if (data.session.teacherNote) {
+                    noteBox.style.display = 'block';
+                    noteText.textContent = data.session.teacherNote;
+                } else { noteBox.style.display = 'none'; }
+            } else {
+                activeSessionData = null;
+                statusBadge.className = 'status-badge status-inactive';
+                statusBadge.textContent = 'Inactive';
+                checkInBtn.disabled = true;
+                info.textContent = "No active portal for this course.";
+                noteBox.style.display = 'none';
+            }
+        } catch (err) { console.error("Session check failed", err); }
+    }
+
+    async function handleCheckIn() {
+        const btn = document.getElementById('checkInBtn');
+        const courseName = document.getElementById('courseSelect').value;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+
+        try {
+            const response = await fetch(`${API_BASE}/api/attendance/submit`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ courseName, sessionId: activeSessionData?._id })
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                alert("Attendance marked! Jazakallah Khair.");
+                btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Attendance Marked';
+                btn.style.background = '#166534';
+            } else {
+                alert(data.message || "Submission failed.");
+                btn.disabled = false;
+                btn.textContent = 'Mark My Attendance';
+            }
+        } catch (err) {
+            alert("Error submitting attendance.");
+            btn.disabled = false;
+        }
+    }
+
+    async function sendAbsenceReport() {
+        const course = document.getElementById('reportCourseSelect').value;
+        const reason = document.getElementById('absenceReason').value;
+        if (!course) return alert("Please select a course.");
+        try {
+            const response = await fetch(`${API_BASE}/api/student/notify-absence`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ courseName: course, reason })
+            });
+            if ((await response.json()).success) {
+                alert("Report sent.");
+                document.getElementById('absenceReason').value = '';
+            }
+        } catch (err) { alert("Failed to send report."); }
+    }
+
+    function resetUI() {
+        document.getElementById('liveStatus').className = 'status-badge status-inactive';
+        document.getElementById('liveStatus').textContent = 'Inactive';
+        document.getElementById('checkInBtn').disabled = true;
+        document.getElementById('teacherNoteBox').style.display = 'none';
+        document.getElementById('sessionInfo').textContent = "Select a course to verify status.";
+    }
+    async function loadInstructorNotes() {
+    try {
+        const response = await fetch(`${API_BASE}/student/announcements`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        const data = await response.json();
+
+        const noticeBoard = document.getElementById('noticeBoard');
+        const noticeList = document.getElementById('noticeList');
+
+        if (data.success && data.announcements.length > 0) {
+            noticeBoard.style.display = 'block';
+            noticeList.innerHTML = data.announcements.map(note => `
+                <div class="note-item" style="padding: 10px 0; border-bottom: 1px dashed #eee;">
+                    <strong style="color: var(--primary-green);">${note.title}</strong>
+                    <p style="margin: 5px 0; font-size: 0.95rem;">${note.message}</p>
+                    <small style="color: #666;">
+                        By Ustadh ${note.author.firstName} • ${new Date(note.createdAt).toLocaleTimeString()}
+                    </small>
+                </div>
+            `).join('');
+        } else {
+            noticeBoard.style.display = 'none';
+        }
+    } catch (err) {
+        console.error("Failed to load notes:", err);
+    }
+}
+
+// Call this function when the page loads
+// Auto-load everything when the student opens the page
+window.onload = async () => {
+    // CHANGE THIS: Match the actual function name in your file
+    await fetchStudentCourses(); 
+    autoCheckActiveSession(); 
+    loadInstructorNotes();    
+};
+
+async function autoCheckActiveSession() {
+    const statusBadge = document.getElementById('liveStatus');
+    const sessionInfo = document.getElementById('sessionInfo');
+    const checkInBtn = document.getElementById('checkInBtn');
+    const teacherNoteBox = document.getElementById('teacherNoteBox');
+    const teacherNoteText = document.getElementById('teacherNoteText');
+
+    try {
+        // 1. Fetch from the specific student active-session endpoint
+        const response = await fetch(`${API_BASE}/student/active-session`, {
+            headers: { 
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Cache-Control': 'no-cache' // Ensures you get fresh data
+            }
+        });
+
+        // 2. Critical Bug Prevention: Check if response is actually JSON
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Server Error or 404:", errorText);
+            resetUI(); // Clear UI if the route isn't responding correctly
+            return;
+        }
+
+        const data = await response.json();
+
+        // 3. UI Update Logic
+        if (data.success && data.activeSession) {
+            // Update Status Badge to "Live"
+            statusBadge.className = 'status-badge status-active';
+            statusBadge.textContent = 'Live Now';
+
+            // Display Course Information
+            sessionInfo.innerHTML = `<strong>${data.activeSession.courseName}</strong> is open for attendance.`;
+            
+            // Handle Teacher Notes/Broadcasts
+            if (data.activeSession.note) {
+                if (teacherNoteBox) teacherNoteBox.style.display = 'block';
+                if (teacherNoteText) teacherNoteText.textContent = data.activeSession.note;
+            } else if (teacherNoteBox) {
+                teacherNoteBox.style.display = 'none';
+            }
+
+            // Enable the Check-In Button
+            checkInBtn.disabled = false;
+            checkInBtn.innerHTML = '<i class="fa-solid fa-location-dot"></i> Check In Now';
+            
+            // Store the course name globally so the 'Mark Attendance' click knows which course to use
+            window.currentActiveCourse = data.activeSession.courseName; 
+
+        } else {
+            // No session found or already marked
+            resetUI();
+            sessionInfo.textContent = data.message || "No active attendance sessions found at the moment.";
+        }
+    } catch (err) {
+        console.error("Auto-scan connection failed:", err);
+        // Do not alert(err) here to avoid annoying the user if they have a brief flicker in internet
+    }
+}
+
+// Helper function to clear UI when no session is active
+function resetUI() {
+    const statusBadge = document.getElementById('liveStatus');
+    const checkInBtn = document.getElementById('checkInBtn');
+    const teacherNoteBox = document.getElementById('teacherNoteBox');
+
+    if (statusBadge) {
+        statusBadge.className = 'status-badge status-inactive';
+        statusBadge.textContent = 'Idle';
+    }
+    if (checkInBtn) {
+        checkInBtn.disabled = true;
+    }
+    if (teacherNoteBox) {
+        teacherNoteBox.style.display = 'none';
+    }
+    window.currentActiveCourse = null;
+}
+
+// Update the Submit function to use the auto-detected course
+async function submitAttendance() {
+    if (!window.currentActiveCourse) return;
+
+    const btn = document.getElementById('checkInBtn');
+    btn.disabled = true;
+    
+    try {
+        const response = await fetch(`${API_BASE}/student/mark-attendance`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ courseName: window.currentActiveCourse })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            alert("Attendance marked successfully!");
+            autoCheckActiveSession(); // Refresh UI
+        } else {
+            alert(data.message);
+            btn.disabled = false;
+        }
+    } catch (err) {
+        alert("Error submitting attendance.");
+        btn.disabled = false;
+    }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,886 @@
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+    <script src="js/admin_functions.js"></script>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>Admin Command Center | Al-Ikroom</title>  
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">  
+    <style>  
+        :root {  
+            --primary-green: #1b6e5f;  
+            --dark-navy: #0a143c;  
+            --bg-light: #f4f7f6;  
+            --white-glass: rgba(255, 255, 255, 0.9);  
+            --text-color: #0a143c;  
+            --header-bg: rgba(255, 255, 255, 0.98);  
+            --input-bg: #fff;  
+            --input-border: #edf2f1;  
+            --card-bg: rgba(255, 255, 255, 0.9);  
+            --error-red: #e74c3c;  
+            --sidebar-width: 280px;  
+            --gold-accent: #d4af37;
+        }  
+        
+        body.dark-mode {  
+            --primary-green: #2ab098;  
+            --dark-navy: #050a1f;  
+            --bg-light: #0f172a;  
+            --white-glass: rgba(30, 41, 59, 0.85);  
+            --text-color: #f1f5f9;  
+            --header-bg: rgba(15, 23, 42, 0.98);  
+            --input-bg: #1e293b;  
+            --input-border: #334155;  
+            --card-bg: rgba(30, 41, 59, 0.9);  
+        }  
+
+        * { box-sizing: border-box; transition: background 0.3s, color 0.3s; }  
+
+        body {  
+            margin: 0;  
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;  
+            color: var(--text-color);  
+            background: var(--bg-light);  
+            min-height: 100vh;  
+            display: flex;  
+            scroll-behavior: smooth;
+        }  
+
+        .admin-bg {  
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;  
+            background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)),  
+            url('https://images.pexels.com/photos/8164381/pexels-photo-8164381.jpeg?auto=compress&cs=tinysrgb&w=1260') center/cover fixed;  
+        }  
+
+        /* --- MODERN SIDEBAR SYSTEM --- */  
+        .sidebar {  
+            width: var(--sidebar-width);  
+            background: var(--header-bg);  
+            backdrop-filter: blur(15px);
+            height: 100vh;  
+            position: fixed;  
+            left: 0;  
+            top: 0;  
+            display: flex;  
+            flex-direction: column;  
+            border-right: 4px solid var(--gold-accent);  
+            z-index: 2000;  
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);  
+            box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+        }  
+
+        .sidebar-header {  
+            padding: 40px 20px;  
+            text-align: center;  
+            border-bottom: 1px solid var(--input-border);  
+        }  
+
+        .logo { height: 70px; margin-bottom: 15px; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.2)); }  
+
+        .nav-menu {  
+            flex: 1;  
+            padding: 25px 15px;  
+            overflow-y: auto;  
+        }  
+
+        .nav-item {  
+            display: flex;  
+            align-items: center;  
+            gap: 15px;  
+            padding: 14px 20px;  
+            color: var(--text-color);  
+            text-decoration: none;  
+            border-radius: 15px;  
+            margin-bottom: 10px;  
+            font-weight: 600;  
+            cursor: pointer;  
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }  
+
+        .nav-item i { width: 20px; text-align: center; font-size: 1.1rem; }
+
+        .nav-item:hover { 
+            background: rgba(27, 110, 95, 0.1); 
+            color: var(--primary-green);
+            transform: translateX(5px);
+            border-color: rgba(27, 110, 95, 0.2);
+        }  
+
+        .nav-item.active { 
+            background: linear-gradient(135deg, var(--primary-green), #248a77); 
+            color: white; 
+            box-shadow: 0 8px 15px rgba(27, 110, 95, 0.3); 
+        }  
+
+        /* --- MAIN LAYOUT --- */  
+        .main-wrapper {  
+            flex: 1;  
+            margin-left: var(--sidebar-width);  
+            width: calc(100% - var(--sidebar-width));  
+            display: flex;  
+            flex-direction: column;  
+            min-height: 100vh;
+        }  
+
+        header {  
+            display: flex; justify-content: space-between; align-items: center;  
+            padding: 15px 40px; background: var(--header-bg); position: sticky; top: 0; z-index: 1000;  
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);  
+            backdrop-filter: blur(10px);
+        }  
+
+        .mobile-toggle { 
+            display: none; 
+            font-size: 1.5rem; 
+            color: var(--primary-green); 
+            cursor: pointer; 
+            z-index: 2100;
+        }  
+
+        .main-content { 
+            padding: 40px; 
+            max-width: 1300px; 
+            margin: 0 auto; 
+            width: 100%; 
+            animation: fadeIn 0.6s ease-out;
+        }  
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- CARDS & GRIDS --- */  
+        .stat-grid {   
+            display: grid;   
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));   
+            gap: 25px;   
+            margin-bottom: 40px;   
+        }  
+
+        .stat-card {  
+            background: var(--white-glass); backdrop-filter: blur(10px); padding: 30px; border-radius: 24px;  
+            border: 1px solid rgba(255,255,255,0.3); text-align: center;
+            transition: transform 0.3s ease;
+        }  
+        .stat-card:hover { transform: translateY(-5px); }
+
+        .stat-card i { font-size: 2.5rem; color: var(--gold-accent); margin-bottom: 15px; }  
+        .stat-card h2 { margin: 5px 0; font-size: 2.5rem; color: var(--primary-green); }  
+        .stat-card p { margin: 0; font-size: 0.8rem; text-transform: uppercase; font-weight: 800; opacity: 0.6; letter-spacing: 1px; }  
+
+        .card {  
+            background: var(--card-bg); backdrop-filter: blur(20px); padding: 35px; border-radius: 30px;  
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08); border: 1px solid rgba(255,255,255,0.2);  
+            margin-bottom: 40px;  
+            scroll-margin-top: 100px; 
+        }  
+
+        .card h3 { 
+            margin-top: 0; 
+            color: var(--primary-green); 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            font-size: 1.4rem;
+        }
+
+        .action-row { display: flex; gap: 15px; flex-wrap: wrap; background: rgba(27,110,95,0.05); padding: 25px; border-radius: 20px; }  
+
+        .btn-main, input, textarea { padding: 14px 22px; border-radius: 14px; border: 1px solid var(--input-border); outline: none; font-family: inherit; font-size: 1rem; }  
+        input, textarea { background: var(--input-bg); color: var(--text-color); flex: 1; min-width: 250px; }  
+        .btn-main { background: var(--primary-green); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }  
+        .btn-main:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(27,110,95,0.3); filter: brightness(1.1); }  
+
+        .table-container { width: 100%; overflow-x: auto; margin-top: 20px; border-radius: 15px; }  
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }  
+        th { text-align: left; padding: 18px; color: var(--primary-green); border-bottom: 3px solid var(--primary-green); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }  
+        td { padding: 18px; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 0.95rem; }  
+
+        /* --- MODALS --- */  
+        .modal-overlay {  
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);  
+            z-index: 3000; justify-content: center; align-items: center;  
+        }  
+        .modal-card { background: var(--card-bg); padding: 40px; border-radius: 25px; width: 90%; max-width: 450px; text-align: center; }  
+
+        @media (max-width: 992px) {  
+            .sidebar {   
+                transform: translateX(-100%);   
+                width: 300px;
+            }  
+            .sidebar.active { transform: translateX(0); }  
+            .main-wrapper { margin-left: 0; width: 100%; }  
+            .mobile-toggle { display: block; }  
+            header { padding: 15px 25px; }
+            .main-content { padding: 20px; } 
+        }  
+
+        .custom-select { position: relative; flex: 1; min-width: 250px; }  
+        .select-trigger { background: var(--input-bg); padding: 14px 22px; border: 1px solid var(--input-border); border-radius: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }  
+        .select-popup { display: none; position: absolute; top: 110%; left: 0; width: 100%; background: var(--header-bg); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 10; overflow: hidden; }  
+        .custom-select.active .select-popup { display: block; }  
+        .select-option { padding: 14px 22px; cursor: pointer; transition: 0.2s; }  
+        .select-option:hover { background: var(--primary-green); color: white; }  
+
+        .key-display { font-size: 1.8rem; font-weight: 900; background: rgba(27,110,95,0.1); padding: 20px; border-radius: 15px; margin: 25px 0; color: var(--primary-green); letter-spacing: 5px; border: 2px dashed var(--primary-green); }  
+
+        .role-badge { background: rgba(27,110,95,0.1); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; }
+    </style>
+</head>  
+
+<body>
+    <div class="admin-bg"></div>  
+    
+    <aside class="sidebar" id="sidebar">  
+        <div class="sidebar-header">  
+            <img src="Al-Ikroom Logo.png" class="logo" alt="Logo">  
+            <h2 style="font-size: 1.2rem; color: var(--primary-green); margin: 0; letter-spacing: 2px;">AL-IKROOM</h2>  
+            <p style="font-size: 0.7rem; opacity: 0.6; margin: 5px 0 0;">ADMINISTRATIVE PORTAL</p>
+        </div>  
+        <nav class="nav-menu">  
+            <div class="nav-item active" onclick="navigateTo('dashboard', this)"><i class="fas fa-chart-line"></i> Dashboard</div>  
+            <div class="nav-item" onclick="navigateTo('userManagement', this)"><i class="fas fa-users-gear"></i> User Directory</div>  
+            <div class="nav-item" onclick="navigateTo('courseManagement', this)"><i class="fas fa-graduation-cap"></i> Course Hub</div>  
+            <div class="nav-item" onclick="navigateTo('announcementSection', this)"><i class="fas fa-bullhorn"></i> News & Alerts</div>  
+        </nav>  
+        <div style="padding: 25px;">  
+            <button class="btn-main" style="width:100%; background:var(--error-red); display: flex; align-items: center; justify-content: center; gap: 10px;" onclick="openModal('logoutModal')">  
+                <i class="fas fa-power-off"></i> Terminate Session  
+            </button>  
+        </div>  
+    </aside>  
+
+    <div class="main-wrapper">  
+        <header>  
+            <div style="display: flex; align-items: center; gap: 20px;">  
+                <i class="fas fa-bars mobile-toggle" id="menuBtn" onclick="toggleSidebar()"></i>  
+                <h1 id="navTitle" style="font-size: 1.4rem; margin: 0; font-weight: 800; color: var(--primary-green);">Command Center</h1>  
+            </div>  
+            <div style="display: flex; align-items: center; gap: 20px;">  
+                <span style="font-size: 0.85rem; font-weight: 600; opacity: 0.7;" id="currentDate"></span>
+                <button id="themeToggle" class="btn-main" style="background:rgba(27,110,95,0.1); color:var(--primary-green); padding: 10px 15px; border-radius: 50%;">
+                    <i class="fas fa-moon"></i>
+                </button>  
+            </div>  
+        </header>  
+
+        <main class="main-content">  
+            <section id="dashboard">
+                <div class="stat-grid">  
+                    <div class="stat-card">  
+                        <i class="fas fa-globe-africa"></i>  
+                        <h2 id="statTotal">--</h2>  
+                        <p>Total Community</p>  
+                    </div>  
+                    <div class="stat-card">  
+                        <i class="fas fa-user-graduate"></i>  
+                        <h2 id="statStudents">--</h2>  
+                        <p>Active Students</p>  
+                    </div>  
+                    <div class="stat-card">  
+                        <i class="fas fa-chalkboard-teacher"></i>  
+                        <h2 id="statTeachers">--</h2>  
+                        <p>Approved Teachers</p>  
+                    </div>  
+                </div>  
+
+                <div class="card">  
+                    <h3><i class="fas fa-key"></i> Access Key Generator</h3>  
+                    <div class="action-row">  
+                        <div class="custom-select" id="selGenRole">  
+                            <div class="select-trigger">  
+                                <span id="txtGenRole" data-value="student">Student Registration</span>  
+                                <i class="fas fa-chevron-down"></i>  
+                            </div>  
+                            <div class="select-popup">  
+                                <div class="select-option" onclick="setSelect('selGenRole', 'student', 'Student Registration')">Student Registration</div>  
+                                <div class="select-option" onclick="setSelect('selGenRole', 'teacher', 'Staff Access')">Staff Access</div>  
+                            </div>  
+                        </div>  
+                        <button class="btn-main" onclick="handleGenerateKey()">Create One-Time Code</button>  
+                    </div>  
+                </div>  
+
+                <div class="card">  
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">  
+                        <h3><i class="fas fa-history"></i> Recent Security Keys</h3>  
+                        <button class="btn-main" onclick="deleteAllVouchers()" style="background:var(--error-red); font-size: 0.85rem; padding: 8px 15px;">Clear Ledger</button>  
+                    </div>  
+                    <div class="table-container">  
+                        <table>  
+                            <thead>  
+                                <tr>  
+                                    <th>Key Code</th>  
+                                    <th>Role</th>  
+                                    <th>Status</th>  
+                                    <th>Created At</th>  
+                                </tr>  
+                            </thead>  
+                            <tbody id="voucherTableBody"></tbody>  
+                        </table>  
+                    </div>  
+                </div>
+            </section>
+
+            <div class="card" id="userManagement">  
+                <h3><i class="fas fa-users-cog"></i> Verified User Directory</h3>  
+                <div class="table-container">  
+                    <table>  
+                        <thead>  
+                            <tr>  
+                                <th>IKH ID</th>  
+                                <th>Name</th>  
+                                <th>Role</th>  
+                                <th>Contact Info</th> 
+                                <th>G/Nat</th>         
+                                <th>Status</th>   
+                                <th>Actions</th>  
+                            </tr>  
+                        </thead>  
+                        <tbody id="userTableBody"></tbody>  
+                    </table>  
+                </div>
+            </div>  
+
+            <div class="card">  
+                <h3><i class="fas fa-user-clock"></i> Pending Verification & OTP</h3>  
+                <div class="action-row" style="margin-bottom: 20px;">  
+                    <button class="btn-main" onclick="fetchPendingUsers()"><i class="fas fa-sync"></i> Sync Pending List</button>  
+                </div>  
+                <div class="table-container">  
+                    <table>  
+                        <thead>  
+                            <tr>  
+                                <th>Name</th>  
+                                <th>Email</th>  
+                                <th>Phone</th>  
+                                <th>OTP Code</th>  
+                                <th>Action</th>  
+                            </tr>  
+                        </thead>  
+                        <tbody id="pendingUsersTableBody"></tbody>  
+                    </table>  
+                </div>  
+            </div>  
+
+            <div class="card" id="courseManagement">  
+                <h3><i class="fas fa-folder-plus"></i> Academic Course Hub</h3>  
+                <div class="action-row" style="flex-direction: column; gap: 20px;">  
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; width: 100%;">  
+                        <input id="courseTitle" type="text" placeholder="Course Title (English)">  
+                        <input id="courseTitleAr" dir="rtl" type="text" placeholder="اسم الدورة">  
+                        <input id="courseTeacher" type="text" placeholder="Teacher Name">  
+                        <input id="coursePrice" type="number" placeholder="Tuition Fee">  
+                    </div>  
+                    <textarea id="courseDesc" placeholder="Detailed English Description..." style="width: 100%; height: 100px;"></textarea>  
+                    <textarea id="courseDescAr" dir="rtl" placeholder="وصف الدورة بالتفصيل..." style="width: 100%; height: 100px;"></textarea>  
+                    <button class="btn-main" onclick="addCourse()" style="width: 100%; font-size: 1.1rem;"><i class="fas fa-plus-circle"></i> Create & Publish Course</button>  
+                </div>  
+                <div class="table-container">  
+                    <table>  
+                        <thead>  
+                            <tr>  
+                                <th>Course Name</th>  
+                                <th>Instructor</th>  
+                                <th>Price</th>  
+                                <th>Actions</th>  
+                            </tr>  
+                        </thead>  
+                        <tbody id="courseTableBody"></tbody>
+                    </table>  
+                </div>  
+            </div>  
+
+            <div class="card" id="announcementSection">  
+                <h3><i class="fas fa-bullhorn"></i> Student Portal Announcements</h3>  
+                <div class="action-row" style="flex-direction: column; gap: 15px;">  
+                    <input id="newsTitle" type="text" placeholder="Internal Headline..." style="width: 100%;">  
+                    <textarea id="newsContent" placeholder="Write your internal message here..." style="width: 100%; height: 80px;"></textarea>  
+                    <button class="btn-main" onclick="addAnnouncement()"><i class="fas fa-paper-plane"></i> Broadcast Internally</button>  
+                </div>  
+                <div class="table-container">  
+                    <table>  
+                        <thead>  
+                            <tr><th>Date</th><th>Headline</th><th>Action</th></tr>  
+                        </thead>  
+                        <tbody id="newsTableBody"></tbody>  
+                    </table>  
+                </div>  
+            </div>  
+
+            <div class="card">  
+                <h3><i class="fas fa-newspaper"></i> Public Website News</h3>  
+                <div class="action-row" style="flex-direction: column; gap: 15px;">  
+                    <input id="publicNewsTitle" type="text" placeholder="Public Website Headline..." style="width: 100%;">  
+                    <textarea id="publicNewsContent" placeholder="Content for general visitors..." style="width: 100%; height: 80px;"></textarea>  
+                    <button class="btn-main" onclick="addPublicNews()"><i class="fas fa-globe"></i> Post to Landing Page</button>  
+                </div>  
+                <div class="table-container">  
+                    <table>  
+                        <thead>  
+                            <tr><th>Date</th><th>Headline</th><th>Action</th></tr>  
+                        </thead>  
+                        <tbody id="publicNewsTableBody"></tbody>  
+                    </table>  
+                </div>  
+            </div>  
+        </main>  
+    </div>  
+
+    <div class="modal-overlay" id="logoutModal">  
+        <div class="modal-card">  
+            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--error-red); margin-bottom: 20px;"></i>
+            <h2>Confirm Logout</h2>  
+            <p>Are you sure you want to end your administrative session? All unsaved changes will be lost.</p>  
+            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">  
+                <button class="btn-main" style="background:#eee; color:#333; flex: 1;" onclick="closeModal('logoutModal')">Cancel</button>  
+                <button class="btn-main" style="background:var(--error-red); flex: 1;" onclick="handleLogout()">Logout</button>  
+            </div>  
+        </div>  
+    </div>  
+
+    <div class="modal-overlay" id="keyModal">  
+        <div class="modal-card">  
+            <i class="fas fa-check-circle" style="font-size: 3rem; color: var(--primary-green); margin-bottom: 15px;"></i>
+            <h3>Registration Key Ready</h3>  
+            <div class="key-display" id="generatedKey">----</div>  
+            <p style="font-size: 0.8rem; opacity: 0.7; margin-bottom: 20px;">Provide this code to the user for one-time registration.</p>
+            <button class="btn-main" onclick="copyKey()" style="width: 100%;"><i class="fas fa-copy"></i> Copy to Clipboard</button>  
+            <button class="btn-main" style="background:#eee; margin-top:10px; width: 100%; color:#333" onclick="closeModal('keyModal')">Close</button>  
+        </div>  
+    </div>  
+
+    <script>  
+        const API_URL = 'https://alikroomislamicinstitute.onrender.com/api';  
+
+        // --- NAVIGATION ENGINE ---
+        function navigateTo(elementId, navElement) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                const headerOffset = 100;
+                const elementPosition = element.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+            }
+
+            // Update UI
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            navElement.classList.add('active');
+
+            // Mobile Close
+            if (window.innerWidth <= 992) {
+                toggleSidebar();
+            }
+        }
+
+        // --- SIDEBAR TOGGLE ---
+        function toggleSidebar() {  
+            const sidebar = document.getElementById('sidebar');
+            const menuBtn = document.getElementById('menuBtn');
+            
+            sidebar.classList.toggle('active');
+            
+            if(sidebar.classList.contains('active')) {
+                menuBtn.classList.remove('fa-bars');
+                menuBtn.classList.add('fa-times');
+            } else {
+                menuBtn.classList.remove('fa-times');
+                menuBtn.classList.add('fa-bars');
+            }
+        }
+
+        // --- THEME ENGINE ---
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle ? themeToggle.querySelector('i') : null;
+
+        function updateThemeUI(isDark) {
+            if (isDark) {
+                document.body.classList.add('dark-mode');
+                if (themeIcon) { themeIcon.className = 'fas fa-sun'; }
+            } else {
+                document.body.classList.remove('dark-mode');
+                if (themeIcon) { themeIcon.className = 'fas fa-moon'; }
+            }
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const isNowDark = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', isNowDark ? 'dark' : 'light');
+            updateThemeUI(isNowDark);
+        });
+
+        // Initialize Theme & Date
+        (function init() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            updateThemeUI(savedTheme === 'dark');
+            document.getElementById('currentDate').textContent = new Date().toDateString();
+        })();
+
+        // --- MODALS ---
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }  
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }  
+          
+        function handleLogout() {   
+            localStorage.clear();   
+            window.location.href = 'login.html';   
+        }
+
+        // Auth Check
+        const userRole = localStorage.getItem('userRole');
+        if (userRole !== 'admin') {
+            window.location.href = 'login.html';
+        }
+
+        // CUSTOM SELECT LOGIC
+        function setSelect(id, val, text) {
+            const triggerSpan = document.querySelector(`#${id} .select-trigger span`);
+            triggerSpan.setAttribute('data-value', val);
+            triggerSpan.textContent = text;
+            document.querySelectorAll('.custom-select').forEach(s => s.classList.remove('active'));
+        }
+
+        document.querySelectorAll('.select-trigger').forEach(trigger => {  
+            trigger.onclick = (e) => { 
+                e.stopPropagation(); 
+                const parent = trigger.parentElement;
+                document.querySelectorAll('.custom-select').forEach(s => {
+                    if(s !== parent) s.classList.remove('active');
+                });
+                parent.classList.toggle('active'); 
+            };  
+        });  
+
+        window.onclick = function(event) {  
+            if (!event.target.closest('.custom-select')) {
+                document.querySelectorAll('.custom-select').forEach(s => s.classList.remove('active'));  
+            }
+            const sidebar = document.getElementById('sidebar');  
+            if (sidebar.classList.contains('active') && !sidebar.contains(event.target) && !event.target.closest('.mobile-toggle')) {  
+                toggleSidebar();
+            }  
+        };
+
+        function copyKey() { 
+            navigator.clipboard.writeText(document.getElementById('generatedKey').textContent); 
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(() => btn.innerHTML = originalText, 2000);
+        }
+
+        // --- DATA FETCHING (LOGIC PRESERVED) ---  
+        window.addEventListener('load', initAdmin);
+
+        async function initAdmin() {  
+            const token = localStorage.getItem('token');  
+            if (!token) window.location.href = 'login.html';  
+            
+            fetchStats();  
+            fetchVouchers();  
+            fetchUsers();  
+            fetchCourses();  
+            fetchAnnouncements(); 
+            fetchPublicNews();    
+            fetchPendingUsers();
+        }  
+
+        async function fetchStats() {
+            try {
+                const res = await fetch(`${API_URL}/admin/stats`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const data = await res.json();   
+                if (data.success && data.stats) {  
+                    document.getElementById('statStudents').innerText = data.stats.totalStudents || 0;  
+                    document.getElementById('statTeachers').innerText = data.stats.totalTeachers || 0;  
+                    document.getElementById('statTotal').innerText = (data.stats.totalStudents || 0) + (data.stats.totalTeachers || 0);  
+                }   
+            } catch (err) { console.error("Stats Error:", err); }
+        }
+
+        async function fetchVouchers() {  
+            try {  
+                const res = await fetch(`${API_URL}/admin/vouchers`, {  
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }  
+                });  
+                const data = await res.json();  
+                const tbody = document.getElementById('voucherTableBody');  
+                if (data.vouchers && data.vouchers.length > 0) {  
+                    tbody.innerHTML = data.vouchers.map(v => `  
+                        <tr>  
+                            <td><code style="font-size:1.1rem; color:var(--primary-green)">${v.key}</code></td>  
+                            <td><span class="role-badge">${v.role}</span></td>  
+                            <td>${v.isUsed ? '<span style="color:var(--error-red)"><i class="fas fa-times-circle"></i> Used</span>' : '<span style="color:var(--primary-green)"><i class="fas fa-check-circle"></i> Active</span>'}</td>  
+                            <td style="font-size:0.8rem; opacity:0.7;">${new Date(v.createdAt).toLocaleString()}</td>  
+                        </tr>  
+                    `).join('');  
+                } else {  
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No keys generated yet.</td></tr>';  
+                }  
+            } catch (err) { console.error("Voucher fetch error", err); }  
+        }  
+
+        async function handleGenerateKey() {  
+            const role = document.getElementById('txtGenRole').getAttribute('data-value');  
+            try {  
+                const res = await fetch(`${API_URL}/admin/generate-voucher`, {  
+                    method: 'POST',  
+                    headers: {   
+                        'Content-Type': 'application/json',  
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`   
+                    },  
+                    body: JSON.stringify({ role })  
+                });  
+                const data = await res.json();  
+                if (data.success) {  
+                    document.getElementById('generatedKey').textContent = data.key;  
+                    openModal('keyModal');  
+                    fetchVouchers();  
+                } else { alert(data.message); }  
+            } catch (err) { alert("Generation failed."); }  
+        }  
+
+        async function deleteAllVouchers() {  
+            if (!confirm("Are you sure? This will invalidate all unused keys.")) return;  
+            try {  
+                const res = await fetch(`${API_URL}/admin/vouchers/all`, {  
+                    method: 'DELETE',  
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }  
+                });  
+                if ((await res.json()).success) fetchVouchers();  
+            } catch (err) { alert("Delete failed."); }  
+        }  
+
+        async function fetchUsers() {
+            const tbody = document.getElementById('userTableBody');
+            try {  
+                const response = await fetch(`${API_URL}/admin/users`, {  
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }   
+                });  
+                const data = await response.json();  
+                tbody.innerHTML = '';   
+                if (data.success && data.users) {  
+                    data.users.forEach(user => {  
+                        const statusTag = user.isVerified   
+                            ? `<span style="color: #27ae60; font-weight: bold;">Verified</span>`   
+                            : `<span style="color: #e67e22; font-weight: bold;">Pending</span>`;  
+                        tbody.innerHTML += `  
+                            <tr>  
+                                <td style="font-family: monospace; font-weight: bold; color: var(--primary-green);">${user.ikhId || "N/A"}</td>  
+                                <td><strong>${user.firstName} ${user.lastName || ''}</strong></td>  
+                                <td><span class="role-badge">${user.role}</span></td>  
+                                <td><div style="font-size: 0.8rem;">${user.email}</div><div style="font-size: 0.75rem; opacity: 0.6;">${user.phone || '-'}</div></td>  
+                                <td><div style="font-size: 0.75rem;">${user.gender || '-'}/${user.nationality || '-'}</div></td>  
+                                <td>${statusTag}</td>  
+                                <td><button onclick="deleteUser('${user._id}')" style="background:none; border:none; color:var(--error-red); cursor:pointer;"><i class="fas fa-trash-alt"></i></button></td>  
+                            </tr>  
+                        `;  
+                    });  
+                }  
+            } catch (err) { tbody.innerHTML = '<tr><td colspan="7">Error loading users</td></tr>'; }
+        }
+
+        async function deleteUser(id) {  
+            if(!confirm("Permenantly delete this user?")) return;  
+            try {  
+                await fetch(`${API_URL}/admin/users/${id}`, {   
+                    method: 'DELETE',  
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }  
+                });  
+                fetchUsers(); fetchStats();  
+            } catch (err) { alert("Delete failed"); }  
+        }
+
+        async function fetchCourses() {
+            try {
+                const res = await fetch(`${API_URL}/admin/courses`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const data = await res.json();  
+                if (data.success) {  
+                    document.getElementById('courseTableBody').innerHTML = data.courses.map(course => `  
+                        <tr>  
+                            <td><strong>${course.title}</strong></td>  
+                            <td>${course.teacherName || 'TBD'}</td>  
+                            <td>₦${course.price}</td>  
+                            <td><button onclick="deleteCourse('${course._id}')" style="background:none; border:none; color:var(--error-red); cursor:pointer;"><i class="fas fa-trash"></i></button></td>  
+                        </tr>  
+                    `).join('');  
+                }  
+            } catch (err) { console.error(err); }
+        }
+
+        async function addCourse() {
+            const payload = {
+                title: document.getElementById('courseTitle').value,
+                titleAr: document.getElementById('courseTitleAr').value,
+                teacherName: document.getElementById('courseTeacher').value,
+                price: document.getElementById('coursePrice').value,
+                description: document.getElementById('courseDesc').value,
+                descriptionAr: document.getElementById('courseDescAr').value
+            };
+            if(!payload.title || !payload.price) return alert("Title and Price are required");
+            try {
+                const res = await fetch(`${API_URL}/admin/courses`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}` 
+                    },
+                    body: JSON.stringify(payload)
+                });
+                if((await res.json()).success) {
+                    alert("Course Added!");
+                    fetchCourses();
+                }
+            } catch (err) { alert("Add course failed"); }
+        }
+
+        async function deleteCourse(id) {
+            if(!confirm("Remove course?")) return;
+            try {
+                await fetch(`${API_URL}/admin/courses/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                fetchCourses();
+            } catch (err) { alert("Delete failed"); }
+        }
+
+        async function addAnnouncement() {  
+            const title = document.getElementById('newsTitle').value;  
+            const content = document.getElementById('newsContent').value;  
+            try {  
+                const res = await fetch(`${API_URL}/admin/news`, {  
+                    method: 'POST',  
+                    headers: {   
+                        'Content-Type': 'application/json',  
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`   
+                    },  
+                    body: JSON.stringify({ title, content })  
+                });  
+                if ((await res.json()).success) {  
+                    alert("Posted!");  
+                    fetchAnnouncements();  
+                }  
+            } catch (err) { alert("Post failed"); }  
+        }
+
+        async function fetchAnnouncements() {
+            try {
+                const res = await fetch(`${API_URL}/admin/news`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const data = await res.json();  
+                if (data.success) {  
+                    document.getElementById('newsTableBody').innerHTML = data.news.map(n => `
+                        <tr>
+                            <td>${new Date(n.createdAt).toLocaleDateString()}</td>
+                            <td>${n.title}</td>
+                            <td><button onclick="deleteAnnouncement('${n._id}')" style="background:none; border:none; color:var(--error-red); cursor:pointer;"><i class="fas fa-trash"></i></button></td>
+                        </tr>
+                    `).join('');
+                }  
+            } catch (err) { console.error(err); }
+        }
+
+        async function deleteAnnouncement(id) {
+            try {
+                await fetch(`${API_URL}/admin/news/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                fetchAnnouncements();
+            } catch (err) { alert("Delete failed"); }
+        }
+
+        async function addPublicNews() {  
+            const title = document.getElementById('publicNewsTitle').value;  
+            const content = document.getElementById('publicNewsContent').value;  
+            try {  
+                const res = await fetch(`${API_URL}/news`, {  
+                    method: 'POST',  
+                    headers: {   
+                        'Content-Type': 'application/json',  
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`   
+                    },  
+                    body: JSON.stringify({ newsTitle: title, newsContent: content })   
+                });  
+                if ((await res.json()).success) {  
+                    alert("Published to Public Site!");  
+                    fetchPublicNews();  
+                }  
+            } catch (err) { alert("Publish failed"); }  
+        }  
+
+        async function fetchPublicNews() {  
+            try {  
+                const res = await fetch(`${API_URL}/news`);  
+                const data = await res.json();  
+                if (data.success) {  
+                    document.getElementById('publicNewsTableBody').innerHTML = data.news.map(n => `  
+                        <tr>  
+                            <td>${new Date(n.date).toLocaleDateString()}</td>  
+                            <td><strong>${n.title}</strong></td>  
+                            <td><button onclick="deletePublicNews('${n._id}')" style="background:none; border:none; color:var(--error-red); cursor:pointer;"><i class="fas fa-trash"></i></button></td>  
+                        </tr>  
+                    `).join('');  
+                }  
+            } catch (err) { console.error(err); }  
+        }  
+
+        async function deletePublicNews(id) {  
+            try {  
+                const res = await fetch(`${API_URL}/news/${id}`, {   
+                    method: 'DELETE',  
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }  
+                });  
+                if ((await res.json()).success) fetchPublicNews();   
+            } catch (err) { alert("Delete failed"); }
+        }
+
+        async function fetchPendingUsers() {
+            try {
+                const res = await fetch(`${API_URL}/admin/pending-users`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const data = await res.json();  
+                const tbody = document.getElementById('pendingUsersTableBody');  
+                if (data.success && data.users.length > 0) {  
+                    tbody.innerHTML = data.users.map(user => `  
+                        <tr>  
+                            <td><strong>${user.firstName} ${user.lastName || ''}</strong></td>  
+                            <td>${user.email}</td>  
+                            <td>${user.phone || 'N/A'}</td>  
+                            <td style="font-weight:bold; color:var(--primary-green); font-family:monospace;">${user.manualVerificationCode || '---'}</td>  
+                            <td><button class="btn-main" style="font-size:0.75rem; padding: 5px 12px;" onclick="generateOTP('${user._id}')">New OTP</button></td>  
+                        </tr>  
+                    `).join('');  
+                } else {  
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">No pending registrations</td></tr>`;  
+                }  
+            } catch (err) { console.error(err); }
+        }
+
+        async function generateOTP(userId) {
+            try {
+                const res = await fetch(`${API_URL}/admin/generate-otp/${userId}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const data = await res.json();  
+                if (data.success) {  
+                    alert("OTP Generated: " + data.otp);  
+                    fetchPendingUsers(); 
+                } else alert(data.message);  
+            } catch (err) { alert("OTP generation failed"); }
+        }
+    </script>
+</body>  
+</html>

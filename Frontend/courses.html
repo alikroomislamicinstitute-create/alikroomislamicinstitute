@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Courses - Al-Ikroom Islamic Institute</title>
+<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  /* ===== THEME VARIABLES ===== */
+  :root {
+    --primary-green: #1b6e5f;
+    --dark-navy: #0a143c;
+    --bg-light: #f4f7f6;
+    --text-color: #0a143c;
+    --card-bg: #ffffff;
+    --header-bg: rgba(255, 255, 255, 0.98);
+    --hero-gradient: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(245,255,250,0.95) 100%);
+    --card-border: #edf2f1;
+    --card-text: #555;
+  }
+
+  [data-theme="dark"] {
+    --primary-green: #2ab098;
+    --dark-navy: #050a1f;
+    --bg-light: #0f172a;
+    --text-color: #f1f5f9;
+    --card-bg: #1e293b;
+    --header-bg: rgba(15, 23, 42, 0.98);
+    --hero-gradient: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.95) 100%);
+    --card-border: #334155;
+    --card-text: #cbd5e1;
+  }
+
+  /* ===== GLOBAL STYLES ===== */
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  
+  body {
+    margin: 0;
+    font-family: 'Times New Roman', Times, serif;
+    color: var(--text-color);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-light);
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+
+  /* ===== Keyframe Animations ===== */
+  @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes fadeInUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  /* ===== Header & Nav ===== */
+  header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 5%; position: sticky; top: 0;
+    background: var(--header-bg); z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-bottom: 3px solid var(--primary-green);
+    animation: slideDown 0.6s ease-out;
+  }
+
+  .header-brand { display: flex; align-items: center; gap: 12px; }
+  .logo { height: 45px; width: auto; object-fit: contain; }
+  header h1 { font-size: 1.1rem; color: var(--primary-green); text-transform: uppercase; letter-spacing: 1px; margin: 0; font-weight: 700; }
+
+  nav { display: flex; align-items: center; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+  nav a {
+    margin: 0 12px;
+    font-weight: 600;
+    color: var(--text-color);
+    text-decoration: none;
+    position: relative;
+    transition: 0.3s;
+}
+nav a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background: var(--primary-green);
+    transition: 0.3s;
+}
+nav a:hover::after,
+nav a.active::after {
+    width: 100%;
+}
+  .menu-toggle { display: none; flex-direction: column; cursor: pointer; gap: 5px; border: none; background: none; padding: 5px; z-index: 1001; }
+  .menu-toggle span {
+    height: 3px;
+    width: 25px;
+    background: var(--primary-green);
+    border-radius: 3px;
+    transition: 0.3s;
+}
+.menu-toggle.open span:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+}
+.menu-toggle.open span:nth-child(2) {
+    opacity: 0;
+}
+.menu-toggle.open span:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+}
+.menu-toggle.open span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+  .menu-toggle.open span:nth-child(2) { opacity: 0; }
+  .menu-toggle.open span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+  #langToggle {
+    margin-left: 15px; padding: 8px 16px; border: none; border-radius: 50px;
+    cursor: pointer; background: var(--primary-green); color: #fff; font-weight: bold;
+    font-family: inherit; transition: 0.3s;
+  }
+
+  #themeToggle { background: none; border: none; cursor: pointer; color: var(--primary-green); font-size: 1.2rem; margin-left: 15px; transition: 0.3s; }
+
+  /* ===== Hero Section ===== */
+  .hero {
+    text-align: center; padding: 100px 20px;
+    background: var(--hero-gradient), 
+                url('https://images.rawpixel.com/image_png_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTA2L3Jhd3BpeGVsX29mZmljZV8zN19hX3N0dWRpb19waG90b19vZl9hX211c2xpbV9ib3lfc3R1ZGVudF9zdHVkeV8zNWQ4NzRmNS1jMzEwLTRhZmQtYjM2Ni1kYmYxMTk5Y2JjMjYucG5n.png') 
+                center/cover no-repeat fixed;
+    animation: scaleIn 0.8s ease-out;
+  }
+  .hero h2 { font-size: 2.5rem; color: var(--primary-green); margin-bottom: 10px; animation: fadeInUp 1s ease-out; }
+  .hero p { font-size: 1.2rem; color: var(--text-color); max-width: 700px; margin: 0 auto; animation: fadeInUp 1s ease-out 0.2s both; }
+
+  /* ===== Courses Section ===== */
+  .courses-section {
+    padding: 60px 5%; max-width: 1200px;
+    margin: -50px auto 40px auto; background: var(--card-bg);
+    border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    z-index: 5; position: relative;
+    animation: fadeInUp 1s ease-out 0.4s both;
+  }
+
+  .courses-section h2 { text-align: center; color: var(--primary-green); font-size: 2rem; margin-bottom: 40px; }
+  .courses-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; }
+
+  .course-card {
+    background: var(--card-bg); padding: 30px; border-radius: 20px; border: 2px solid var(--card-border);
+    transition: all 0.4s ease; display: flex; flex-direction: column; justify-content: space-between;
+    position: relative;
+  }
+
+  .course-badge {
+    position: absolute; top: 15px; right: 15px; background: var(--primary-green);
+    color: white; font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; font-weight: bold;
+  }
+
+  .course-card:hover { border-color: var(--primary-green); transform: translateY(-10px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+  .course-card h3 { color: var(--primary-green); margin: 0 0 15px 0; font-size: 1.3rem; }
+  .course-card p { color: var(--card-text); line-height: 1.6; margin-bottom: 20px; font-size: 0.95rem; }
+  .price { font-weight: 700; color: var(--text-color); font-size: 1.2rem; margin-bottom: 20px; display: block; }
+
+  .btn { width: 100%; padding: 14px; background: var(--primary-green); border: none; border-radius: 12px; color: #fff; font-weight: bold; cursor: pointer; transition: 0.3s; font-family: inherit; }
+  .btn:hover { background: #145247; transform: scale(1.02); }
+
+  /* Referral Popup Styles */
+  .referral-modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px);
+    display: none; justify-content: center; align-items: center; z-index: 3000;
+  }
+  .referral-modal.active { display: flex; animation: scaleIn 0.3s ease; }
+  .referral-box {
+    background: var(--card-bg); padding: 40px; border-radius: 30px; text-align: center;
+    max-width: 400px; width: 90%; color: var(--text-color); border-top: 6px solid var(--primary-green);
+  }
+  .referral-box i { font-size: 3rem; color: var(--primary-green); margin-bottom: 20px; display: block; }
+
+  footer { text-align: center; padding: 30px; background: var(--dark-navy); color: white; margin-top: auto; font-size: 0.9rem; }
+
+  @media (max-width: 900px) {
+    .menu-toggle { display: flex; }
+    nav {
+        display: flex; flex-direction: column; position: absolute;
+        top: 100%; left: 0; width: 100%; background: var(--card-bg);
+        max-height: 0; opacity: 0; overflow: hidden;
+        transform: translateY(-10px); padding: 0;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1); border-bottom: 4px solid var(--primary-green);
+        transition: all 0.4s ease;
+    }
+    nav.active { max-height: 600px; opacity: 1; transform: translateY(0); padding: 30px 0; }
+    nav a { margin: 12px 0; text-align: center; opacity: 0; transform: translateX(-20px); transition: 0.3s; }
+    nav.active a { opacity: 1; transform: translateX(0); }
+    #langToggle { margin: 15px auto 0; width: 150px; }
+    #themeToggle { margin: 15px auto 0; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-brand">
+    <img src="Al-Ikroom Logo.png" alt="Logo" class="logo">
+    <h1 id="instituteName">Al-Ikroom Islamic Institute</h1>
+  </div>
+  <button class="menu-toggle" id="mobile-menu" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
+ <nav id="nav-links">
+  <a href="index.html" id="navHome">Home</a>
+  <a href="login.html" id="navLogin">Login</a>
+  <a href="register.html" id="navReg">Register</a>
+  <a href="courses.html" id="navCourses" class="active">Courses</a>
+  <a href="about.html" id="navAbout">About</a>
+  <a href="contact.html" id="navContact">Contact</a>
+  <button id="langToggle">العربية</button>
+  <button id="themeToggle" title="Toggle Theme">
+    <i class="fas fa-moon"></i>
+  </button>
+</nav>
+</header>
+
+<section class="hero">
+  <h2 id="heroTitle">📖 Explore Our Courses</h2>
+  <p id="heroDesc">Grow spiritually with a wide range of Islamic studies tailored for all ages.</p>
+</section>
+
+<section class="courses-section">
+  <h2 id="sectionHeader">🌟 Featured Programs</h2>
+  <div class="courses-container" id="dynamicCoursesGrid"></div>
+</section>
+
+<div class="referral-modal" id="referralModal">
+  <div class="referral-box">
+    <i class="fas fa-paper-plane"></i>
+    <h3 id="refTitle">Enrollment Started</h3>
+    <p id="refMsg">We are taking you to the registration page to finalize your application.</p>
+  </div>
+</div>
+
+<footer>
+  <p id="footerCopy">&copy; 2026 Al-Ikroom Islamic Institute | Dedicated to Excellence</p>
+</footer>
+
+<script>
+// Paste the custom-alerts logic directly here
+(function() {
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .als-alert-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 9999; }
+        .als-alert-overlay.active { display: flex; }
+        .als-alert-box { background: var(--card-bg, #fff); padding: 35px; border-radius: 35px; text-align: center; max-width: 420px; width: 90%; border-top: 6px solid var(--primary-green); }
+        .als-alert-btn { width: 100%; padding: 14px; background: var(--primary-green); color: #fff; border: none; border-radius: 50px; cursor: pointer; margin-top: 20px; }
+    `;
+    document.head.appendChild(style);
+
+    window.alert = function(message) {
+        const overlay = document.createElement('div');
+        overlay.className = 'als-alert-overlay active';
+        overlay.innerHTML = `
+            <div class="als-alert-box">
+                <i class="fas fa-exclamation-circle" style="font-size:3rem; color:var(--primary-green);"></i>
+                <div style="font-size:1.4rem; font-weight:700; margin: 15px 0; color:var(--primary-green);">Notification</div>
+                <div style="line-height:1.5;">${message}</div>
+                <button class="als-alert-btn">Understood</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        overlay.querySelector('button').onclick = () => document.body.removeChild(overlay);
+    };
+})();
+</script>
+
+
+<script>
+/* --- DYNAMIC COURSE SYNC LOGIC --- */
+const BACKEND_URL = "https://alikroomislamicinstitute.onrender.com/api";
+let isArabic = false;
+
+async function loadCourses() {
+    const grid = document.getElementById('dynamicCoursesGrid');
+    
+    // 1. Show a clean loading state
+    grid.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-green);"></i>
+            <p style="margin-top: 15px; opacity: 0.7;">
+                ${isArabic ? 'جاري تحميل الدورات...' : 'Loading official courses...'}
+            </p>
+        </div>`;
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/student/courses`);
+        
+        // Check if the response is okay
+        if (!response.ok) throw new Error('Network response was not ok');
+        
+        const data = await response.json();
+
+        // 2. Handle Empty State
+        if (!data.success || !data.courses || data.courses.length === 0) {
+            grid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px; opacity: 0.6;">
+                    <i class="fas fa-book-open" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                    <p>${isArabic ? 'لا توجد دورات متاحة حالياً.' : 'No courses found in the database.'}</p>
+                </div>`;
+            return;
+        }
+
+        // 3. Map Data to HTML
+        grid.innerHTML = data.courses.map(course => {
+            // Use logical OR (||) to fallback to English if Arabic fields are missing
+            const displayTitle = isArabic ? (course.arTitle || course.title) : course.title;
+            const displayDesc = isArabic ? (course.arDesc || course.description) : course.description;
+            
+            // Format price: adjust currency symbol based on language preference
+            const displayPrice = isArabic ? `₦${course.price}` : `$${course.price}`;
+            const btnText = isArabic ? "سجل الآن" : "Enroll Now";
+            const category = isArabic ? (course.arCategory || course.category || 'عام') : (course.category || 'General');
+
+            return `
+                <div class="course-card" style="animation: fadeInUp 0.5s ease forwards;">
+                    <div class="course-badge">${category}</div>
+                    <h3>${displayTitle}</h3>
+                    <p>${displayDesc || (isArabic ? 'لا يوجد وصف متاح.' : 'No description available.')}</p>
+                    <span class="price">${displayPrice}</span>
+                    <button class="btn" onclick="enrollCourse('${course.title}')">
+                        <i class="fas fa-graduation-cap" style="margin-right: 8px;"></i>${btnText}
+                    </button>
+                </div>
+            `;
+        }).join('');
+
+    } catch (err) {
+        console.error("Fetch Error:", err);
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; color: #e74c3c; padding: 40px;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 2rem;"></i>
+                <p style="margin-top:10px;">
+                    ${isArabic ? 'خطأ في الاتصال. يرجى التأكد من تشغيل الخادم.' : 'Connection error. Check if your server is running.'}
+                </p>
+            </div>`;
+    }
+}
+
+/* Theme Logic */
+const themeToggle = document.getElementById('themeToggle');
+const htmlElement = document.documentElement;
+const savedTheme = localStorage.getItem('theme') || 'light';
+htmlElement.setAttribute('data-theme', savedTheme);
+updateThemeIcon(savedTheme);
+
+themeToggle.addEventListener('click', () => {
+    const currentTheme = htmlElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    htmlElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+});
+
+function updateThemeIcon(theme) {
+    const icon = themeToggle.querySelector('i');
+    if (theme === 'dark') { icon.classList.replace('fa-moon', 'fa-sun'); } 
+    else { icon.classList.replace('fa-sun', 'fa-moon'); }
+}
+
+function toggleMenu() {
+    const nav = document.getElementById('nav-links');
+    const btn = document.getElementById('mobile-menu');
+    nav.classList.toggle('active');
+    btn.classList.toggle('open');
+}
+
+function enrollCourse(courseName){
+  sessionStorage.setItem('selectedCourse', courseName);
+  document.getElementById('referralModal').classList.add('active');
+  setTimeout(() => { window.location.href = 'register.html'; }, 1500);
+}
+
+/* Arabic Toggle Logic */
+const langBtn = document.getElementById('langToggle');
+
+langBtn.addEventListener('click', () => {
+  isArabic = !isArabic;
+  document.body.dir = isArabic ? 'rtl' : 'ltr';
+  langBtn.textContent = isArabic ? "English" : "العربية";
+
+  document.getElementById('instituteName').textContent = isArabic ? 'معهد الإكرام الإسلامي' : 'Al-Ikroom Islamic Institute';
+  document.getElementById('navHome').textContent = isArabic ? 'الرئيسية' : 'Home';
+  document.getElementById('navLogin').textContent = isArabic ? 'دخول' : 'Login';
+  document.getElementById('navRegister').textContent = isArabic ? 'حساب جديد' : 'Register';
+  document.getElementById('navCourses').textContent = isArabic ? 'الدورات' : 'Courses';
+  document.getElementById('navAbout').textContent = isArabic ? 'عن المعهد' : 'About';
+  document.getElementById('navContact').textContent = isArabic ? 'اتصل بنا' : 'Contact';
+  
+  document.getElementById('heroTitle').textContent = isArabic ? '📖 استكشف دوراتنا' : '📖 Explore Our Courses';
+  document.getElementById('heroDesc').textContent = isArabic ? 'نمُ روحياً من خلال مجموعة واسعة من الدراسات الإسلامية لجميع الأعمار.' : 'Grow spiritually with a wide range of Islamic studies tailored for all ages.';
+  document.getElementById('sectionHeader').textContent = isArabic ? '🌟 البرامج المختارة' : '🌟 Featured Programs';
+  document.getElementById('footerCopy').innerHTML = isArabic ? '&copy; ٢٠٢٦ معهد الإكرام الإسلامي | التميز شعارنا' : '&copy; 2026 Al-Ikroom Islamic Institute | Dedicated to Excellence';
+  
+  document.getElementById('refTitle').textContent = isArabic ? 'بدء التسجيل' : 'Enrollment Started';
+  document.getElementById('refMsg').textContent = isArabic ? 'نقوم بنقلك إلى صفحة التسجيل لإنهاء طلبك.' : 'We are taking you to the registration page to finalize your application.';
+
+  loadCourses();
+});
+
+// Initial load
+window.addEventListener('DOMContentLoaded', loadCourses);
+</script>
+<script src="js/global.js"></script>
+</body>
+</html>

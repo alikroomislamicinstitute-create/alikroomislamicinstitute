@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Management - Al-Ikroom Teacher</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+    :root {
+        --primary-green: #1b6e5f;
+        --accent-sage: #82b366;
+        --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        --card-bg: #ffffff;
+        --text-color: #1e293b;
+        --body-bg: #f8fafc;
+        --glass-border: rgba(0, 0, 0, 0.08);
+        --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        --glass-bg: rgba(255, 255, 255, 0.7);
+        --danger: #e11d48;
+        --warning: #f59e0b;
+        --success: #10b981;
+        --inactive-bg: #f8fafc;
+        --input-bg: #ffffff;
+        --table-header: #f1f5f9;
+    }
+
+    [data-theme="dark"] {
+        --primary-green: #2ab098;
+        --bg-gradient: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+        --card-bg: #1e293b;
+        --text-color: #f1f5f9;
+        --body-bg: #0f172a;
+        --glass-bg: rgba(30, 41, 59, 0.6);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --input-bg: #334155;
+        --table-header: #334155;
+        --inactive-bg: #1e293b;
+    }
+
+    body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background: var(--bg-gradient);
+        color: var(--text-color);
+        margin: 0;
+        padding: 0;
+        transition: background 0.3s;
+        min-height: 100vh;
+    }
+
+    /* --- Navbar --- */
+    .navbar {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--glass-border);
+        padding: 0.8rem 1.2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .nav-logo {
+        font-weight: 800;
+        font-size: 1.2rem;
+        color: var(--primary-green);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .nav-item {
+        text-decoration: none;
+        color: var(--text-color);
+        font-weight: 700;
+        font-size: 0.85rem;
+        padding: 8px 12px;
+        border-radius: 10px;
+        transition: 0.3s;
+    }
+
+    .nav-item:hover {
+        background: rgba(27, 110, 95, 0.1);
+        color: var(--primary-green);
+    }
+
+    /* --- Container & Cards --- */
+    .container { 
+        max-width: 1000px; 
+        margin: 0 auto; 
+        padding: 15px; 
+        box-sizing: border-box; 
+    }
+
+    .card { 
+        background: var(--card-bg); 
+        padding: 1.5rem; 
+        border-radius: 16px; 
+        border: 1px solid var(--glass-border); 
+        box-shadow: var(--shadow); 
+        margin-bottom: 1.5rem; 
+    }
+
+    /* --- Attendance History Design --- */
+    .history-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background: var(--inactive-bg);
+        border-radius: 12px;
+        margin-bottom: 10px;
+        border-left: 4px solid var(--primary-green);
+        transition: 0.2s;
+    }
+    .history-item:hover { transform: scale(1.01); }
+    .history-main { display: flex; flex-direction: column; gap: 2px; }
+    .history-course { font-weight: 800; font-size: 0.95rem; color: var(--primary-green); }
+    .history-meta { font-size: 0.75rem; color: #64748b; font-weight: 600; }
+    .history-stats { text-align: right; }
+    .stat-badge {
+        background: var(--primary-green);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    /* --- Live Attendance List --- */
+    .student-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: var(--inactive-bg);
+        border-radius: 12px;
+        margin-bottom: 0.75rem;
+        border: 1px solid var(--glass-border);
+        transition: transform 0.2s;
+    }
+    .student-row:hover { transform: translateX(5px); border-color: var(--primary-green); }
+    .student-info { display: flex; flex-direction: column; }
+    .student-name { font-weight: 700; color: var(--primary-green); }
+    .student-id { font-size: 0.8rem; color: #64748b; }
+    .check-in-time {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--success);
+        background: rgba(16, 185, 129, 0.1);
+        padding: 4px 12px;
+        border-radius: 20px;
+    }
+
+    /* --- Table / Roster Optimization --- */
+    .table-container {
+        width: 100%;
+        overflow-x: auto;
+        border-radius: 12px;
+        border: 1px solid var(--glass-border);
+        background: var(--card-bg);
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 600px; /* Ensures table doesn't squash on mobile */
+    }
+
+    th {
+        background: var(--table-header);
+        padding: 12px 15px;
+        text-align: left;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    td {
+        padding: 12px 15px;
+        font-size: 0.9rem;
+        border-bottom: 1px solid var(--glass-border);
+    }
+
+    /* --- Forms & Inputs --- */
+    .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group { margin-bottom: 1.2rem; }
+    label { display: block; font-weight: 700; margin-bottom: 0.5rem; font-size: 0.9rem; }
+
+    select, textarea, input {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid var(--glass-border);
+        background: var(--input-bg);
+        color: var(--text-color);
+        font-family: inherit;
+        box-sizing: border-box;
+    }
+
+    .day-picker { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .day-btn {
+        padding: 8px 12px;
+        border: 1px solid var(--glass-border);
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 600;
+        background: var(--card-bg);
+    }
+    .day-btn.active { background: var(--primary-green); color: white; }
+
+    .student-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+        max-height: 180px;
+        overflow-y: auto;
+        padding: 12px;
+        border: 1px solid var(--glass-border);
+        border-radius: 8px;
+    }
+
+    /* --- Buttons --- */
+    .btn-primary {
+        background: var(--primary-green);
+        color: white;
+        border: none;
+        padding: 14px;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        width: 100%;
+    }
+
+    .btn-danger-outline {
+        background: transparent;
+        color: var(--danger);
+        border: 1.5px solid var(--danger);
+        padding: 10px;
+        border-radius: 8px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .refresh-btn {
+        background: var(--primary-green);
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    /* --- Mobile Optimization --- */
+    @media (max-width: 600px) {
+        .navbar { padding: 0.8rem; }
+        .nav-item { display: none; }
+        .section-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+        .btn-danger-outline { width: 100%; }
+        .grid-2 { grid-template-columns: 1fr !important; }
+        .student-row { flex-direction: row; justify-content: space-between; align-items: center; }
+        .history-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+        .history-stats { align-self: flex-end; }
+    }
+
+    .hidden { display: none; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; gap: 10px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="dashboard-teacher.html" class="nav-logo">
+        <i class="fa-solid fa-graduation-cap"></i> Al-Ikroom
+    </a>
+    <div class="nav-right">
+        <a href="dashboard-teacher.html" class="nav-item">Dashboard</a>
+        <a href="assessment-teacher.html" class="nav-item">Quizzes</a>
+        <button class="theme-toggle" id="navThemeToggle" style="background:none; border:none; color:var(--text-color); cursor:pointer; font-size:1.1rem;">
+            <i class="fa-solid fa-moon"></i>
+        </button>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="card">
+        <div class="section-header">
+            <h2><i class="fa-solid fa-calendar-plus"></i> Attendance Configuration</h2>
+            <button class="btn-danger-outline" onclick="clearAllActiveConfigs()">
+                <i class="fa-solid fa-trash-can"></i> Clear All Active
+            </button>
+        </div>
+        
+        <p style="color: #64748b; margin-bottom: 20px; font-size: 0.9rem;">Define when and for whom the attendance portal should be active.</p>
+        
+        <div class="grid-3">
+            <div class="form-group">
+                <label>Target Course</label>
+                <select id="courseSelect">
+                    <option value="">Loading courses...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Session Type</label>
+                <select id="sessionType" onchange="toggleScheduleOptions()">
+                    <option value="immediate">Start Now (Manual Stop)</option>
+                    <option value="scheduled">Scheduled Window (Automatic)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label><i class="fa-solid fa-stopwatch"></i> Duration (Minutes)</label>
+                <input type="number" id="attendanceDuration" value="10" min="1" max="120">
+            </div>
+        </div>
+
+        <div id="scheduledOptions" class="hidden">
+            <div class="form-group">
+                <label>Active Days</label>
+                <div class="day-picker" id="dayPicker">
+                    <div class="day-btn" data-day="1">Mon</div>
+                    <div class="day-btn" data-day="2">Tue</div>
+                    <div class="day-btn" data-day="3">Wed</div>
+                    <div class="day-btn" data-day="4">Thu</div>
+                    <div class="day-btn" data-day="5">Fri</div>
+                    <div class="day-btn" data-day="6">Sat</div>
+                    <div class="day-btn" data-day="0">Sun</div>
+                </div>
+            </div>
+            <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label>Start Time</label>
+                    <input type="time" id="startTime" value="00:00">
+                </div>
+                <div class="form-group">
+                    <label>End Time</label>
+                    <input type="time" id="endTime" value="01:00">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Eligibility (Selection)</label>
+            <div class="student-grid" id="studentGrid">
+                <div class="student-item">
+                    <input type="checkbox" id="selectAll" checked onchange="toggleAllStudents(this)">
+                    <span>All Enrolled Students</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--glass-border);">
+            <label><i class="fa-solid fa-message"></i> Teacher Note (Global Broadcast)</label>
+            <textarea id="teacherNote" rows="3" placeholder="e.g. Class is starting 10 mins late..."></textarea>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                <button class="btn-primary" onclick="saveAttendanceConfig()">
+                    <i class="fa-solid fa-circle-check"></i> Deploy Portal
+                </button>
+                <button class="btn-danger-outline" onclick="broadcastNoteOnly()" style="color: var(--primary-green); border-color: var(--primary-green);">
+                    <i class="fa-solid fa-paper-plane"></i> Send Note Only
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="section-header">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> Attendance History</h3>
+        </div>
+        <div id="sessionsHistoryList">
+            </div>
+    </div>
+
+    <div class="card">
+        <div class="section-header">
+            <h3><i class="fa-solid fa-list-check"></i> Live Status</h3>
+            <button class="refresh-btn" onclick="refreshAttendance()">
+                <i class="fa-solid fa-rotate"></i> Refresh
+            </button>
+        </div>
+        
+        <div class="form-group">
+            <label>Select Course to Monitor</label>
+            <select id="statusCourseSelect" onchange="changeLiveCourse(this.value)">
+                <option value="">-- Choose a Course --</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <p style="font-weight: 700; font-size: 0.9rem;">Monitoring: <span id="attendanceCourseDisplay" style="color: var(--primary-green);">None Selected</span></p>
+            <input type="hidden" id="attendanceCourse" value="">
+        </div>
+
+        <div id="attendanceList" style="max-height: 350px; overflow-y: auto; padding: 5px;">
+            <p style="text-align: center; color: #64748b; padding: 20px;">No students checked in yet.</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="section-header">
+            <h3><i class="fa-solid fa-table-list"></i> Monthly Roster</h3>
+            <button class="btn-danger-outline" style="font-size: 0.8rem;" onclick="deleteMonthlyRoster()">
+                <i class="fa-solid fa-eraser"></i> Delete Roster
+            </button>
+        </div>
+
+        <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <div class="form-group">
+                <label>Month</label>
+                <input type="month" id="rosterMonth" onchange="fetchMonthlyRoster()">
+            </div>
+            <div class="form-group">
+                <label>Filter Course</label>
+                <select id="rosterCourseFilter" onchange="fetchMonthlyRoster()">
+                    <option value="all">All Courses</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table id="attendanceTable">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Course</th>
+                        <th>Status</th>
+                        <th>Date & Time</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="rosterBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'https://alikroomislamicinstitute.onrender.com/api';
+    let allTeacherData = { students: [], managedCourses: [] };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        updateThemeIcons(savedTheme);
+
+        const now = new Date();
+        document.getElementById('rosterMonth').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        
+        fetchTeacherCourses();
+        setupDayPicker();
+        fetchMonthlyRoster();
+        loadMySessions();
+    });
+
+    // Theme Toggle Logic
+    const themeToggle = document.getElementById('navThemeToggle');
+    if (themeToggle) {
+        themeToggle.onclick = () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', nextTheme);
+            localStorage.setItem('theme', nextTheme);
+            updateThemeIcons(nextTheme);
+        };
+    }
+
+    function updateThemeIcons(theme) {
+        const el = document.getElementById('navThemeToggle');
+        if (el) {
+            const icon = el.querySelector('i');
+            icon.className = theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        }
+    }
+
+    function setupDayPicker() {
+        document.querySelectorAll('.day-btn').forEach(btn => {
+            btn.onclick = () => btn.classList.toggle('active');
+        });
+    }
+
+    // --- UPGRADE: Auto-Duration Logic ---
+    function calculateScheduledDuration() {
+        const start = document.getElementById('startTime').value;
+        const end = document.getElementById('endTime').value;
+        const durationInput = document.getElementById('attendanceDuration');
+
+        if (start && end) {
+            const [startH, startM] = start.split(':').map(Number);
+            const [endH, endM] = end.split(':').map(Number);
+            
+            let diffInMinutes = (endH * 60 + endM) - (startH * 60 + startM);
+            
+            // Handle overnight sessions
+            if (diffInMinutes < 0) diffInMinutes += 1440; 
+
+            durationInput.value = diffInMinutes;
+            durationInput.readOnly = true; 
+            durationInput.style.background = "var(--inactive-bg)";
+        }
+    }
+
+    document.getElementById('startTime').addEventListener('change', calculateScheduledDuration);
+    document.getElementById('endTime').addEventListener('change', calculateScheduledDuration);
+
+    function toggleScheduleOptions() {
+        const type = document.getElementById('sessionType').value;
+        const options = document.getElementById('scheduledOptions');
+        const durationInput = document.getElementById('attendanceDuration');
+
+        if (type === 'scheduled') {
+            options.className = '';
+            calculateScheduledDuration();
+        } else {
+            options.className = 'hidden';
+            durationInput.readOnly = false;
+            durationInput.style.background = "var(--input-bg)";
+        }
+    }
+
+    async function fetchTeacherCourses() {
+        try {
+            const response = await fetch(`${API_BASE}/teacher/dashboard-data`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                allTeacherData.students = data.students; 
+                allTeacherData.managedCourses = data.managedCourses;
+
+                const select = document.getElementById('courseSelect');
+                const filter = document.getElementById('rosterCourseFilter');
+                const statusSelect = document.getElementById('statusCourseSelect');
+                
+                if(select) select.innerHTML = '<option value="">Select a Course</option>';
+                if(filter) filter.innerHTML = '<option value="all">All Courses</option>';
+                if(statusSelect) statusSelect.innerHTML = '<option value="">-- Choose a Course --</option>';
+                
+                data.managedCourses.forEach(course => {
+                    const opt = document.createElement('option');
+                    opt.value = course.name; 
+                    opt.textContent = course.name;
+                    if(select) select.appendChild(opt.cloneNode(true));
+                    if(filter) filter.appendChild(opt.cloneNode(true));
+                    if(statusSelect) statusSelect.appendChild(opt);
+                });
+                
+                if(select) select.onchange = () => loadStudentsForCourse(select.value);
+            }
+        } catch (err) { console.error("Error loading courses:", err); }
+    }
+
+    function changeLiveCourse(courseName) {
+        const display = document.getElementById('attendanceCourseDisplay');
+        const listContainer = document.getElementById('attendanceList');
+        if (!courseName) {
+            if(display) display.textContent = "None Selected";
+            if(listContainer) listContainer.innerHTML = '<p style="text-align: center; color: #64748b;">Please select a course above to view live attendance.</p>';
+            return;
+        }
+        if(display) display.textContent = courseName;
+        refreshAttendance();
+    }
+
+    function loadStudentsForCourse(courseName) {
+        const grid = document.getElementById('studentGrid');
+        grid.innerHTML = `
+            <div class="student-item" style="grid-column: 1/-1; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                <input type="checkbox" id="selectAll" checked onclick="toggleAllStudents(this)"> 
+                <label for="selectAll"><strong>Select All Students</strong></label>
+            </div>
+        `;
+        if (!courseName) return;
+        const filteredStudents = allTeacherData.students.filter(s => 
+            s.enrolledCourses.some(c => c.courseName === courseName)
+        );
+        if (filteredStudents.length === 0) {
+            grid.innerHTML += '<p style="padding: 10px; opacity: 0.6;">No students enrolled.</p>';
+            return;
+        }
+        filteredStudents.forEach(s => {
+            const div = document.createElement('div');
+            div.className = 'student-item';
+            div.innerHTML = `
+                <input type="checkbox" class="student-checkbox" value="${s._id}" checked 
+                       onchange="handleStudentCheckboxChange()"> 
+                <span>${s.firstName} ${s.lastName}</span>
+            `;
+            grid.appendChild(div);
+        });
+    }
+
+    function handleStudentCheckboxChange() {
+        const selectAllBox = document.getElementById('selectAll');
+        const studentBoxes = document.querySelectorAll('.student-checkbox');
+        const allChecked = Array.from(studentBoxes).every(cb => cb.checked);
+        if (selectAllBox) selectAllBox.checked = allChecked;
+    }
+
+    function toggleAllStudents(source) {
+        document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = source.checked);
+    }
+
+    // --- UPGRADE: Calendar Roster Logic ---
+    async function fetchMonthlyRoster() {
+        const tbody = document.getElementById('rosterBody');
+        const thead = document.querySelector('#attendanceTable thead');
+        const monthVal = document.getElementById('rosterMonth').value;
+        const courseFilter = document.getElementById('rosterCourseFilter').value;
+
+        if (!monthVal) return;
+        const [year, month] = monthVal.split('-');
+        const daysInMonth = new Date(year, month, 0).getDate();
+
+        let headerRow = `<tr><th>Student Name</th>`;
+        for (let i = 1; i <= daysInMonth; i++) {
+            headerRow += `<th style="text-align:center; padding: 5px; font-size: 0.7rem;">${i}</th>`;
+        }
+        headerRow += `<th>Total</th></tr>`;
+        thead.innerHTML = headerRow;
+
+        tbody.innerHTML = '<tr><td colspan="100%" style="text-align:center; padding:20px;">Fetching records...</td></tr>';
+
+        try {
+            const response = await fetch(`${API_BASE}/teacher/monthly-roster?course=${courseFilter}&month=${month}&year=${year}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const data = await response.json();
+
+            if (data.success && data.roster && Object.keys(data.roster).length > 0) {
+                tbody.innerHTML = Object.values(data.roster).map(student => {
+                    let dayCells = "";
+                    student.days.forEach(present => {
+                        dayCells += `<td style="text-align:center; color: ${present ? 'var(--success)' : '#ccc'}">
+                            ${present ? '<i class="fa-solid fa-circle-check"></i>' : '·'}
+                        </td>`;
+                    });
+
+                    return `
+                        <tr>
+                            <td style="font-weight:700;">${student.name}</td>
+                            ${dayCells}
+                            <td style="font-weight:800; color:var(--primary-green);">${student.total}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                tbody.innerHTML = `<tr><td colspan="100%" style="text-align:center; padding:20px; opacity:0.6;">No attendance data found for this period.</td></tr>`;
+            }
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="100%" style="text-align:center; color:var(--danger);">Error loading roster.</td></tr>`;
+        }
+    }
+
+    async function broadcastNoteOnly() {
+        const course = document.getElementById('courseSelect').value;
+        const note = document.getElementById('teacherNote').value;
+        if (!course) return alert("Please select a target course first.");
+        if (!note.trim()) return alert("Please enter a note to broadcast.");
+        try {
+            const response = await fetch(`${API_BASE}/teacher/broadcast-note`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                body: JSON.stringify({ courseName: course, note: note.trim(), type: 'info-only' })
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                alert("Note broadcasted successfully!");
+                document.getElementById('teacherNote').value = "";
+            } else { alert("Error: " + (data.message || "Failed to broadcast.")); }
+        } catch (err) { alert("Connection failed."); }
+    }
+
+    async function clearAllActiveConfigs() {
+        if(confirm("Purge all active/scheduled sessions? Students won't be able to log attendance.")) {
+            alert("All active configurations cleared.");
+        }
+    }
+
+    async function deleteMonthlyRoster() {
+        const month = document.getElementById('rosterMonth').value;
+        if(confirm(`Permanently delete ALL records for ${month}?`)) {
+            fetchMonthlyRoster();
+        }
+    }
+
+    async function saveAttendanceConfig() {
+        const course = document.getElementById('courseSelect').value;
+        const durationInput = document.getElementById('attendanceDuration');
+        const selectAllBox = document.getElementById('selectAll');
+        if (!durationInput) return;
+        const duration = durationInput.value;
+        const selectAllChecked = selectAllBox ? selectAllBox.checked : false;
+        const selectedStudents = Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb => cb.value);
+        if (!course) return alert("Please select a course before publishing.");
+        try {
+            const response = await fetch(`${API_BASE}/teacher/deploy-attendance`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                body: JSON.stringify({ courseName: course, duration: duration, eligibleStudents: selectAllChecked ? 'all' : selectedStudents })
+            });
+            const data = await response.json();
+            if (data.success) { alert(`Portal deployed! Duration: ${duration} minutes.`); }
+            else { alert("Deployment failed: " + data.message); }
+        } catch (err) { alert("Server connection failed."); }
+    }
+
+    async function loadMySessions() {
+        try {
+            const response = await fetch(`${API_BASE}/teacher/my-attendance-sessions`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const data = await response.json();
+            if (data.success) {
+                const container = document.getElementById('sessionsHistoryList');
+                if (!container) return;
+                if (data.sessions.length === 0) {
+                    container.innerHTML = "<p style='text-align:center; padding:20px; opacity:0.6;'>No recent activity found.</p>";
+                    return;
+                }
+                container.innerHTML = data.sessions.map(item => `
+                    <div class="history-item" style="border-left: 4px solid ${item.type === 'note' ? '#f59e0b' : '#1b6e5f'}">
+                        <div class="history-main">
+                            <span class="history-course">${item.courseName} <small style="font-weight:400; color:#64748b;">(${item.displayType})</small></span>
+                            <span class="history-meta"><i class="fa-regular fa-calendar"></i> ${new Date(item.date).toLocaleDateString()} • ${new Date(item.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                            ${item.type === 'note' ? `<p style="margin:5px 0 0 0; font-size:0.8rem; font-style:italic; color:var(--text-color);">"${item.message.substring(0, 60)}${item.message.length > 60 ? '...' : ''}"</p>` : ''}
+                        </div>
+                        <div class="history-stats">
+                            ${item.type === 'attendance' ? `<span class="stat-badge">${item.count} Present</span>` : ''}
+                            <button onclick="deleteHistoryRecord('${item._id}', '${item.type}')" style="background:none; border:none; color:var(--danger); cursor:pointer; margin-left:10px; font-size:1.1rem;"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        } catch (err) { console.error("Failed to load history:", err); }
+    }
+
+    async function deleteHistoryRecord(id, type) {
+        if (!confirm(`Delete this ${type === 'note' ? 'announcement' : 'attendance record'}?`)) return;
+        try {
+            const response = await fetch(`${API_BASE}/teacher/delete-history/${id}/${type}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const data = await response.json();
+            if (data.success) { loadMySessions(); } else { alert(data.message); }
+        } catch (err) { alert("Error deleting record"); }
+    }
+
+    // --- UPDATED: Live Status Refresh logic to show ALL students ---
+    async function refreshAttendance() {
+        try {
+            const statusSelect = document.getElementById('statusCourseSelect');
+            const listContainer = document.getElementById('attendanceList');
+            const countBadge = document.getElementById('presentCount');
+            if (!statusSelect) return;
+            const courseName = statusSelect.value;
+            if (!courseName) {
+                if (listContainer) listContainer.innerHTML = '<p style="text-align: center; color: #64748b; padding: 20px;">Please select a course to view live status.</p>';
+                return;
+            }
+            const response = await fetch(`${API_BASE}/teacher/attendance-status/${encodeURIComponent(courseName)}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const data = await response.json();
+            if (data.success) {
+                // Check if session is older than 2 hours
+                const sessionTime = new Date(data.sessionStartTime).getTime();
+                const diffHours = (Date.now() - sessionTime) / (1000 * 60 * 60);
+                if (diffHours > 2) {
+                    if (listContainer) listContainer.innerHTML = '<p style="text-align: center; color: #64748b; padding: 20px;">Live session expired (over 2 hours ago).</p>';
+                    if (countBadge) countBadge.textContent = '0';
+                    return;
+                }
+
+                if (countBadge) countBadge.textContent = data.presentCount;
+                if (data.students.length === 0) {
+                    listContainer.innerHTML = '<p style="text-align: center; color: #64748b; padding: 20px;">No students checked in yet.</p>';
+                } else {
+                    // FIXED: Now correctly iterates and displays ALL students
+                    listContainer.innerHTML = data.students.map(s => `
+                        <div class="student-row">
+                            <div class="student-info">
+                                <span class="student-name">${s.name}</span>
+                                <span class="student-id">#${s.id || 'N/A'}</span>
+                            </div>
+                            <div class="check-in-time">
+                                <i class="fa-regular fa-clock"></i> 
+                                ${new Date(s.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        } catch (err) { console.error("Refresh Error:", err); }
+    }
+
+    // --- NEW: Consolidated Live Update Function ---
+    async function updateLiveStatus(courseName) {
+        if (!courseName) return;
+        try {
+            const response = await fetch(`${API_BASE}/teacher/attendance-status/${courseName}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                const list = document.getElementById('attendanceList');
+                const countDisplay = document.getElementById('liveCount');
+                
+                if (countDisplay) countDisplay.textContent = data.presentCount;
+
+                if (data.students.length === 0) {
+                    list.innerHTML = `<p style="text-align: center; color: #64748b; padding: 20px;">Waiting for check-ins...</p>`;
+                } else {
+                    // FIXED: Map through ALL students in the array
+                    list.innerHTML = data.students.map(s => `
+                        <div class="student-row">
+                            <div class="student-info">
+                                <span class="student-name">${s.name}</span>
+                                <span class="student-id">#${s.id}</span>
+                            </div>
+                            <div class="check-in-time">
+                                <i class="fa-regular fa-clock"></i> 
+                                ${new Date(s.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        } catch (err) {
+            console.error("Live Update Failed:", err);
+        }
+    }
+
+    async function loadAbsenceRequests() {
+        try {
+            const response = await fetch(`${API_BASE}/teacher/absence-requests`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const data = await response.json();
+            if (data.success) {
+                const container = document.getElementById('absenceList'); 
+                if(!container) return;
+                container.innerHTML = data.requests.map(req => `
+                    <div class="absence-card" style="border-left: 4px solid var(--danger); padding:10px; background:#fff5f5; margin-bottom:10px; border-radius:8px;">
+                        <div style="font-weight:800;">${req.studentName}</div>
+                        <div style="font-size:0.8rem; color:#666;">Course: ${req.courseName}</div>
+                        <p style="margin:5px 0; font-style:italic;">"${req.reason}"</p>
+                    </div>
+                `).join('');
+            }
+        } catch (err) { console.error(err); }
+    }
+</script>
+</body>
+</html>

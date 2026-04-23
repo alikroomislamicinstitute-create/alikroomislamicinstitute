@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Dashboard - Al-Ikroom</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --primary-green: #1b6e5f;
+    --accent-sage: #82b366;
+    --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    --card-bg: #ffffff;
+    --text-color: #1e293b;
+    --header-bg: #ffffff; 
+    --glass-border: #e2e8f0;
+    --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --notification-red: #e11d48;
+  }
+
+  [data-theme="dark"] {
+    --primary-green: #2ab098;
+    --bg-gradient: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+    --card-bg: #1e293b;
+    --text-color: #f1f5f9;
+    --header-bg: #0f172a; 
+    --glass-border: #334155;
+    --glass-bg: rgba(30, 41, 59, 0.5);
+  }
+
+  body { 
+    margin: 0; 
+    font-family: 'Plus Jakarta Sans', sans-serif; 
+    background: var(--bg-gradient); 
+    color: var(--text-color); 
+    min-height: 100vh; 
+    transition: background 0.4s ease, color 0.4s ease;
+    overflow-x: hidden;
+  }
+
+  header { 
+    display: flex; justify-content: space-between; align-items: center; 
+    padding: 10px 5%; 
+    background: var(--header-bg); 
+    border-bottom: 1px solid var(--glass-border); 
+    position: sticky; top: 0; z-index: 1000; 
+    box-shadow: var(--shadow);
+  }
+
+  .header-brand { display: flex; align-items: center; gap: 12px; }
+  .logo { height: 40px; width: auto; object-fit: contain; }
+  .brand-text { 
+    font-size: 1.2rem; color: var(--primary-green); 
+    font-weight: 800; letter-spacing: -0.5px; text-transform: uppercase;
+    margin: 0;
+  }
+
+  .header-actions { display: flex; align-items: center; gap: 15px; }
+
+  .menu-toggle {
+    background: none; border: none; cursor: pointer;
+    display: flex; flex-direction: column; gap: 5px; z-index: 1001;
+    padding: 5px;
+  }
+  .menu-toggle div {
+    width: 24px; height: 3px; background-color: var(--primary-green);
+    transition: 0.4s; border-radius: 2px;
+  }
+
+  .nav-menu {
+    position: absolute; top: 100%; right: 5%;
+    background: var(--header-bg); 
+    border: 1px solid var(--glass-border); border-radius: 20px;
+    padding: 15px; display: none; flex-direction: column; gap: 5px;
+    box-shadow: var(--shadow); width: 260px; z-index: 1000;
+  }
+  .nav-menu.active { display: flex; animation: slideIn 0.3s ease-out; }
+
+  .nav-link, .nav-btn {
+    background: none; border: none; color: var(--text-color);
+    padding: 12px 15px; border-radius: 12px; font-weight: 600;
+    text-align: left; display: flex; align-items: center; gap: 12px;
+    cursor: pointer; text-decoration: none; transition: 0.2s;
+    font-size: 0.9rem; width: 100%; box-sizing: border-box;
+  }
+  
+  .nav-link:hover, .nav-btn:hover { background: var(--glass-border); }
+
+  .container { padding: 25px 5%; max-width: 1200px; margin: 0 auto; box-sizing: border-box; }
+  
+  .glass-card {
+    background: var(--glass-bg); padding: 20px; border-radius: 20px;
+    border: 1px solid var(--glass-border); backdrop-filter: blur(8px);
+    box-shadow: var(--shadow); transition: 0.3s;
+    word-wrap: break-word;
+  }
+
+  .stats-grid { 
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
+    gap: 15px; margin-bottom: 30px; 
+  }
+  
+  .course-grid { 
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+    gap: 20px; 
+  }
+
+  .modal {
+    display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+  }
+  .modal-content {
+    background-color: #fefefe; margin: 2% auto; padding: 0; border: none; width: 90%; height: 90%;
+    border-radius: 15px; overflow: hidden; position: relative;
+  }
+  .close-modal {
+    position: absolute; top: 15px; right: 25px; color: #fff; font-size: 35px;
+    font-weight: bold; cursor: pointer; z-index: 2001; transition: 0.3s;
+  }
+  .close-modal:hover { color: var(--primary-green); }
+  iframe { border: none; width: 100%; height: 100%; }
+
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 600px) {
+    .brand-text { font-size: 0.95rem; }
+    .logo { height: 32px; }
+    .container { padding: 20px 4%; }
+    .nav-menu { width: 90%; right: 5%; left: 5%; margin: 10px auto; top: 70px; }
+    .stats-grid { grid-template-columns: 1fr; }
+    .welcome-section h2 { font-size: 1.4rem !important; }
+    #announcementContainer div { flex-direction: column; gap: 10px !important; }
+    .modal-content { width: 95%; height: 85%; margin: 10% auto; }
+  }
+  
+  .announcement-row {
+    display: flex;
+    gap: 15px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+  }
+
+  .announcement-card {
+    min-width: 300px;
+    max-width: 320px;
+    flex-shrink: 0;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-left: 5px solid var(--primary-green);
+    border-radius: 15px;
+    padding: 15px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-brand">
+    <img src="Al-Ikroom Logo.png" alt="Logo" class="logo">
+    <h1 class="brand-text">Dashboard</h1>
+  </div>
+
+  <div class="header-actions">
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle Menu">
+      <div class="bar1"></div>
+      <div class="bar2"></div>
+      <div class="bar3"></div>
+    </button>
+  </div>
+  
+  <nav class="nav-menu" id="navMenu">
+    <a href="add_drop.html" class="nav-link">
+      <i class="fa-solid fa-layer-group"></i> 
+      <span id="labelAddDrop">Add/Drop Courses</span>
+    </a>
+    <a href="attendance-student.html" class="nav-link">
+      <i class="fa-solid fa-clipboard-user"></i> 
+      <span>Attendance</span>
+    </a>
+    <a href="assessment-student.html" class="nav-link">
+      <i class="fa-solid fa-file-pen"></i> 
+      <span id="labelAssessments">Assessments</span>
+    </a>
+    <a href="messages.html" class="nav-link">
+      <i class="fa-solid fa-comments"></i> 
+      <span id="labelChat">Messages</span>
+    </a>
+    
+    <button id="langToggle" class="nav-btn"><i class="fa-solid fa-language"></i> <span id="langText">العربية</span></button>
+    <button id="themeToggle" class="nav-btn"><i class="fa-solid fa-moon"></i> <span id="themeText">Dark Mode</span></button>
+    <hr style="border: 0; border-top: 1px solid var(--glass-border); width: 100%; margin: 5px 0;">
+    <button id="logoutBtn" class="nav-btn" style="color: #e11d48;"><i class="fa-solid fa-right-from-bracket"></i> <span id="labelLogout">Logout</span></button>
+  </nav>
+</header>
+
+<main class="container">
+  <div class="welcome-section" style="margin-bottom: 25px;">
+    <h2 id="userName" style="font-size: 1.6rem; margin: 0; font-weight: 800; color: var(--primary-green);">...</h2>
+    <p id="welcomeSub" style="opacity: 0.7; margin-top: 5px; font-size: 0.9rem;">Continue your journey today.</p>
+  </div>
+
+  <div id="announcementListContainer"></div>
+
+<template id="announcementTemplate">
+    <div class="announcement-row" style="margin-bottom: 25px; border-left: 5px solid var(--primary-green); padding: 15px; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow);">
+        <div style="display: flex; gap: 15px; align-items: start;">
+            <div style="font-size: 1.2rem; color: var(--primary-green);"><i class="fa-solid fa-bullhorn"></i></div>
+            <div style="flex-grow: 1; min-width: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px;">
+                    <h4 class="ann-title" style="margin: 0; font-weight: 800; font-size: 1rem;"></h4>
+                    <span class="ann-date" style="font-size: 0.7rem; opacity: 0.5;"></span>
+                </div>
+                <p class="ann-text" style="margin: 8px 0 0; line-height: 1.5; font-size: 0.85rem;"></p>
+            </div>
+        </div>
+    </div>
+</template>
+
+  <div class="stats-grid">
+    <div class="glass-card" style="display: flex; align-items: center; gap: 15px;">
+        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(27, 110, 95, 0.1); color: var(--primary-green); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;"><i class="fa-solid fa-book-open"></i></div>
+        <div>
+            <div id="labelEnrolled" style="font-size: 0.75rem; opacity: 0.6; font-weight: 600;">Enrolled</div>
+            <div style="font-size: 1.2rem; font-weight: 800;" id="countEnrolled">0</div>
+        </div>
+    </div>
+    <div class="glass-card" style="display: flex; align-items: center; gap: 15px;">
+        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(27, 110, 95, 0.1); color: var(--primary-green); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;"><i class="fa-solid fa-graduation-cap"></i></div>
+        <div>
+            <div id="labelAvg" style="font-size: 0.75rem; opacity: 0.6; font-weight: 600;">Progress</div>
+            <div style="font-size: 1.2rem; font-weight: 800;" id="avgProgress">0%</div>
+        </div>
+    </div>
+  </div>
+
+  <h3 id="labelCourses" style="font-size: 1.3rem; font-weight: 800; margin: 30px 0 15px;">Active Learning</h3>
+  <div id="courseGrid" class="course-grid"></div>
+
+  <h3 id="labelResources" style="font-size: 1.3rem; font-weight: 800; margin: 40px 0 15px;"><i class="fa-solid fa-folder-open" style="margin-right: 8px;"></i>Resources</h3>
+  <div id="resourceGrid" class="stats-grid"></div>
+</main>
+
+<div id="pdfModal" class="modal">
+    <span class="close-modal" onclick="closePdfModal()">&times;</span>
+    <div class="modal-content">
+        <iframe id="pdfFrame" src=""></iframe>
+    </div>
+</div>
+
+<script>
+// Paste the custom-alerts logic directly here
+(function() {
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .als-alert-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 9999; }
+        .als-alert-overlay.active { display: flex; }
+        .als-alert-box { background: var(--card-bg, #fff); padding: 35px; border-radius: 35px; text-align: center; max-width: 420px; width: 90%; border-top: 6px solid var(--primary-green); }
+        .als-alert-btn { width: 100%; padding: 14px; background: var(--primary-green); color: #fff; border: none; border-radius: 50px; cursor: pointer; margin-top: 20px; }
+    `;
+    document.head.appendChild(style);
+
+    window.alert = function(message) {
+        const overlay = document.createElement('div');
+        overlay.className = 'als-alert-overlay active';
+        overlay.innerHTML = `
+            <div class="als-alert-box">
+                <i class="fas fa-exclamation-circle" style="font-size:3rem; color:var(--primary-green);"></i>
+                <div style="font-size:1.4rem; font-weight:700; margin: 15px 0; color:var(--primary-green);">Notification</div>
+                <div style="line-height:1.5;">${message}</div>
+                <button class="als-alert-btn">Understood</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        overlay.querySelector('button').onclick = () => document.body.removeChild(overlay);
+    };
+})();
+</script>
+
+
+<script>
+    const BACKEND_URL = "https://alikroomislamicinstitute.onrender.com/api";
+    let currentLang = localStorage.getItem('lang') || 'en';
+
+    window.studentData = {
+        name: localStorage.getItem('full_name') || "Student",
+        announcement: null,
+        courses: [],
+        resources: [],
+        assessments: []
+    };
+
+    const getAuthHeaders = () => {
+        const token = localStorage.getItem('token');
+        return {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+    };
+
+    function openPdfModal(url) {
+        const modal = document.getElementById('pdfModal');
+        const frame = document.getElementById('pdfFrame');
+        const fullUrl = url.startsWith('http') ? url : `https://alikroomislamicinstitute.onrender.com${url}`;
+        frame.src = fullUrl;
+        modal.style.display = "block";
+        document.body.style.overflow = "hidden";
+    }
+
+    function closePdfModal() {
+        const modal = document.getElementById('pdfModal');
+        const frame = document.getElementById('pdfFrame');
+        modal.style.display = "none";
+        frame.src = "";
+        document.body.style.overflow = "auto";
+    }
+
+    function renderAssessments(assessments) {
+        const list = document.getElementById('manageAssessmentsList');
+        if (!list) return;
+        list.innerHTML = assessments.map(a => `
+            <div class="resource-item">
+                <span>${a.title} (${a.type})</span>
+            </div>
+        `).join('');
+    }
+
+    async function fetchStudentAssessments() {
+        const res = await fetch(`${BACKEND_URL}/student/my-assessments`, { 
+            headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        if (data.success) {
+            const container = document.getElementById('assessmentContainer');
+            if (container) {
+                container.innerHTML = data.assessments.map(a => `
+                    <div class="assessment-card">
+                        <h4>${a.title}</h4>
+                        <p>Type: ${a.type}</p>
+                        ${a.fileUrl ? `
+                            <div style="display:flex; gap:10px; margin-top:10px;">
+                                <a href="${a.fileUrl}" download style="text-decoration:none; color:var(--primary-green); font-size:0.8rem;"><i class="fa-solid fa-download"></i> Download</a>
+                                <a href="javascript:void(0)" onclick="openPdfModal('${a.fileUrl}')" style="text-decoration:none; color:var(--primary-green); font-size:0.8rem;"><i class="fa-solid fa-eye"></i> View</a>
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('');
+                if (typeof renderAssessments === "function") renderAssessments(data.assessments);
+            }
+        }
+    }
+
+    function renderTasks(tasks) {
+        const container = document.getElementById('tasksContainer');
+        if (!container) return; 
+        if (!tasks || tasks.length === 0) {
+            container.innerHTML = `<p style="text-align:center; opacity:0.5; padding:20px;">${i18n[currentLang].noAssessments}</p>`;
+            return;
+        }
+    }
+
+    async function handleSubmission(assessmentId) {
+        const textContent = document.getElementById(`ans-${assessmentId}`).value;
+        const uploadedFileLink = document.getElementById(`file-${assessmentId}`).value;
+        try {
+            const response = await fetch(`${BACKEND_URL}/assessments/submit`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ assessmentId, content: textContent, fileUrl: uploadedFileLink })
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert("Done! Your work has been sent to the Ustadh.");
+                fetchStudentDashboardData();
+            } else {
+                alert("Failed: " + (result.message || "Unknown error"));
+            }
+        } catch (err) {
+            alert("Network error. Please try again.");
+        }
+    }
+
+    function handleAssessmentClick(id, type) {
+        if (type === 'Quiz') {
+            window.location.href = `cbt-exam.html?id=${id}`;
+        }
+    }
+
+    async function fetchStudentDashboardData() {
+        const token = localStorage.getItem('token');
+        if (!token) { window.location.href = 'login.html'; return; }
+        try {
+            const res = await fetch(`${BACKEND_URL}/student/my-dashboard`, { headers: getAuthHeaders() });
+            const data = await res.json();
+            if (data.success) {
+                if (data.user && data.user.fullName) {
+                    const firstName = data.user.fullName.trim().split(' ')[0];
+                    window.studentData.name = firstName;
+                    localStorage.setItem('full_name', firstName); 
+                }
+                window.studentData.courses = data.enrolledCourses || [];
+                window.studentData.resources = data.resources || [];
+                window.studentData.assessments = data.assessments || []; 
+                render(); 
+                renderTasks(window.studentData.assessments);
+            }
+        } catch (err) { console.error("Dashboard Sync Error:", err); }
+    }
+
+    const API_URL = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost' 
+                    ? 'https://alikroomislamicinstitute.onrender.com/api' 
+                    : '/api';
+
+async function fetchAnnouncements() {
+    try {
+        // Change the URL from '/api/student/announcements' to include the port 5000
+        const response = await fetch('https://alikroomislamicinstitute.onrender.com/api/student/announcements', {
+            headers: { 
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        // ... rest of your display logic
+
+        const container = document.getElementById('announcementListContainer');
+        container.innerHTML = ''; // Clear old ones
+
+        if (data.success && data.announcements.length > 0) {
+            data.announcements.forEach(ann => {
+                const template = document.getElementById('announcementTemplate').content.cloneNode(true);
+                
+                template.querySelector('.ann-title').textContent = ann.title;
+                template.querySelector('.ann-text').textContent = ann.message;
+                template.querySelector('.ann-date').textContent = new Date(ann.createdAt).toLocaleDateString();
+                
+                // If it's urgent, change the border color
+                if(ann.priority === 'urgent') {
+                    template.querySelector('.announcement-row').style.borderLeftColor = 'var(--notification-red)';
+                }
+
+                container.appendChild(template);
+            });
+        } else {
+            container.innerHTML = '<p style="font-size: 0.8rem; opacity: 0.6;">No recent announcements.</p>';
+        }
+    } catch (err) {
+        console.error("Announcement fetch error:", err);
+    }
+}
+
+    const i18n = {
+        en: {
+            welcome: "Assalamu Alaikum", sub: "Continue your journey of knowledge today.",
+            enrolled: "Courses Enrolled", avg: "Avg. Progress", courses: "My Active Learning",
+            resources: "Learning Resources", assessments: "Assessments & Quizzes",
+            noAssessments: "No pending assessments.", announce: "Notice Board",
+            urgent: "Urgent Update", waiting: "No specific notes from Ustadh.",
+            noCourses: "No courses registered yet.", noResources: "No study materials uploaded yet.",
+            logout: "Logout", addDrop: "Add/Drop Courses", chat: "Messages", dark: "Dark Mode", light: "Light Mode",
+            view: "View Online", for: "For"
+        },
+        ar: {
+            welcome: "السلام عليكم", sub: "واصل رحلتك في طلب العلم اليوم.",
+            enrolled: "الدورات المسجلة", avg: "متوسط التقدم", courses: "تعلمي النشط",
+            resources: "مصادر التعلم", assessments: "التقييمات والاختبارات",
+            noAssessments: "لا توجد تقييمات معلقة.", announce: "لوحة الإعلانات",
+            urgent: "تحديث عاجل", waiting: "لا توجد ملاحظات من الأستاذ.",
+            noCourses: "لم يتم تسجيل أي دورات بعد.", noResources: "لم يتم رفع أي مواد دراسية بعد.",
+            logout: "تسجيل الخروج", addDrop: "إضافة/إسقاط الدورات", chat: "الرسائل", dark: "الوضع الداكن", light: "الوضع المضيء",
+            view: "عرض مباشر", for: "لـ"
+        }
+    };
+
+    function render() {
+        const t = i18n[currentLang];
+        const isAr = currentLang === 'ar';
+        const data = window.studentData; 
+        document.dir = isAr ? 'rtl' : 'ltr';
+
+        const nameElement = document.getElementById('userName');
+        if (nameElement) nameElement.innerText = `${t.welcome}, ${data.name}`;
+        
+        document.getElementById('welcomeSub').innerText = t.sub;
+        document.getElementById('labelEnrolled').innerText = t.enrolled;
+        document.getElementById('labelAvg').innerText = t.avg;
+        document.getElementById('labelCourses').innerText = t.courses;
+        document.getElementById('labelResources').innerText = t.resources;
+        document.getElementById('labelAddDrop').innerText = t.addDrop;
+        document.getElementById('labelChat').innerText = t.chat;
+        document.getElementById('labelLogout').innerText = t.logout;
+        document.getElementById('langText').innerText = isAr ? 'English' : 'العربية';
+        
+        const total = data.courses ? data.courses.length : 0;
+        const avg = total > 0 ? Math.round(data.courses.reduce((s, c) => s + (c.progress || 0), 0) / total) : 0;
+        document.getElementById('countEnrolled').innerText = total;
+        document.getElementById('avgProgress').innerText = `${avg}%`;
+
+        const annBox = document.getElementById('announcementContainer');
+        if (data.announcement) {
+            annBox.style.display = 'block';
+            const isUrgent = data.announcement.priority === 'urgent';
+            const courseBadge = data.announcement.course !== 'All' ? ` <span style="font-size:0.7rem; background:var(--primary-green); color:white; padding:2px 8px; border-radius:10px; margin-left:5px;">${t.for}: ${data.announcement.course}</span>` : '';
+            
+            document.getElementById('announcementTitle').innerHTML = (isUrgent ? t.urgent : (data.announcement.title || t.announce)) + courseBadge;
+            document.getElementById('announcementText').innerText = data.announcement.message;
+            document.getElementById('announcementDate').innerText = data.announcement.date || "";
+            
+            annBox.style.borderColor = isUrgent ? "#e11d48" : "var(--primary-green)";
+            document.getElementById('announcementIcon').style.color = isUrgent ? "#e11d48" : "var(--primary-green)";
+        }
+
+        const courseGrid = document.getElementById('courseGrid');
+        courseGrid.innerHTML = total > 0 ? "" : `<div class="glass-card" style="grid-column:1/-1; text-align:center; opacity:0.5; border: 2px dashed var(--glass-border); background: none; padding: 40px;">${t.noCourses}</div>`;
+        
+        data.courses.forEach(c => {
+            const courseInfo = c.course || {};
+            const title = isAr ? (courseInfo.arTitle || courseInfo.title) : (courseInfo.title || 'Unknown Course');
+            courseGrid.innerHTML += `
+                <div class="glass-card">
+                    <div style="display:flex; justify-content:space-between; align-items:start;">
+                        <div>
+                            <h4 style="margin:0; color:var(--primary-green); font-size:1.1rem;">${title}</h4>
+                            <span style="font-size:0.75rem; opacity:0.6;">${courseInfo.courseCode || 'Active'}</span>
+                        </div>
+                        <span style="font-weight:bold; font-size:0.9rem;">${c.progress || 0}%</span>
+                    </div>
+                    <div class="progress-container" style="margin:15px 0; height:8px; background:rgba(0,0,0,0.05); border-radius:10px; overflow:hidden;">
+                        <div class="progress-bar" style="width:${c.progress || 0}%; height:100%; background:var(--primary-green); transition:0.3s;"></div>
+                    </div>
+                    <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--glass-border); display:flex; gap:10px; font-size:0.85rem; opacity:0.8;">
+                        <i class="fa-solid fa-comment-dots" style="color:var(--primary-green); margin-top:3px;"></i>
+                        <span>${c.teacherNote || t.waiting}</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        const resGrid = document.getElementById('resourceGrid');
+        const hasRes = data.resources && data.resources.length > 0;
+        resGrid.innerHTML = hasRes ? "" : `<div class="glass-card" style="grid-column:1/-1; text-align:center; opacity:0.5; border:2px dashed var(--glass-border); background:none; padding: 20px;">${t.noResources}</div>`;
+        if (hasRes) {
+            data.resources.forEach(r => {
+                resGrid.innerHTML += `
+                    <div class="glass-card" style="display:flex; gap:15px; align-items:center; padding:15px 20px;">
+                        <div style="font-size:1.4rem; color:var(--primary-green);"><i class="fa-solid fa-file-pdf"></i></div>
+                        <div style="flex-grow:1;">
+                            <div style="font-weight:700; font-size:0.9rem;">${r.title}</div>
+                            <div style="font-size:0.75rem; opacity:0.6;">${r.course || 'General'}</div>
+                            <div style="margin-top:5px; display:flex; gap:10px;">
+                                <a href="javascript:void(0)" onclick="openPdfModal('${r.fileUrl}')" style="color:var(--primary-green); font-size:0.7rem; font-weight:700; text-decoration:none;"><i class="fa-solid fa-eye"></i> ${t.view}</a>
+                            </div>
+                        </div>
+                        <a href="javascript:void(0)" onclick="downloadResource('${r._id}', '${r.title}')" style="color:var(--primary-green); font-size:1.2rem;"><i class="fa-solid fa-circle-down"></i></a>
+                    </div>
+                `;
+            });
+        }
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        document.getElementById('themeText').innerText = isDark ? t.light : t.dark;
+        document.querySelector('#themeToggle i').className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+    }
+
+    async function downloadResource(id, filename) {
+        try {
+            const response = await fetch(`${BACKEND_URL}/student/resource/download/${id}`, {
+                headers: getAuthHeaders()
+            });
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = filename || 'resource';
+            document.body.appendChild(a); a.click();
+            window.URL.revokeObjectURL(url); a.remove();
+        } catch (err) { alert("Could not download file."); }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        const menuToggle = document.getElementById('menuToggle');
+        const navMenu = document.getElementById('navMenu');
+
+        menuToggle.onclick = (e) => {
+            e.stopPropagation();
+            menuToggle.classList.toggle('change');
+            navMenu.classList.toggle('active');
+        };
+
+        document.getElementById('themeToggle').onclick = () => {
+            const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            render();
+        };
+
+        document.getElementById('langToggle').onclick = () => {
+            currentLang = currentLang === 'en' ? 'ar' : 'en';
+            localStorage.setItem('lang', currentLang);
+            render();
+        };
+
+        document.getElementById('logoutBtn').onclick = () => {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        };
+
+        document.addEventListener('click', () => {
+            menuToggle.classList.remove('change');
+            navMenu.classList.remove('active');
+        });
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('pdfModal');
+            if (event.target == modal) {
+                closePdfModal();
+            }
+        }
+
+        render();
+        fetchAnnouncements();
+        fetchStudentDashboardData();
+        fetchStudentAssessments();
+
+        setInterval(() => {
+            fetchStudentDashboardData();
+            fetchAnnouncements();
+            fetchStudentAssessments();
+        }, 150000);
+    });
+</script>
+</body>
+</html>

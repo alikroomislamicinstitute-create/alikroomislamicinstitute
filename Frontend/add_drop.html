@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add/Drop Courses | Al-Ikroom Islamic Institute</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Light Theme Variables */
+            --primary-green: #1b6e5f;
+            --primary-light: #e8f3f1;
+            --accent-gold: #c5a059;
+            --bg-body: #f4f7f6;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --glass-border: rgba(226, 232, 240, 0.8);
+            --danger: #e11d48;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            --nav-bg: #ffffff;
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --glass-border: rgba(51, 65, 85, 0.5);
+            --nav-bg: #1e293b;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; transition: background 0.3s ease, color 0.3s ease; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* --- THEME TOGGLE & HEADER --- */
+        header {
+            background: var(--nav-bg);
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-left { display: flex; align-items: center; gap: 20px; }
+
+        .back-btn {
+            background: var(--primary-light);
+            color: var(--primary-green);
+            padding: 10px 18px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+        }
+
+        .back-btn:hover {
+            background: var(--primary-green);
+            color: white;
+            transform: translateX(-5px);
+            box-shadow: 0 5px 15px rgba(27, 110, 95, 0.3);
+        }
+
+        .theme-toggle {
+            background: var(--primary-light);
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            cursor: pointer;
+            color: var(--primary-green);
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- MAIN LAYOUT --- */
+        main {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header { margin-bottom: 40px; text-align: center; }
+        .page-header h1 { font-size: 2.5rem; font-weight: 800; color: var(--primary-green); margin-bottom: 8px; }
+        .instruction { color: var(--text-muted); font-size: 1rem; max-width: 600px; margin: 0 auto; }
+
+        /* --- SECTIONS --- */
+        .section-container { margin-bottom: 40px; }
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--glass-border);
+        }
+
+        .section-title i { font-size: 1.2rem; }
+        .title-drop { color: var(--danger); border-color: rgba(225, 29, 72, 0.2); }
+        .title-add { color: var(--primary-green); border-color: rgba(27, 110, 95, 0.2); }
+
+        /* --- COURSE CARDS --- */
+        .course-list { display: grid; gap: 15px; }
+        
+        .course-item {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+        }
+
+        .course-item:hover {
+            transform: scale(1.01);
+            border-color: var(--primary-green);
+            box-shadow: var(--shadow);
+        }
+
+        /* Side Indicators */
+        .drop-zone .course-item { border-left: 5px solid var(--danger); }
+        .add-zone .course-item { border-left: 5px solid var(--primary-green); }
+
+        .course-main-info { display: flex; align-items: center; gap: 20px; flex: 1; }
+        
+        .course-cb {
+            width: 24px;
+            height: 24px;
+            accent-color: var(--primary-green);
+            cursor: pointer;
+        }
+
+        .course-details { display: flex; flex-direction: column; gap: 4px; }
+        .course-tag {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 800;
+            color: var(--accent-gold);
+        }
+        .course-title { font-size: 1.1rem; font-weight: 700; }
+        .course-meta { font-size: 0.85rem; color: var(--text-muted); }
+
+        .course-arabic {
+            font-family: 'Amiri', serif;
+            text-align: right;
+            line-height: 1.2;
+        }
+        .ar-text { font-size: 1.3rem; color: var(--primary-green); font-weight: 700; }
+
+        /* --- SUBMIT BUTTON --- */
+        .btn-wrapper {
+            position: sticky;
+            bottom: 30px;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .btn-submit {
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 18px 60px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(27, 110, 95, 0.4);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(27, 110, 95, 0.5);
+            letter-spacing: 1px;
+        }
+
+        .btn-submit:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .error-message {
+            background: rgba(225, 29, 72, 0.1);
+            color: var(--danger);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+            border: 1px solid var(--danger);
+        }
+
+        .empty-msg { text-align: center; padding: 40px; color: var(--text-muted); font-style: italic; }
+
+        @media (max-width: 600px) {
+            .course-item { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .course-arabic { text-align: left; }
+            .header-left h2 { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <a href="dashboard-student.html" class="back-btn">
+            <i class="fa-solid fa-house"></i> Dashboard
+        </a>
+        <h2 style="font-size: 1.1rem; font-weight: 700;">Enrollment Portal</h2>
+    </div>
+    <button class="theme-toggle" id="themeToggle" title="Toggle Theme">
+        <i class="fa-solid fa-moon"></i>
+    </button>
+</header>
+
+<main>
+    <div class="page-header">
+        <h1>Add/Drop Courses</h1>
+        <p class="instruction">Customize your learning journey at Al-Ikroom. Registered courses are highlighted in red for dropping, while available courses are in green.</p>
+    </div>
+
+    <p class="error-message" id="errorMessage"></p>
+
+    <div class="section-container">
+        <div class="section-title title-drop">
+            <i class="fa-solid fa-book-bookmark"></i> Currently Registered
+        </div>
+        <div class="course-list drop-zone" id="dropList">
+            <div class="empty-msg">Syncing with academy records...</div>
+        </div>
+    </div>
+
+    <div class="section-container">
+        <div class="section-title title-add">
+            <i class="fa-solid fa-cart-plus"></i> Open for Enrollment
+        </div>
+        <div class="course-list add-zone" id="addList">
+            <div class="empty-msg">Checking for new programs...</div>
+        </div>
+    </div>
+
+    <div class="btn-wrapper">
+        <button class="btn-submit" id="saveCoursesBtn">Confirm Changes</button>
+    </div>
+</main>
+
+<script>
+// Paste the custom-alerts logic directly here
+(function() {
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .als-alert-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 9999; }
+        .als-alert-overlay.active { display: flex; }
+        .als-alert-box { background: var(--card-bg, #fff); padding: 35px; border-radius: 35px; text-align: center; max-width: 420px; width: 90%; border-top: 6px solid var(--primary-green); }
+        .als-alert-btn { width: 100%; padding: 14px; background: var(--primary-green); color: #fff; border: none; border-radius: 50px; cursor: pointer; margin-top: 20px; }
+    `;
+    document.head.appendChild(style);
+
+    window.alert = function(message) {
+        const overlay = document.createElement('div');
+        overlay.className = 'als-alert-overlay active';
+        overlay.innerHTML = `
+            <div class="als-alert-box">
+                <i class="fas fa-exclamation-circle" style="font-size:3rem; color:var(--primary-green);"></i>
+                <div style="font-size:1.4rem; font-weight:700; margin: 15px 0; color:var(--primary-green);">Notification</div>
+                <div style="line-height:1.5;">${message}</div>
+                <button class="als-alert-btn">Understood</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        overlay.querySelector('button').onclick = () => document.body.removeChild(overlay);
+    };
+})();
+</script>
+
+
+<script>
+    const BACKEND_URL = "https://alikroomislamicinstitute.onrender.com/api";
+    const token = localStorage.getItem('token');
+
+    if (!token) { window.location.href = 'login.html'; }
+
+    // --- THEME ENGINE ---
+    const themeToggle = document.getElementById('themeToggle');
+    const html = document.documentElement;
+    const currentTheme = localStorage.getItem('theme') || 'light';
+
+    html.setAttribute('data-theme', currentTheme);
+    updateThemeIcon(currentTheme);
+
+    themeToggle.addEventListener('click', () => {
+        const newTheme = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        html.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeIcon(newTheme);
+    });
+
+    function updateThemeIcon(theme) {
+        themeToggle.innerHTML = theme === 'light' ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
+    }
+
+    // --- LOGIC ---
+    const dropListDiv = document.getElementById('dropList');
+    const addListDiv = document.getElementById('addList');
+    const errorMessage = document.getElementById('errorMessage');
+    const saveBtn = document.getElementById('saveCoursesBtn');
+
+    async function loadSelectionData() {
+        try {
+            const [allRes, profileRes] = await Promise.all([
+                fetch(`${BACKEND_URL}/student/courses`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${BACKEND_URL}/student/profile`, { headers: { 'Authorization': `Bearer ${token}` } })
+            ]);
+
+            const coursesData = await allRes.json();
+            const studentData = await profileRes.json();
+
+            if (!coursesData.success || !studentData.success) throw new Error("Sync failed.");
+
+            const enrolledCourseIds = (studentData.user.enrolledCourses || []).map(item => {
+                const target = item.course || item;
+                return (target._id || target.id || target).toString();
+            });
+
+            renderSplitLists(coursesData.courses || [], enrolledCourseIds);
+        } catch (err) {
+            errorMessage.textContent = "Connection Error: " + err.message;
+            errorMessage.style.display = 'block';
+        }
+    }
+
+    function renderSplitLists(allCourses, enrolledCourseIds) {
+        dropListDiv.innerHTML = '';
+        addListDiv.innerHTML = '';
+        
+        const registeredArr = allCourses.filter(c => enrolledCourseIds.includes((c._id || c.id).toString()));
+        const availableArr = allCourses.filter(c => !enrolledCourseIds.includes((c._id || c.id).toString()));
+
+        if (registeredArr.length === 0) dropListDiv.innerHTML = '<p class="empty-msg">No active enrollments.</p>';
+        else registeredArr.forEach(c => dropListDiv.appendChild(createCourseCard(c, true)));
+
+        if (availableArr.length === 0) addListDiv.innerHTML = '<p class="empty-msg">No new courses available right now.</p>';
+        else availableArr.forEach(c => addListDiv.appendChild(createCourseCard(c, false)));
+    }
+
+    function createCourseCard(course, isEnrolled) {
+        const div = document.createElement('div');
+        div.className = 'course-item';
+        const courseId = course._id || course.id;
+        
+        div.innerHTML = `
+            <div class="course-main-info">
+                <input type="checkbox" value="${courseId}" ${isEnrolled ? 'checked' : ''} class="course-cb">
+                <div class="course-details">
+                    <span class="course-tag">${course.category || 'General'}</span>
+                    <span class="course-title">${course.title}</span>
+                    <span class="course-meta"><i class="fa-solid fa-user-tie"></i> ${course.teacherName || 'Ustadh TBA'} • <i class="fa-solid fa-tags"></i> $${course.price}</span>
+                </div>
+            </div>
+            <div class="course-arabic">
+                <div class="ar-text">${course.arTitle || ''}</div>
+            </div>
+        `;
+
+        div.addEventListener('click', (e) => {
+            if (e.target.type !== 'checkbox') {
+                const cb = div.querySelector('.course-cb');
+                cb.checked = !cb.checked;
+            }
+        });
+        return div;
+    }
+
+    saveBtn.addEventListener('click', async () => {
+        const selectedIds = Array.from(document.querySelectorAll('.course-cb:checked')).map(cb => cb.value);
+        saveBtn.disabled = true;
+        saveBtn.innerText = "Processing...";
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/student/update-courses`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ enrolledCourses: selectedIds })
+            });
+
+            const result = await res.json();
+            if (result.success) {
+                window.location.href = 'dashboard-student.html';
+            } else throw new Error(result.message);
+        } catch (err) {
+            errorMessage.textContent = err.message;
+            errorMessage.style.display = 'block';
+            saveBtn.disabled = false;
+            saveBtn.innerText = "Confirm Changes";
+        }
+    });
+
+    loadSelectionData();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al-Ikroom | Examination System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1b6e5f;
+            --danger: #e11d48;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); margin: 0; overflow: hidden; }
+        
+        /* Layout */
+        .cbt-header { 
+            background: var(--primary); color: white; padding: 15px 40px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .main-wrapper { 
+            display: grid; grid-template-columns: 1fr 350px; 
+            height: calc(100vh - 70px); gap: 20px; padding: 20px; 
+        }
+
+        /* Question Section */
+        .question-box {
+            background: var(--card); border-radius: 12px; padding: 40px;
+            display: flex; flex-direction: column; position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .option {
+            padding: 15px 20px; border: 2px solid #e2e8f0; border-radius: 8px;
+            margin-bottom: 12px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; font-weight: 500;
+        }
+        .option:hover { border-color: var(--primary); background: #f0fdf4; }
+        .option.selected { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* Sidebar Navigation */
+        .sidebar { background: var(--card); border-radius: 12px; padding: 20px; overflow-y: auto; }
+        .nav-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 20px; }
+        .nav-btn {
+            aspect-ratio: 1; border: 1px solid #cbd5e1; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-weight: bold; font-size: 0.9rem;
+        }
+        .nav-btn.current { border: 2px solid var(--primary); color: var(--primary); }
+        .nav-btn.answered { background: var(--primary); color: white; border: none; }
+
+        .footer-nav { margin-top: auto; display: flex; gap: 15px; padding-top: 20px; }
+        
+        /* Animations */
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        .animate-slide { animation: slideIn 0.3s ease-out; }
+    </style>
+</head>
+<body>
+
+<div class="cbt-header">
+    <div>
+        <h2 id="quizTitle" style="margin:0">CBT Assessment</h2>
+        <small id="courseName">Al-Ikroom Portal</small>
+    </div>
+    <div style="text-align: center;">
+        <div style="font-size: 0.8rem; opacity: 0.8;">TIME REMAINING</div>
+        <div id="timer" style="font-size: 1.8rem; font-weight: 800;">00:00:00</div>
+    </div>
+    <button onclick="finalSubmit()" style="background: var(--danger); color: white; border: none; padding: 10px 25px; border-radius: 6px; font-weight: bold; cursor: pointer;">Finish Attempt</button>
+</div>
+
+<div class="main-wrapper">
+    <div class="question-box">
+        <div id="qNumber" style="color: var(--primary); font-weight: 800; font-size: 1.1rem;">QUESTION 1</div>
+        <h3 id="qText" style="margin: 20px 0 30px 0; line-height: 1.6;">Loading question...</h3>
+        
+        <div id="optionsArea"></div>
+
+        <div class="footer-nav">
+            <button onclick="prevQ()" id="prevBtn" style="padding: 12px 30px; border-radius: 6px; cursor: pointer;">Previous</button>
+            <button onclick="nextQ()" id="nextBtn" style="padding: 12px 30px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer;">Next Question</button>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <h4 style="margin:0">Question Palette</h4>
+        <div class="nav-grid" id="palette"></div>
+        <div style="margin-top: 30px; font-size: 0.85rem; color: #64748b;">
+            <p><span style="display:inline-block; width:12px; height:12px; background:var(--primary); border-radius:2px;"></span> Answered</p>
+            <p><span style="display:inline-block; width:12px; height:12px; border:2px solid var(--primary); border-radius:2px;"></span> Current</p>
+            <p><span style="display:inline-block; width:12px; height:12px; border:1px solid #cbd5e1; border-radius:2px;"></span> Not Visited</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    let quizData = [];
+    let currentIndex = 0;
+    let answers = [];
+    const quizId = new URLSearchParams(window.location.search).get('id');
+
+    async function loadQuiz() {
+        const token = localStorage.getItem('token');
+        // We fetch the specific quiz details from your existing backend
+        const res = await fetch(`https://alikroomislamicinstitute.onrender.com/api/student/quiz-details/${quizId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        quizData = data.quiz.quizData;
+        answers = new Array(quizData.length).fill(null);
+        document.getElementById('quizTitle').innerText = data.quiz.title;
+        renderQuestion();
+        renderPalette();
+    }
+
+    function renderQuestion() {
+        const q = quizData[currentIndex];
+        const area = document.getElementById('optionsArea');
+        document.getElementById('qNumber').innerText = `QUESTION ${currentIndex + 1}`;
+        document.getElementById('qText').innerText = q.questionText;
+        
+        area.innerHTML = q.options.map((opt, i) => `
+            <div class="option ${answers[currentIndex] === i ? 'selected' : ''}" onclick="setAnswer(${i})">
+                <span style="width:30px">${String.fromCharCode(65+i)}.</span> ${opt}
+            </div>
+        `).join('');
+    }
+
+    function setAnswer(i) {
+        answers[currentIndex] = i;
+        renderQuestion();
+        renderPalette();
+    }
+
+    function renderPalette() {
+        const grid = document.getElementById('palette');
+        grid.innerHTML = quizData.map((_, i) => `
+            <div class="nav-btn ${i === currentIndex ? 'current' : ''} ${answers[i] !== null ? 'answered' : ''}" onclick="jumpTo(${i})">
+                ${i+1}
+            </div>
+        `).join('');
+    }
+
+    function jumpTo(i) { currentIndex = i; renderQuestion(); renderPalette(); }
+    function nextQ() { if(currentIndex < quizData.length - 1) jumpTo(currentIndex + 1); }
+    function prevQ() { if(currentIndex > 0) jumpTo(currentIndex - 1); }
+
+    async function finalSubmit() {
+        if(!confirm("Submit your answers?")) return;
+        const token = localStorage.getItem('token');
+        const res = await fetch(`https://alikroomislamicinstitute.onrender.com/api/student/submit-quiz/${quizId}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ answers })
+        });
+        const result = await res.json();
+        alert("Score: " + result.score);
+        window.location.href = 'dashboard-student.html';
+    }
+
+    loadQuiz();
+</script>
+</body>
+</html>

@@ -1,0 +1,174 @@
+/* ===== Reset & Base ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #0a3d62, #3c6382);
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== Navigation ===== */
+nav {
+  background: rgba(0, 0, 0, 0.6);
+  padding: 15px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+nav a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s, transform 0.3s;
+}
+
+nav a:hover {
+  color: #1abc9c;
+  transform: scale(1.1);
+}
+
+/* ===== Hero / Section Titles ===== */
+header, section {
+  text-align: center;
+  padding: 50px 20px;
+  animation: fadeIn 1.2s ease-in-out;
+}
+
+h1, h2 {
+  font-size: 2rem;
+  margin-bottom: 15px;
+  animation: slideDown 1s ease forwards;
+}
+
+p {
+  font-size: 1.1rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* ===== Cards ===== */
+.card {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  margin: 20px auto;
+  border-radius: 12px;
+  max-width: 600px;
+  transition: transform 0.4s, box-shadow 0.4s;
+}
+
+.card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+/* ===== Footer ===== */
+footer {
+  margin-top: auto;
+  text-align: center;
+  padding: 15px;
+  background: rgba(0,0,0,0.5);
+  animation: fadeInUp 1.5s ease;
+}
+
+/* ===== Animations ===== */
+@keyframes fadeIn {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+
+@keyframes slideDown {
+  from {opacity: 0; transform: translateY(-30px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+
+@keyframes fadeInUp {
+  from {opacity: 0; transform: translateY(20px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 768px) {
+  nav {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  h1, h2 {
+    font-size: 1.6rem;
+  }
+
+  p {
+    font-size: 1rem;
+  }
+
+  .card {
+    margin: 15px;
+  }
+}
+/* ===== THEME VARIABLES ===== */
+:root {
+  /* Light Mode */
+  --primary-green: #1b6e5f;
+  --dark-navy: #0a143c;
+  --bg-light: #f4f7f6;
+  --text-color: #0a143c;
+  --card-bg: #ffffff;
+  --header-bg: rgba(255, 255, 255, 0.98);
+  --input-border: #edf2f1;
+}
+
+[data-theme="dark"] {
+  /* Dark Mode */
+  --primary-green: #2ab098;
+  --dark-navy: #050a1f;
+  --bg-light: #0f172a;
+  --text-color: #f1f5f9;
+  --card-bg: #1e293b;
+  --header-bg: rgba(15, 23, 42, 0.98);
+  --input-border: #334155;
+}
+
+/* ===== SHARED GLOBAL STYLES ===== */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  color: var(--text-color);
+  background: var(--bg-light);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Apply variables to common components */
+header {
+  background: var(--header-bg) !important;
+  color: var(--primary-green);
+}
+
+.info-card, .course-card, .teacher-card, .contact-info-panel, .contact-form-panel {
+  background: var(--card-bg) !important;
+  color: var(--text-color) !important;
+  border-color: var(--input-border) !important;
+}
+
+input, textarea {
+  background: var(--card-bg);
+  color: var(--text-color);
+  border-color: var(--input-border);
+}
+
+footer {
+  background: var(--dark-navy);
+  color: #ffffff;
+}

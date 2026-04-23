@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Panel - Al-Ikroom</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-green: #1b6e5f;
+            --accent-sage: #82b366;
+            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --header-bg: #ffffff; 
+            --glass-border: rgba(0, 0, 0, 0.08);
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --card-text: #555;
+            --danger: #e11d48;
+        }
+
+        [data-theme="dark"] {
+            --primary-green: #2ab098;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+            --card-bg: #1e293b;
+            --text-color: #f1f5f9;
+            --header-bg: #0f172a; 
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-bg: rgba(30, 41, 59, 0.6);
+            --card-text: #cbd5e1;
+        }
+
+        body { 
+            margin: 0; 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--bg-gradient); 
+            color: var(--text-color); 
+            min-height: 100vh; 
+            transition: background 0.4s ease, color 0.4s ease; 
+        }
+
+        header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 15px 5%; 
+            background: var(--header-bg); 
+            border-bottom: 1px solid var(--glass-border); 
+            position: sticky; top: 0; z-index: 1000; 
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-brand { display: flex; align-items: center; gap: 15px; }
+        .logo { height: 45px; }
+        .brand-text { font-size: 1.3rem; color: var(--primary-green); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+
+        .header-actions { display: flex; align-items: center; gap: 20px; }
+
+        .menu-toggle {
+            background: none; border: none; cursor: pointer;
+            display: flex; flex-direction: column; gap: 6px; z-index: 1001;
+        }
+        .menu-toggle div {
+            width: 28px; height: 3px; background-color: var(--primary-green);
+            transition: 0.4s; border-radius: 2px;
+        }
+        .change .bar1 { transform: translateY(9px) rotate(-45deg); }
+        .change .bar2 { opacity: 0; }
+        .change .bar3 { transform: translateY(-9px) rotate(45deg); }
+
+        .nav-menu {
+            position: absolute; top: 100%; right: 5%;
+            background: var(--header-bg); 
+            border: 1px solid var(--glass-border); border-radius: 20px;
+            padding: 20px; display: none; flex-direction: column; gap: 5px;
+            box-shadow: var(--shadow); width: 240px; z-index: 1000;
+        }
+        .nav-menu.active { display: flex; animation: slideIn 0.3s ease-out; }
+
+        .nav-link, .nav-btn {
+            background: none; border: none; color: var(--text-color);
+            padding: 12px 15px; border-radius: 12px; font-weight: 600;
+            text-align: left; display: flex; align-items: center; gap: 12px;
+            cursor: pointer; text-decoration: none; transition: 0.2s;
+            font-size: 0.9rem;
+        }
+        .nav-link:hover, .nav-btn:hover { background: rgba(27, 110, 95, 0.1); color: var(--primary-green); }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .container { padding: 40px 5%; max-width: 1300px; margin: 0 auto; }
+        
+        .welcome-section {
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        #greetText {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-green);
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #teacherNameHeader {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin: 0;
+            color: var(--text-color);
+            line-height: 1.1;
+        }
+
+        .glass-card {
+            background: var(--glass-bg); padding: 25px; border-radius: 24px;
+            border: 1px solid var(--glass-border); backdrop-filter: blur(12px);
+            box-shadow: var(--shadow); margin-bottom: 25px;
+        }
+
+        .section-title { font-weight: 800; color: var(--primary-green); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .grid-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; }
+
+        .courses-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px; }
+        .course-card-mini {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .course-card-mini::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 4px; height: 100%;
+            background: var(--primary-green);
+        }
+
+        .course-card-mini:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .course-card-mini h4 { 
+            color: var(--primary-green); 
+            margin: 0 0 8px 0; 
+            font-size: 1.1rem; 
+            font-weight: 700;
+        }
+
+        .course-badge {
+            font-size: 0.65rem;
+            background: var(--accent-sage);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 50px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        table { width: 100%; border-spacing: 0 10px; border-collapse: separate; }
+        th { padding: 10px 15px; text-align: left; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; }
+        tbody tr { background: var(--card-bg); border-radius: 12px; transition: 0.2s; }
+        tbody tr:hover { transform: translateX(5px); }
+        tbody tr td { padding: 15px; border: none; }
+        tbody tr td:first-child { border-radius: 12px 0 0 12px; }
+        tbody tr td:last-child { border-radius: 0 12px 12px 0; }
+        
+        .progress-input {
+            background: var(--bg-gradient);
+            border: 1px solid var(--glass-border);
+            padding: 8px;
+            border-radius: 8px;
+            width: 60px;
+            text-align: center;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; color: var(--primary-green); }
+        input, select, textarea { 
+            width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--glass-border); 
+            background: var(--card-bg); color: var(--text-color); font-family: inherit; box-sizing: border-box;
+            transition: 0.3s;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-green); box-shadow: 0 0 0 3px rgba(27, 110, 95, 0.1); }
+
+        /* Custom Checkbox Styles */
+        .checkbox-container {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            max-height: 150px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+        #targetStudentsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8fafc;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    border: 1px solid #e2e8f0;
+}
+        .checkbox-item:hover { background: rgba(27, 110, 95, 0.05); }
+        .checkbox-item input[type="checkbox"] { width: auto; cursor: pointer; }
+        .checkbox-item span { font-size: 0.9rem; color: var(--text-color); }
+
+        .search-wrapper { position: relative; flex: 1; min-width: 200px; }
+        .search-wrapper i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5; }
+        .search-input { padding-left: 38px !important; }
+
+        .btn-submit { 
+            background: var(--primary-green); color: white; border: none; padding: 14px; 
+            border-radius: 12px; cursor: pointer; font-weight: 700; width: 100%; transition: 0.3s;
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+        .btn-submit:hover { background: #14564a; transform: translateY(-2px); }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .resource-item, .student-item {
+            background: var(--card-bg); padding: 15px; border-radius: 15px;
+            border: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 12px; transition: 0.3s;
+        }
+
+        .tab-container { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { padding: 10px 20px; border-radius: 10px; border: 1px solid var(--glass-border); background: var(--card-bg); color: var(--text-color); cursor: pointer; font-weight: 600; }
+        .tab-btn.active { background: var(--primary-green); color: white; border-color: var(--primary-green); }
+
+        .view-btn { text-decoration: none; color: var(--primary-green); font-weight: bold; font-size: 1.1rem; }
+        .delete-btn { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.1rem; transition: 0.2s; }
+        .hidden { display: none; }
+        
+        @media (max-width: 768px) {
+            .brand-text { display: block; font-size: 1rem; }
+            .grid-layout { grid-template-columns: 1fr; }
+            .welcome-section { align-items: flex-start; text-align: left; }
+            #teacherNameHeader { font-size: 1.8rem; }
+            #greetText { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<header>
+    <div class="header-brand">
+        <img src="Al-Ikroom Logo.png" alt="Logo" class="logo">
+        <h1 class="brand-text"> Dashboard</h1>
+    </div>
+
+    <div class="header-actions">
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle Menu">
+            <div class="bar1"></div>
+            <div class="bar2"></div>
+            <div class="bar3"></div>
+        </button>
+    </div>
+
+    <nav class="nav-menu" id="navMenu">
+        <a href="attendance-teacher.html" class="nav-link">
+    <i class="fa-solid fa-clipboard-user"></i> 
+    <span>Attendance</span>
+</a>
+        <a href="assessment-teacher.html" class="nav-link">
+            <i class="fa-solid fa-file-circle-plus"></i> 
+            <span>Assessments</span>
+        </a>
+
+        <a href="messages.html" class="nav-link">
+            <i class="fa-solid fa-comments"></i> 
+            <span>Messages</span>
+        </a>
+
+        <button id="themeToggle" class="nav-btn">
+            <i class="fa-solid fa-moon" id="themeIcon"></i> 
+            <span id="themeText">Dark Mode</span>
+        </button>
+
+        <hr style="border: 0; border-top: 1px solid var(--glass-border); width: 100%; margin: 5px 0;">
+
+        <button id="logoutBtn" class="nav-btn" style="color: var(--danger);">
+            <i class="fa-solid fa-right-from-bracket"></i> 
+            <span>Logout</span>
+        </button>
+    </nav>
+</header>
+
+<main class="container">
+    <div class="welcome-section">
+        <span id="greetText">Assalamu Alaikum</span>
+        <h2 id="teacherNameHeader">Ustadh <span id="teacherName">...</span></h2>
+    </div>
+    
+    <div class="grid-layout">
+        <div class="glass-card">
+            <h3 class="section-title"><i class="fa-solid fa-book-bookmark"></i> Your Offered Programs</h3>
+            <div class="courses-grid" id="teacherCoursesDisplay">
+                <p style="opacity:0.5; font-size:0.8rem;">Loading courses...</p>
+            </div>
+        </div>
+
+        <div class="glass-card" style="display: flex; flex-direction: column;">
+            <h3 class="section-title"><i class="fa-solid fa-chart-pie"></i> Enrollment Breakdown</h3>
+            <div id="courseBreakdown" style="width: 100%; display: flex; flex-direction: column; gap: 12px;">
+                <p style="opacity:0.5; font-size:0.8rem;">Calculating enrollment...</p>
+            </div>
+            <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--glass-border); width: 100%; text-align: center;">
+                <span style="font-size: 0.9rem; opacity:0.8;">Total Unique Students: </span>
+                <span id="totalStudentCount" style="font-weight: 900; color: var(--primary-green); font-size: 1.2rem;">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-layout">
+        <div class="glass-card">
+            <form id="uploadForm" onsubmit="event.preventDefault(); uploadResource();">
+                <h3 class="section-title">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Share Resources
+                </h3>
+
+                <div class="form-group">
+                    <label>Target Course</label>
+                    <select id="resCourse" required></select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Target Specific Students (Optional)</label>
+                    <div class="checkbox-container" id="targetStudentsContainer">
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="eligibleStudents" value="all" checked>
+                            <span>All Students (Default)</span>
+                        </label>
+                        </div>
+                    <div style="font-size: 0.75rem; margin-top: 5px; opacity: 0.7;">
+                        Check specific students or leave "All" selected.
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="resTitle" placeholder="e.g. Arabic Grammar PDF" required>
+                </div>
+
+                <div class="form-group">
+                    <label>File Selection</label>
+                    <input type="file" id="resFile" style="border: none; padding: 5px 0;" required>
+                </div>
+
+                <button type="submit" class="btn-submit" id="btnUpload">
+                    <i class="fa-solid fa-paper-plane"></i> Upload Material
+                </button>
+            </form>
+
+            <hr style="margin: 25px 0; border: 0; border-top: 1px solid var(--glass-border);">
+            <h3 class="section-title" style="font-size: 1.1rem;"><i class="fa-solid fa-folder-tree"></i> Managed Files</h3>
+            <div id="manageResourcesList" style="max-height: 250px; overflow-y: auto;">
+                <p style="opacity:0.5; font-size:0.85rem; text-align:center;">Loading materials...</p>
+            </div>
+        </div>
+
+        <div class="glass-card">
+         <form id="announcementForm" onsubmit="event.preventDefault(); submitAnnouncement();">
+    <h3 class="section-title"><i class="fa-solid fa-bullhorn"></i> Post Announcement</h3>
+    
+    <div class="form-group">
+        <label>Target Course</label>
+        <select id="annCourse" required onchange="updateAnnStudentList(this.value)">
+            <option value="">Select a Course</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Target Specific Students (Optional)</label>
+        <div class="checkbox-container" id="annTargetStudentsContainer">
+            <label class="checkbox-item">
+                <input type="checkbox" name="annEligibleStudents" value="all" checked>
+                <span>All Students in Course</span>
+            </label>
+        </div>
+        <div style="font-size: 0.75rem; margin-top: 5px; opacity: 0.7;">
+            Select specific students or leave "All" checked.
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Headline</label>
+        <input type="text" id="annTitle" placeholder="Class Update" required>
+    </div>
+                <div class="form-group">
+                    <label>Message</label>
+                    <input type="hidden" id="role" value="teacher"> 
+                    <textarea id="annMessage" rows="4" placeholder="Write to your students..." required></textarea>
+                </div>
+                <button type="submit" class="btn-submit" id="annSubmitBtn">Broadcast Message</button>
+            </form>
+            <hr style="margin: 25px 0; border: 0; border-top: 1px solid var(--glass-border);">
+            <h3 class="section-title" style="font-size: 1.1rem;"><i class="fa-solid fa-clock-rotate-left"></i> History</h3>
+            <div id="manageAnnouncementsList" style="max-height: 200px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <div class="glass-card" style="margin-top:25px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; flex-wrap: wrap; gap: 15px;">
+            <h3 class="section-title" style="margin:0;"><i class="fa-solid fa-users-gear"></i> Student Roster & Progress</h3>
+            
+            <div style="display:flex; align-items:center; gap:15px; flex-wrap: wrap; flex: 1; justify-content: flex-end;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <label style="margin:0;">Filter Program:</label>
+                    <select id="rosterFilter" onchange="renderStudentsLocally()" style="width:180px;"></select>
+                </div>
+
+                <div class="search-wrapper">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="studentSearch" class="search-input" placeholder="Search by name or email..." onkeyup="renderStudentsLocally()">
+                </div>
+            </div>
+        </div>
+        
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student Information</th>
+                        <th>Program</th>
+                        <th>Progress %</th>
+                        <th style="text-align: right;">Management</th>
+                    </tr>
+                </thead>
+                <tbody id="studentList"></tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<div id="assessmentPanel" class="glass-card" style="display:none; margin-top:25px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h3 class="section-title"><i class="fa-solid fa-vial-circle-check"></i> Assessment Center</h3>
+        <button onclick="toggleAssessmentPanel()" class="nav-btn" style="color: var(--danger);">
+            <i class="fa-solid fa-xmark"></i> Close
+        </button>
+    </div>
+
+    <div class="tab-container">
+        <button class="tab-btn active" onclick="switchTab('assignment')">Assignments</button>
+        <button class="tab-btn" onclick="switchTab('quiz')">CBT Quizzes</button>
+    </div>
+
+    <div id="assignment-section" class="grid-layout">
+        <div class="glass-card">
+            <h3 class="section-title">Create Assignment</h3>
+            <input id="asnTitle" placeholder="Title"><br><br>
+            <textarea id="asnInstructions" placeholder="Instructions"></textarea><br><br>
+            <input type="datetime-local" id="asnDeadline"><br><br>
+            <button onclick="submitAssignment()" class="btn-submit">Publish</button>
+        </div>
+
+        <div class="glass-card">
+            <h3 class="section-title">History</h3>
+            <div id="asnHistoryList"></div>
+        </div>
+    </div>
+
+    <div id="quiz-section" class="hidden">
+        <input id="quizTitle" placeholder="Quiz Title"><br><br>
+        <input id="quizDuration" placeholder="Duration"><br><br>
+        <div id="questionsWrapper"></div>
+        <button onclick="addNewQuestion()" class="btn-submit">Add Question</button>
+        <button onclick="saveFullQuiz()" class="btn-submit">Save Quiz</button>
+    </div>
+</div>
+
+<script>
+// Paste the custom-alerts logic directly here
+(function() {
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .als-alert-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 9999; }
+        .als-alert-overlay.active { display: flex; }
+        .als-alert-box { background: var(--card-bg, #fff); padding: 35px; border-radius: 35px; text-align: center; max-width: 420px; width: 90%; border-top: 6px solid var(--primary-green); }
+        .als-alert-btn { width: 100%; padding: 14px; background: var(--primary-green); color: #fff; border: none; border-radius: 50px; cursor: pointer; margin-top: 20px; }
+    `;
+    document.head.appendChild(style);
+
+    window.alert = function(message) {
+        const overlay = document.createElement('div');
+        overlay.className = 'als-alert-overlay active';
+        overlay.innerHTML = `
+            <div class="als-alert-box">
+                <i class="fas fa-exclamation-circle" style="font-size:3rem; color:var(--primary-green);"></i>
+                <div style="font-size:1.4rem; font-weight:700; margin: 15px 0; color:var(--primary-green);">Notification</div>
+                <div style="line-height:1.5;">${message}</div>
+                <button class="als-alert-btn">Understood</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        overlay.querySelector('button').onclick = () => document.body.removeChild(overlay);
+    };
+})();
+</script>
+
+
+<script>
+const currentTheme = localStorage.getItem('theme') || 'light';
+document.documentElement.setAttribute('data-theme', currentTheme);
+
+const API_BASE = "https://alikroomislamicinstitute.onrender.com/api/teacher";
+
+let globalStudentData = []; 
+let editingAnnId = null;
+
+const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+    };
+};
+
+const userObj = JSON.parse(localStorage.getItem('user'));
+const teacherDisplayName = userObj?.name || 'Ustadh';
+
+const menuToggle = document.getElementById('menuToggle');
+const navMenu = document.getElementById('navMenu');
+
+menuToggle.onclick = (e) => {
+    e.stopPropagation();
+    menuToggle.classList.toggle('change');
+    navMenu.classList.toggle('active');
+};
+
+document.addEventListener('click', () => {
+    menuToggle.classList.remove('change');
+    navMenu.classList.remove('active');
+});
+
+const themeToggle = document.getElementById('themeToggle');
+const themeText = document.getElementById('themeText');
+const themeIcon = document.getElementById('themeIcon');
+
+function updateThemeUI(theme) {
+    if (theme === 'dark') {
+        themeText.textContent = 'Light Mode';
+        themeIcon.className = 'fa-solid fa-sun';
+    } else {
+        themeText.textContent = 'Dark Mode';
+        themeIcon.className = 'fa-solid fa-moon';
+    }
+}
+
+themeToggle.onclick = () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const next = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    updateThemeUI(next);
+};
+
+updateThemeUI(currentTheme);
+function renderStudentsLocally() {
+    const filterEl = document.getElementById('rosterFilter');
+    const list = document.getElementById('studentList');
+    if (!filterEl || !list) return;
+    
+    const selectedCourse = filterEl.value;
+
+    // Show prompt if no course is selected
+    if (!selectedCourse) {
+        list.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:40px; opacity:0.5;">Please select a program to view the student roster.</td></tr>`;
+        return;
+    }
+    const searchText = document.getElementById('studentSearch').value.toLowerCase();
+    
+    const filtered = globalStudentData.filter(s => {
+        const isInCourse = s.enrolledCourses && s.enrolledCourses.some(c => {
+            const courseName = typeof c === 'string' ? c : (c.courseName || (c.course ? c.course.title : ''));
+            return courseName === selectedCourse;
+        });
+
+        const fullName = `${s.firstName || ''} ${s.lastName || ''}`.toLowerCase();
+        const matchesSearch = fullName.includes(searchText) || (s.email && s.email.toLowerCase().includes(searchText));
+        
+        return isInCourse && matchesSearch;
+    });
+
+    if (filtered.length === 0) {
+        list.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:40px; opacity:0.5;">No students enrolled in ${selectedCourse} yet.</td></tr>`;
+        return;
+    }
+
+    list.innerHTML = filtered.map(s => {
+        const courseObj = s.enrolledCourses.find(c => (typeof c === 'string' ? c : (c.courseName || (c.course ? c.course.title : ''))) === selectedCourse);
+        const progressValue = (courseObj && typeof courseObj === 'object') ? (courseObj.progress || 0) : 0;
+
+        return `
+            <tr>
+                <td>
+                    <div style="font-weight:800; color: var(--text-color);">${s.firstName} ${s.lastName}</div>
+                    <div style="font-size:0.75rem; opacity:0.6;">${s.email}</div>
+                </td>
+                <td style="font-size: 0.85rem; font-weight: 600; color: var(--primary-green);">${selectedCourse}</td>
+                <td>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <input type="number" id="prog-${s._id}" value="${progressValue}" class="progress-input" min="0" max="100">
+                        <span style="font-size:0.8rem; opacity:0.7;">%</span>
+                    </div>
+                </td>
+                <td style="text-align: right;">
+                    <div style="display:inline-flex; gap:8px;">
+                        <button onclick="updateStudentProgress('${s._id}', '${selectedCourse}', document.getElementById('prog-${s._id}').value)" 
+                                class="btn-submit" style="padding:8px 12px; width: auto; background: var(--accent-sage);">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+                        <button onclick="deleteStudent('${s._id}')" class="delete-btn" style="padding: 5px;">
+                            <i class="fa-solid fa-user-xmark"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+function toggleAssessmentPanel() {
+    const panel = document.getElementById('assessmentPanel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+async function refreshDashboard() {
+    try {
+        const res = await fetch(`${API_BASE}/dashboard-data`, { headers: getAuthHeaders() }); 
+        const data = await res.json();
+
+        if (res.status === 401 || res.status === 403) return logoutUser();
+
+        if (data.success) {
+            document.getElementById('teacherName').textContent = data.teacherName || teacherDisplayName;
+            document.getElementById('totalStudentCount').textContent = data.totalEnrolled || 0;
+
+            const courseContainer = document.getElementById('teacherCoursesDisplay');
+            const breakdownContainer = document.getElementById('courseBreakdown');
+            
+            if (data.managedCourses && data.managedCourses.length > 0) {
+                courseContainer.innerHTML = data.managedCourses.map(c => `
+                    <div class="course-card-mini">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                            <h4>${c.name}</h4>
+                            <span class="course-badge">${c.code || 'PRG'}</span>
+                        </div>
+                        <p style="font-size:0.8rem; margin-top:5px; line-height:1.4;">${c.description || 'Active instructional program.'}</p>
+                    </div>
+                `).join('');
+
+                breakdownContainer.innerHTML = data.managedCourses.map(mc => {
+                    const count = (data.students || []).filter(s => 
+                        s.enrolledCourses.some(e => (typeof e === 'string' ? e : (e.courseName || (e.course ? e.course.title : ''))) === mc.name)
+                    ).length;
+
+                    return `
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 12px 18px; border-radius: 15px; border: 1px solid var(--glass-border);">
+                            <span style="font-size: 0.9rem; font-weight: 700;">${mc.name}</span>
+                            <span style="background: var(--primary-green); color: white; padding: 3px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 800;">${count} Students</span>
+                        </div>
+                    `;
+                }).join('');
+
+                const options = data.managedCourses.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+const placeholder = `<option value="" disabled selected>Select a Course</option>`;
+
+// Update all three dropdowns with the placeholder
+document.getElementById('rosterFilter').innerHTML = placeholder + options;
+document.getElementById('resCourse').innerHTML = placeholder + options;
+document.getElementById('annCourse').innerHTML = placeholder + options;
+
+            } else {
+                courseContainer.innerHTML = `<p style="opacity:0.5; text-align:center;">No courses assigned.</p>`;
+            }
+
+            globalStudentData = data.students || [];
+            renderStudentsLocally();
+        }
+    } catch (err) { console.error("Sync Error:", err); }
+}
+
+async function uploadResource() {
+    const title = document.getElementById('resTitle').value;
+    const course = document.getElementById('resCourse').value;
+    const fileInput = document.getElementById('resFile');
+    const btn = document.getElementById('btnUpload');
+
+    // 1. Existing validation
+    if (!fileInput.files[0]) return alert("Please select a file");
+
+    // 2. Existing FormData initialization
+    const form = document.getElementById("uploadForm");
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('course', course); 
+    formData.append('file', fileInput.files[0]);
+
+    // Get all checked student IDs, excluding 'all'
+const selectedCheckboxes = document.querySelectorAll('input[name="eligibleStudents"]:checked');
+
+let eligibleStudents = Array.from(selectedCheckboxes)
+    .map(cb => cb.value)
+    .filter(val => val !== 'all');
+    const isForAllStudents = eligibleStudents.length === 0;
+
+formData.append('isForAllStudents', isForAllStudents);
+
+// Append each student ID
+eligibleStudents.forEach(id => formData.append('selectedStudents', id));
+    // 3. Existing Button UI State
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
+
+    try {
+        // 4. Existing Fetch Call
+        const res = await fetch(`${API_BASE}/upload-resource`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+            body: formData
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            alert("Upload Successful!");
+            // Ensure this matches your HTML form ID (it was 'uploadForm' in your snippet)
+       document.getElementById('uploadForm').reset();
+            if (form) form.reset();
+             loadManageResources(); 
+        } else {
+            alert("Upload failed: " + (data.message || data.error));
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Server error during upload");
+    } finally {
+        // 5. Existing Reset Button UI
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Upload Material';
+    }
+}
+
+// 1. Function to fetch and display ONLY this teacher's resources
+async function loadManageResources() {
+    const container = document.getElementById('manageResourcesList');
+    if (!container) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/resources/my-materials`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.resources.length > 0) {
+            container.innerHTML = data.resources.map(res => `
+                <div class="resource-item">
+                    <div class="res-info">
+                        <strong>${res.title}</strong>
+                        <p>${res.course} | ${new Date(res.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <div class="res-actions">
+                        <button onclick="deleteResource('${res._id}')" class="delete-btn">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = `<p>No files found.</p>`;
+        }
+
+    } catch (err) {
+        console.error("Fetch error:", err);
+        container.innerHTML = `<p>Error loading resources.</p>`;
+    }
+}
+
+// 2. Update your Upload Form Listener
+name="resource"
+async function deleteResource(id) {
+    if (!confirm("Remove this resource permanently?")) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/resources/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        let data;
+        try {
+            data = await response.json();
+        } catch (err) {
+            console.error("Invalid JSON response");
+            return;
+        }
+
+        if (data.success) {
+            loadManageResources(); // refresh list
+        }
+
+    } catch (err) {
+        console.error("Delete error:", err);
+    }
+}
+async function updateStudentProgress(studentId, courseName, newProgress) {
+    try {
+        const res = await fetch(`${API_BASE}/students/progress/${studentId}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ courseName, progress: newProgress })
+        });
+        if ((await res.json()).success) {
+            alert("Progress Updated");
+            refreshDashboard(); 
+        }
+    } catch (err) { console.error(err); }
+}
+
+async function loadManageAnnouncements() {
+    try {
+        const res = await fetch(`${API_BASE}/announcements/all`, { headers: getAuthHeaders() });
+        const data = await res.json();
+        const list = document.getElementById('manageAnnouncementsList');
+        if (!data.announcements || data.announcements.length === 0) {
+            list.innerHTML = `<p style="opacity:0.5; font-size:0.85rem; text-align:center; padding:15px;">No history.</p>`;
+            return;
+        }
+        list.innerHTML = data.announcements.map(ann => `
+            <div class="student-item" style="border-left: 5px solid var(--primary-green);">
+                <div style="flex-grow: 1;">
+                    <div style="font-weight:800; color: var(--primary-green);">${ann.title}</div>
+                    <div style="font-size:0.75rem; opacity:0.7;">${ann.message.substring(0, 45)}...</div>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="prepareEdit('${ann._id}', '${ann.title}', '${escape(ann.message)}')" class="nav-btn" style="color:var(--primary-green); padding:5px;"><i class="fa-solid fa-pen"></i></button>
+                    <button onclick="deleteAnnouncement('${ann._id}')" class="nav-btn" style="color:var(--danger); padding:5px;"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) { console.error(err); }
+}
+
+function prepareEdit(id, title, msg) {
+    editingAnnId = id;
+    document.getElementById('annTitle').value = title;
+    document.getElementById('annMessage').value = unescape(msg);
+    document.getElementById('annSubmitBtn').innerText = "Update Announcement";
+}
+
+function updateAnnStudentList(courseName) {
+    const container = document.getElementById('annTargetStudentsContainer');
+    container.innerHTML = `
+        <label class="checkbox-item">
+            <input type="checkbox" name="annEligibleStudents" value="all" checked>
+            <span>All Students in Course</span>
+        </label>
+    `;
+
+    if (!courseName) return;
+
+    const studentsInCourse = globalStudentData.filter(s =>
+        s.enrolledCourses &&
+        s.enrolledCourses.some(c => {
+            const title = typeof c === 'string' ? c : (c.courseName || (c.course ? c.course.title : ''));
+            return title === courseName;
+        })
+    );
+
+    studentsInCourse.forEach(student => {
+        const label = document.createElement('label');
+        label.className = 'checkbox-item';
+        label.innerHTML = `
+            <input type="checkbox" name="annEligibleStudents" value="${student._id}">
+            <span>${student.firstName} ${student.lastName}</span>
+        `;
+        container.appendChild(label);
+    });
+}
+
+async function submitAnnouncement() {
+    const title = document.getElementById('annTitle').value;
+    const message = document.getElementById('annMessage').value;
+    const course = document.getElementById('annCourse').value;
+
+    // Get selected students
+    const selectedCheckboxes = document.querySelectorAll('input[name="annEligibleStudents"]:checked');
+    let eligibleStudents = Array.from(selectedCheckboxes)
+        .map(cb => cb.value)
+        .filter(val => val !== 'all');
+    
+    const isForAllStudents = eligibleStudents.length === 0 || Array.from(selectedCheckboxes).some(cb => cb.value === 'all');
+
+    const url = editingAnnId ? `${API_BASE}/announcements/${editingAnnId}` : `${API_BASE}/announcements`;
+    
+    try {
+        const res = await fetch(url, {
+            method: editingAnnId ? 'PUT' : 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ 
+                title, 
+                message, 
+                course, 
+                eligibleStudents, 
+                isForAllStudents 
+            })
+        });
+        if(res.ok) {
+            alert("Announcement Processed!");
+            document.getElementById('announcementForm').reset();
+            document.getElementById('annSubmitBtn').innerText = "Broadcast Message";
+            editingAnnId = null; 
+            loadManageAnnouncements();
+        }
+    } catch (err) { console.error(err); }
+}
+
+// Inside dashboard-teacher.html
+async function deleteAnnouncement(id) {
+    if (!confirm('Are you sure you want to delete this announcement?')) return;
+
+    try {
+        const response = await fetch(`https://alikroomislamicinstitute.onrender.com/api/teacher/delete-history/${id}/note`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert('Announcement deleted successfully');
+            // FIX: Use the correct function name defined in your script
+            loadManageAnnouncements(); 
+        } else {
+            alert('Error: ' + data.message);
+        }
+    } catch (err) {
+        console.error('Delete error:', err);
+    }
+}
+
+async function deleteStudent(id) {
+    if(!confirm("Remove student from your course list?")) return;
+    await fetch(`${API_BASE}/students/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+    refreshDashboard();
+}
+
+function logoutUser() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = 'login.html';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (!localStorage.getItem('token')) {
+        window.location.href = 'login.html';
+    } else {
+        document.getElementById('teacherName').textContent = teacherDisplayName;
+        refreshDashboard();
+        loadManageAnnouncements();
+        loadManageResources();
+    }
+});
+// Change 'resourceCourse' to 'resCourse' to match your HTML ID
+document.getElementById('resCourse').addEventListener('change', (e) => {
+    const courseName = e.target.value;
+    const container = document.getElementById('targetStudentsContainer');
+
+    // Reset with "All"
+    container.innerHTML = `
+        <label class="checkbox-item">
+            <input type="checkbox" name="eligibleStudents" value="all" checked>
+            <span>All Students (Default)</span>
+        </label>
+    `;
+
+    if (!courseName) return;
+
+    // 🔥 Filter from already loaded students (same as roster logic)
+    const studentsInCourse = globalStudentData.filter(s =>
+        s.enrolledCourses &&
+        s.enrolledCourses.some(c => {
+            const courseTitle =
+                typeof c === 'string'
+                    ? c
+                    : (c.courseName || (c.course ? c.course.title : ''));
+            return courseTitle === courseName;
+        })
+    );
+
+    // Populate checkboxes
+    studentsInCourse.forEach(student => {
+        const label = document.createElement('label');
+        label.className = 'checkbox-item';
+        label.innerHTML = `
+            <input type="checkbox" name="eligibleStudents" value="${student._id}">
+            <span>${student.firstName} ${student.lastName}</span>
+        `;
+        container.appendChild(label);
+    });
+});
+document.getElementById('logoutBtn').onclick = logoutUser;
+document.addEventListener('change', (e) => {
+    const name = e.target.name;
+    if (name === 'eligibleStudents' || name === 'annEligibleStudents') {
+        const container = e.target.closest('.checkbox-container');
+        const allCheckbox = container.querySelector('input[value="all"]');
+        const others = container.querySelectorAll(`input[name="${name}"]:not([value="all"])`);
+
+        if (e.target.value === 'all') {
+            if (e.target.checked) {
+                // Uncheck individual students if "All" is selected
+                others.forEach(cb => cb.checked = false);
+            }
+        } else {
+            if (e.target.checked) {
+                // Uncheck "All" if a specific student is selected
+                allCheckbox.checked = false;
+            }
+            // Fallback: If nothing is checked, default back to "All"
+            const anyChecked = Array.from(others).some(cb => cb.checked);
+            if (!anyChecked) {
+                allCheckbox.checked = true;
+            }
+        }
+    }
+});
+
+</script>
+</body>
+</html>

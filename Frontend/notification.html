@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notifications - Al-Ikroom</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --primary-green: #1b6e5f;
+    --accent-sage: #82b366;
+    --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    --card-bg: #ffffff;
+    --text-color: #1e293b;
+    --header-bg: #ffffff; 
+    --glass-border: #e2e8f0;
+    --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --dropdown-bg: #ffffff;
+  }
+
+  [data-theme="dark"] {
+    --primary-green: #2ab098;
+    --bg-gradient: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+    --card-bg: #1e293b;
+    --text-color: #f1f5f9;
+    --header-bg: #0f172a; 
+    --glass-border: #334155;
+    --glass-bg: rgba(30, 41, 59, 0.5);
+    --dropdown-bg: #1e293b;
+  }
+
+  body { 
+    margin: 0; 
+    font-family: 'Plus Jakarta Sans', sans-serif; 
+    background: var(--bg-gradient); 
+    color: var(--text-color); 
+    min-height: 100vh; 
+    transition: background 0.4s ease, color 0.4s ease; 
+  }
+
+  header { 
+    display: flex; justify-content: space-between; align-items: center; 
+    padding: 15px 5%; 
+    background: var(--header-bg); 
+    border-bottom: 1px solid var(--glass-border); 
+    position: sticky; top: 0; z-index: 1000; 
+  }
+
+  .header-brand { display: flex; align-items: center; gap: 12px; cursor: default; }
+  .logo { height: 35px; }
+  .brand-text { font-size: 1.1rem; color: var(--primary-green); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+
+  .nav-menu { display: flex; align-items: center; gap: 15px; }
+  
+  .nav-link {
+    text-decoration: none;
+    color: var(--text-color);
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    border-radius: 10px;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid transparent;
+    cursor: pointer;
+  }
+
+  .nav-link:hover { background: rgba(27, 110, 95, 0.05); border-color: var(--glass-border); }
+
+  .hamburger {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-color);
+    cursor: pointer;
+    padding: 5px;
+  }
+
+  .container { padding: 40px 5%; max-width: 900px; margin: 0 auto; }
+
+  .glass-card {
+    background: var(--glass-bg); padding: 20px; border-radius: 20px;
+    border: 1px solid var(--glass-border); backdrop-filter: blur(8px);
+    box-shadow: var(--shadow); margin-bottom: 20px;
+  }
+
+  .notif-item { display: flex; gap: 20px; align-items: flex-start; }
+
+  .notif-icon {
+    width: 45px; height: 45px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; flex-shrink: 0;
+  }
+
+  .icon-announcement { background: rgba(27, 110, 95, 0.1); color: var(--primary-green); }
+  
+  .notif-content { flex-grow: 1; }
+  .notif-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .notif-title { font-weight: 700; font-size: 1.05rem; margin: 0; }
+  .notif-time { font-size: 0.75rem; opacity: 0.5; }
+  .notif-body { font-size: 0.9rem; line-height: 1.5; margin: 5px 0 0; opacity: 0.8; }
+
+  @media (max-width: 768px) {
+    .hamburger { display: block; }
+    .nav-menu {
+      position: absolute;
+      top: 100%;
+      right: 5%;
+      flex-direction: column;
+      background: var(--dropdown-bg);
+      border: 1px solid var(--glass-border);
+      padding: 15px;
+      border-radius: 15px;
+      box-shadow: var(--shadow);
+      display: none;
+      min-width: 200px;
+      align-items: flex-start;
+      backdrop-filter: blur(10px);
+    }
+    .nav-menu.active { display: flex; animation: slideDown 0.3s ease-out; }
+    .nav-link { width: 100%; box-sizing: border-box; }
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 600px) {
+    .container { padding: 20px 5%; }
+    .notif-header { flex-direction: column; align-items: flex-start; gap: 2px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-brand">
+    <img src="Al-Ikroom Logo.png" alt="Logo" class="logo">
+    <h1 class="brand-text">Al-Ikroom Islamic Institute</h1>
+  </div>
+
+  <button class="hamburger" id="hamburgerBtn">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <nav class="nav-menu" id="navMenu">
+    <a href="dashboard-student.html" class="nav-link">
+        <i class="fa-solid fa-house"></i> <span id="labelBack">Dashboard</span>
+    </a>
+    <a href="javascript:void(0)" class="nav-link" id="langToggle">
+        <i class="fa-solid fa-language"></i> <span id="langText">العربية</span>
+    </a>
+    <a href="javascript:void(0)" class="nav-link" id="themeToggle">
+        <i class="fa-solid fa-moon"></i> <span id="themeText">Mode</span>
+    </a>
+  </nav>
+</header>
+
+<main class="container">
+  <div style="margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
+    <h2 id="pageTitle" style="font-weight: 800; color: var(--primary-green); margin: 0;">Notifications</h2>
+    <button onclick="clearNotifications()" style="background: none; border: none; color: #e11d48; cursor: pointer; font-size: 0.85rem; font-weight: 600;">
+        <i class="fa-solid fa-trash-can"></i> <span id="clearText">Clear All</span>
+    </button>
+  </div>
+
+  <div id="notificationList"></div>
+</main>
+
+<script>
+const API_BASE = 'https://alikroomislamicinstitute.onrender.com/api'; 
+let currentLang = localStorage.getItem('lang') || 'en';
+
+const i18n = {
+    en: {
+        title: "Notifications",
+        clear: "Clear All",
+        noNotif: "All caught up! No new notifications.",
+        back: "Dashboard",
+        mode: "Mode"
+    },
+    ar: {
+        title: "الإشعارات",
+        clear: "مسح الكل",
+        noNotif: "أنت مطلع على كل شيء! لا توجد إشعارات جديدة.",
+        back: "لوحة التحكم",
+        mode: "الوضع"
+    }
+};
+
+async function loadNotifications() {
+    console.log("Attempting to fetch notifications from:", `${API_BASE}/teacher/announcements/all`);
+    
+    const list = document.getElementById('notificationList');
+    const t = i18n[currentLang];
+    const isAr = currentLang === 'ar';
+
+    // Update UI labels
+    document.dir = isAr ? 'rtl' : 'ltr';
+    document.getElementById('pageTitle').innerText = t.title;
+    document.getElementById('clearText').innerText = t.clear;
+    document.getElementById('labelBack').innerText = t.back;
+    document.getElementById('themeText').innerText = t.mode;
+    document.getElementById('langText').innerText = isAr ? 'English' : 'العربية';
+
+    if (!list) return console.error("Could not find element with ID 'notificationList'");
+
+    try {
+        const res = await fetch(`${API_BASE}/teacher/announcements/all`);
+        
+        if (!res.ok) {
+            throw new Error(`Server responded with status: ${res.status}`);
+        }
+
+        const data = await res.json();
+        console.log("Data received:", data);
+
+        if (data.success && data.announcements && data.announcements.length > 0) {
+            list.innerHTML = ""; 
+            
+            data.announcements.forEach(ann => {
+                list.innerHTML += `
+                    <div class="glass-card" style="margin-bottom:15px; border-left: 5px solid var(--primary-green);">
+                        <div class="notif-item">
+                            <div class="notif-icon icon-announcement"><i class="fa-solid fa-bullhorn"></i></div>
+                            <div class="notif-content">
+                                <div class="notif-header">
+                                    <h4 class="notif-title" style="color:var(--primary-green); margin:0;">${ann.title}</h4>
+                                    <span class="notif-time" style="font-size:0.7rem; opacity:0.6;">
+                                        ${new Date(ann.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US')}
+                                    </span>
+                                </div>
+                                <p class="notif-body" style="margin-top:10px; line-height:1.6;">${ann.message}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            list.innerHTML = `<div class="glass-card" style="text-align:center; opacity:0.6; padding: 50px; border: 2px dashed var(--glass-border); background: none;">${t.noNotif}</div>`;
+        }
+    } catch (err) {
+        console.error("Fetch Error:", err);
+        list.innerHTML = `<div class="glass-card" style="color:#e11d48; text-align:center; padding:20px;">
+            <i class="fa-solid fa-triangle-exclamation"></i> Connection Error: Make sure your backend server is running on Port 5000.
+        </div>`;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Mobile Menu Toggle ---
+    const hamburger = document.getElementById('hamburgerBtn');
+    const navMenu = document.getElementById('navMenu');
+
+    hamburger.onclick = () => {
+        navMenu.classList.toggle('active');
+        const icon = hamburger.querySelector('i');
+        icon.classList.toggle('fa-bars');
+        icon.classList.toggle('fa-xmark');
+    };
+
+    // --- Theme & Lang Handlers ---
+    document.getElementById('themeToggle').onclick = () => {
+        const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+        document.querySelector('#themeToggle i').className = next === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+    };
+
+    document.getElementById('langToggle').onclick = () => {
+        currentLang = currentLang === 'en' ? 'ar' : 'en';
+        localStorage.setItem('lang', currentLang);
+        loadNotifications();
+    };
+
+    window.clearNotifications = () => {
+        if(confirm("Note: This will not delete announcements from the server. Only the teacher can do that. Continue?")) {
+            document.getElementById('notificationList').innerHTML = `<div class="glass-card" style="text-align:center; opacity:0.6; padding: 50px;">Notifications cleared for this view.</div>`;
+        }
+    };
+
+    // Initial Load
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    loadNotifications();
+});
+</script>
+</body>
+</html>

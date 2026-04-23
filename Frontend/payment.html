@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment - Al-Ikroom Islamic Institute</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    /* ===== SHARED THEME ===== */
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #f0f8f5 0%, #e6f2e6 50%, #f0f8f5 100%);
+      color: #1b2e5f;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 15px 50px;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-bottom: 3px solid #a1c181;
+    }
+    header h1 { font-size: 1.4rem; color: #1b2e5f; }
+    nav a { margin: 0 15px; font-weight: 600; color: #1b2e5f; text-decoration: none; }
+
+    /* ===== PAYMENT CONTAINER ===== */
+    .payment-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    .checkout-card {
+      max-width: 900px;
+      width: 100%;
+      background: #fff;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-radius: 30px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+      animation: fadeInUp 0.8s ease;
+    }
+
+    /* Left Side: Summary */
+    .summary-side {
+      background: #1b6e5f;
+      color: #fff;
+      padding: 50px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .summary-side h2 { margin-bottom: 20px; }
+    .course-info {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+    }
+    .price-tag {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #a1c181;
+    }
+
+    /* Right Side: Form */
+    .form-side {
+      padding: 50px;
+      background: #fff;
+    }
+
+    .payment-methods {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .method {
+      flex: 1;
+      border: 2px solid #eee;
+      padding: 15px;
+      border-radius: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .method.active {
+      border-color: #82b366;
+      background: #f0f8f5;
+      color: #1b6e5f;
+    }
+
+    .method i { font-size: 1.5rem; display: block; margin-bottom: 5px; }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+    .input-group label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem; }
+    .input-group input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      outline: none;
+      transition: 0.3s;
+    }
+    .input-group input:focus { border-color: #82b366; box-shadow: 0 0 8px rgba(130, 179, 102, 0.2); }
+
+    .btn-pay {
+      width: 100%;
+      padding: 16px;
+      background: #1b6e5f;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: 0.4s;
+    }
+    .btn-pay:hover { background: #15936f; transform: translateY(-3px); }
+
+    .security-note {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.8rem;
+      color: #777;
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      .checkout-card { grid-template-columns: 1fr; }
+      .summary-side { padding: 30px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Al-Ikroom Payment</h1>
+  <nav>
+    <a href="dashboard-student.html">Back to Dashboard</a>
+  </nav>
+</header>
+
+<main class="payment-container">
+  <div class="checkout-card">
+    
+    <div class="summary-side">
+      <h2>Order Summary</h2>
+      <div class="course-info">
+        <p style="margin:0; opacity: 0.8;">Selected Course:</p>
+        <h3 id="courseNameDisplay" style="margin:5px 0;">Tajweed Foundations</h3>
+        <p>Full Access + Certificate</p>
+      </div>
+      <p>Total to Pay:</p>
+      <div class="price-tag">$49.99</div>
+      <p style="font-size: 0.9rem; margin-top: 20px;">
+        <i class="fa-solid fa-circle-check"></i> Lifetime access to materials<br>
+        <i class="fa-solid fa-circle-check"></i> Live Q&A sessions<br>
+        <i class="fa-solid fa-circle-check"></i> Verified Digital Certificate
+      </p>
+    </div>
+
+    <div class="form-side">
+      <h3>Payment Details</h3>
+      
+      <div class="payment-methods">
+        <div class="method active" onclick="selectMethod(this)">
+          <i class="fa-solid fa-credit-card"></i> Card
+        </div>
+        <div class="method" onclick="selectMethod(this)">
+          <i class="fa-brands fa-paypal"></i> PayPal
+        </div>
+        <div class="method" onclick="selectMethod(this)">
+          <i class="fa-solid fa-building-columns"></i> Transfer
+        </div>
+      </div>
+
+      <form id="paymentForm">
+        <div class="input-group">
+          <label>Cardholder Name</label>
+          <input type="text" placeholder="John Doe" required>
+        </div>
+        <div class="input-group">
+          <label>Card Number</label>
+          <input type="text" placeholder="**** **** **** 1234" required>
+        </div>
+        <div style="display: flex; gap: 15px;">
+          <div class="input-group" style="flex: 2;">
+            <label>Expiry Date</label>
+            <input type="text" placeholder="MM/YY" required>
+          </div>
+          <div class="input-group" style="flex: 1;">
+            <label>CVV</label>
+            <input type="password" placeholder="***" required>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-pay" id="payBtn">Complete Payment</button>
+      </form>
+
+      <div class="security-note">
+        <i class="fa-solid fa-lock"></i> SSL Encrypted & Secure Payment
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <p>&copy; 2026 Al-Ikroom Islamic Institute | Secure Checkout</p>
+</footer>
+
+<script>
+  // UI Functionality
+  function selectMethod(el) {
+    document.querySelectorAll('.method').forEach(m => m.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  // Firebase Logic Link
+  document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('payBtn');
+    
+    // UI Animation
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
+    btn.disabled = true;
+
+    // Simulate Payment Gateway Response
+    setTimeout(() => {
+        completeFirebasePayment();
+    }, 2000);
+  });
+
+  async function completeFirebasePayment() {
+    /* HERE IS WHERE FIREBASE COMES IN:
+       We update the current user's Firestore document.
+    */
+    // Example: 
+    // await updateDoc(doc(db, "users", auth.currentUser.uid), { paymentStatus: "Paid" });
+    
+    alert("✅ Jazakallah Khair! Your payment was successful. Your courses are now unlocked.");
+    window.location.href = "dashboard-student.html";
+  }
+</script>
+
+</body>
+</html>
