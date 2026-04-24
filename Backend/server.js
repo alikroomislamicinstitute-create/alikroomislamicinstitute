@@ -21,7 +21,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
         origin: [
-            "https://alikroomislamicinstitute.onrender.com",
+            "http://localhost:5000",
             "http://127.0.0.1:5500",
             "http://localhost:5500",
         ],
@@ -180,6 +180,16 @@ socket.on('end-call', (data) => {
         from: data.from
     });
 });
+
+// Server-side socket logic
+socket.on('call-reaction', (data) => {
+    // Forward the emoji to the recipient
+    io.to(data.to).emit('call-reaction', {
+        emoji: data.emoji,
+        from: socket.id // Optional
+    });
+});
+
     socket.on('disconnect', () => {
         onlineUsers.delete(socket.id);
         io.emit('update-status', Array.from(onlineUsers.values()));
@@ -209,7 +219,7 @@ if (!fs.existsSync(thumbPath)) {
 
 // --- MIDDLEWARE ---
 app.use(cors({
-    origin: ['http://127.0.0.1:5500', 'http://localhost:5500', 'https://alikroomislamicinstitute.onrender.com', 'https://alikroomislamicinstitute.onrender.com'],
+    origin: ['http://127.0.0.1:5500', 'http://localhost:5500', 'http://localhost:5000', 'http://localhost:5000'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -247,7 +257,7 @@ app.post('/api/messages/upload', upload.single('file'), async (req, res) => {
     else if (mime.startsWith('video/')) type = 'video';
     else if (mime.includes('audio') || mime.includes('webm')) type = 'audio';
 
-    const fileUrl = `https://alikroomislamicinstitute.onrender.com/uploads/${req.file.filename}`;
+    const fileUrl = `http://localhost:5000/uploads/${req.file.filename}`;
 
     // =========================
     // 🎬 VIDEO THUMBNAIL LOGIC
@@ -273,7 +283,7 @@ app.post('/api/messages/upload', upload.single('file'), async (req, res) => {
                 url: fileUrl,
                 name: req.file.originalname,
                 type: type,
-                thumbnailUrl: `https://alikroomislamicinstitute.onrender.com/uploads/thumbnails/${thumbnailName}`
+                thumbnailUrl: `http://localhost:5000/uploads/thumbnails/${thumbnailName}`
             });
 
         } catch (err) {
