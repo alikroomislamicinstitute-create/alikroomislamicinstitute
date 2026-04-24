@@ -293,9 +293,8 @@ const CallUI = {
             <div id="callOverlay" class="call-overlay">
                 <div id="dynamicBg" class="dynamic-bg"></div>
                 <div id="remote-video"></div>
-                
-<div id="reaction-container" style="position:absolute; bottom:120px; left:0; width:100%; height:300px; pointer-events:none; z-index:15; overflow:hidden;"></div>
-
+            
+<div id="reaction-container" style="position:absolute; bottom:120px; left:0; width:100%; height:80vh; pointer-events:none; z-index:100; overflow:hidden;"></div>
 <div id="reactionPicker" style="position:absolute; bottom:110px; background:rgba(0,0,0,0.8); padding:10px; border-radius:30px; display:none; gap:10px; z-index:20; backdrop-filter:blur(10px);">
     <span onclick="CallUI.sendReaction('💖')" style="cursor:pointer; font-size:24px;">💖</span>
     <span onclick="CallUI.sendReaction('👍')" style="cursor:pointer; font-size:24px;">👍</span>
@@ -370,171 +369,178 @@ const CallUI = {
     },
 
     setupSocketListeners() {
-        socket.on('incoming-call-notice', (data) => {
-            this.handleIncomingCall(data);
-            socket.emit('call-ringing', { to: data.from });
-        });
+    // 1. RECEIVING A CALL (Recipient side)
+    socket.on('incoming-call-notice', (data) => {
+        this.handleIncomingCall(data);
+        // Immediately notify the sender that the device is ringing
+        socket.emit('call-ringing', { to: data.from });
+    });
 
-        socket.on('call-ringing', () => {
-            if (this.state === 'outgoing') {
-                document.getElementById('callStatusLabel').innerText = "Ringing...";
-            }
-        });
-
-        socket.on('call-accepted', async (data) => {
-            this.sounds.dialtone.pause();
-            this.sounds.dialtone.currentTime = 0;
-            document.getElementById('callStatusLabel').innerText = "Connecting...";
-            await this.startAgoraStream(data.channelName);
-        });
-
-        socket.on('call-declined', () => {
-            this.endCall(false);
-        });
-
-        socket.on('call-ended', () => {
-            this.endCall(false);
-        });
-
-        socket.on('call-type-changed', (data) => {
-    if (data.newType === 'video') {
-        this.callType = 'video';
-        // Update UI to show video containers
-        document.getElementById('voice-placeholder').style.display = 'none';
-        document.getElementById('remote-video').style.display = 'block';
-        document.getElementById('local-video').style.display = 'block';
-        document.getElementById('dynamicBg').style.opacity = '0';
-        
-        document.getElementById('camToggle').style.display = 'flex';
-        document.getElementById('flipToggle').style.display = 'flex';
-        document.getElementById('screenShareToggle').style.display = 'flex';
-        document.getElementById('switchToVideoBtn').style.display = 'none';
-    }
-});
-
-socket.on('call-reaction', (data) => {
-    this.animateReaction(data.emoji);
-});
-
-    },
-
-    handleIncomingCall(data) {
-        this.syncTheme(); 
-        this.state = 'incoming';
-        this.isInitiator = false;
-        this.remoteUser = data.from;
-        this.currentChannel = data.channelName;
-        this.callType = data.type;
-
-        const callerDisplayName = data.fromName || "Unknown User";
-        const callerAvatar = data.fromAvatar || '';
-
-        document.getElementById('callerName').innerText = callerDisplayName;
-        document.getElementById('activeCallerName').innerText = callerDisplayName;
-        
-        const toastAvatar = document.getElementById('callerAvatar');
-        if (callerAvatar) {
-            toastAvatar.innerHTML = `<img src="${callerAvatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+    // 2. REMOTE DEVICE IS RINGING (Initiator side)
+    socket.on('call-ringing', () => {
+        if (this.state === 'outgoing') {
+            document.getElementById('callStatusLabel').innerText = "Ringing...";
         }
+    });
 
-        const dynBg = document.getElementById('dynamicBg');
-        if (callerAvatar) {
-            dynBg.style.backgroundImage = `url(${callerAvatar})`;
-        }
+    // 3. CALL ACCEPTED (Initiator side)
+    socket.on('call-accepted', async (data) => {
+        this.sounds.dialtone.pause();
+        this.sounds.dialtone.currentTime = 0;
+        
+        // Update UI to Connecting immediately
+        document.getElementById('callStatusLabel').innerText = "Connecting...";
+        await this.startAgoraStream(data.channelName);
+    });
 
-        document.getElementById('callTypeText').innerText = data.type;
-        document.getElementById('incomingToast').classList.add('active');
+    // 4. CALL DECLINED
+    socket.on('call-declined', () => {
+        this.endCall(false);
+    });
 
-        this.sounds.ringtone.play().catch(e => console.log("Audio blocked"));
-        
-        if ('vibrate' in navigator) {
-            navigator.vibrate([200, 100, 200]);
-        }
-    },
+    // 5. CALL ENDED BY REMOTE
+    socket.on('call-ended', () => {
+        this.endCall(false);
+    });
 
-    initiateCall(type) {
-        if (typeof activeChatUser === 'undefined' || !activeChatUser) {
-            return alert("Please select a user to call first.");
-        }
-        
-        this.syncTheme();
-        this.state = 'outgoing';
-        this.isInitiator = true;
-        this.callType = type;
-        this.remoteUser = activeChatUser;
-        const channelName = `room_${Math.random().toString(36).slice(2, 9)}`;
-        this.currentChannel = channelName;
-        
-        const recipientHeader = document.querySelector('.chat-header .chat-user-info h4');
-        const recipientImgEl = document.querySelector('.chat-header .chat-user-img img');
-        
-        const recipientName = recipientHeader ? recipientHeader.innerText : "User";
-        const recipientImg = recipientImgEl ? recipientImgEl.src : '';
-                                     
-        document.getElementById('activeCallerName').innerText = recipientName;
-        
-        const dynBg = document.getElementById('dynamicBg');
-        const voicePlaceholder = document.getElementById('voice-placeholder');
-        if (recipientImg) {
-            dynBg.style.backgroundImage = `url(${recipientImg})`;
-            if (voicePlaceholder) {
-                voicePlaceholder.innerHTML = `<div style="width:140px; height:140px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; border: 4px solid rgba(255,255,255,0.05); box-shadow: 0 15px 35px rgba(0,0,0,0.3)"><img src="${recipientImg}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;"></div>`;
-            }
-        }
-
-        const myNameEl = document.querySelector('.user-profile h4');
-        const role = typeof userRole !== 'undefined' ? userRole : localStorage.getItem('userRole');
-        
-        let myDisplayName = "";
-        if (role === 'teacher') {
-            const name = myNameEl ? myNameEl.innerText : "Teacher";
-            myDisplayName = name.includes('Ustadh') ? name : `Ustadh ${name}`;
-        } else {
-            myDisplayName = myNameEl ? myNameEl.innerText : "Student";
-        }
-        
-        const myImgEl = document.querySelector('.user-profile img');
-        const myAvatar = myImgEl ? myImgEl.src : '';
-
-        const localBox = document.getElementById('local-video');
-        if (type === 'voice') {
-    voicePlaceholder.style.display = 'flex';
-    document.getElementById('remote-video').style.display = 'none';
-    document.getElementById('camToggle').style.display = 'none';
-    document.getElementById('flipToggle').style.display = 'none';
-    document.getElementById('screenShareToggle').style.display = 'none'; // Voice doesn't need this yet
-    document.getElementById('switchToVideoBtn').style.display = 'flex'; // Show Switch Button
-    localBox.style.display = 'none';
-    dynBg.style.opacity = '1';
-        } else {
-            voicePlaceholder.style.display = 'none';
+    // 6. DYNAMIC TYPE CHANGE (Voice to Video)
+    socket.on('call-type-changed', (data) => {
+        if (data.newType === 'video') {
+            this.callType = 'video';
+            document.getElementById('voice-placeholder').style.display = 'none';
             document.getElementById('remote-video').style.display = 'block';
+            document.getElementById('dynamicBg').style.opacity = '0';
+            
             document.getElementById('camToggle').style.display = 'flex';
             document.getElementById('flipToggle').style.display = 'flex';
-            localBox.style.display = 'block';
-            dynBg.style.opacity = '0';
+            document.getElementById('screenShareToggle').style.display = 'flex';
+            document.getElementById('switchToVideoBtn').style.display = 'none';
+            document.getElementById('local-video').style.display = 'block';
         }
+    });
 
-        this.expandCall();
-        this.sounds.dialtone.play().catch(e => console.log("Audio blocked"));
+    // 7. REMOTE REACTIONS
+    socket.on('call-reaction', (data) => {
+        this.animateReaction(data.emoji);
+    });
+},
 
-        socket.emit('request-call', {
-            to: activeChatUser,
-            from: userId,
-            fromName: myDisplayName,
-            fromAvatar: myAvatar,
-            type: type,
-            channelName: channelName
-        });
-    },
+   handleIncomingCall(data) {
+    this.syncTheme(); 
+    this.state = 'incoming';
+    this.isInitiator = false;
+    this.remoteUser = data.from;
+    this.currentChannel = data.channelName;
+    this.callType = data.type;
+
+    // Use the name sent by the initiator (which is now hardcoded as TEACHER or STUDENT)
+    const displayCallerName = data.fromName || "USER";
+
+    document.getElementById('callerName').innerText = displayCallerName;
+    document.getElementById('activeCallerName').innerText = displayCallerName;
+    
+    const toastAvatar = document.getElementById('callerAvatar');
+    if (data.fromAvatar) {
+        toastAvatar.innerHTML = `<img src="${data.fromAvatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+    }
+
+    const dynBg = document.getElementById('dynamicBg');
+    if (data.fromAvatar) {
+        dynBg.style.backgroundImage = `url(${data.fromAvatar})`;
+    }
+
+    document.getElementById('callTypeText').innerText = data.type;
+    document.getElementById('incomingToast').classList.add('active');
+
+    this.sounds.ringtone.play().catch(e => console.log("Audio blocked"));
+    
+    if ('vibrate' in navigator) {
+        navigator.vibrate([200, 100, 200]);
+    }
+},
+
+    initiateCall(type) {
+    if (typeof activeChatUser === 'undefined' || !activeChatUser) {
+        return alert("Please select a user to call first.");
+    }
+    
+    this.syncTheme();
+    this.state = 'outgoing';
+    this.isInitiator = true;
+    this.callType = type;
+    this.remoteUser = activeChatUser;
+    const channelName = `room_${Math.random().toString(36).slice(2, 9)}`;
+    this.currentChannel = channelName;
+    
+    // --- HARDCODED LOGIC FOR SENDER UI ---
+    const myRole = typeof userRole !== 'undefined' ? userRole : localStorage.getItem('userRole');
+    const displayRecipientAs = (myRole === 'teacher') ? "STUDENT" : "TEACHER";
+    const displayMeAs = (myRole === 'teacher') ? "TEACHER" : "STUDENT";
+
+    document.getElementById('activeCallerName').innerText = displayRecipientAs;
+    document.getElementById('callStatusLabel').innerText = "Calling...";
+    // -------------------------------------
+
+    const recipientImgEl = document.querySelector('.chat-header .chat-user-img img');
+    const recipientImg = recipientImgEl ? recipientImgEl.src : '';
+    const dynBg = document.getElementById('dynamicBg');
+    const voicePlaceholder = document.getElementById('voice-placeholder');
+
+    if (recipientImg) {
+        dynBg.style.backgroundImage = `url(${recipientImg})`;
+        if (voicePlaceholder) {
+            voicePlaceholder.innerHTML = `<div style="width:140px; height:140px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; border: 4px solid rgba(255,255,255,0.05); box-shadow: 0 15px 35px rgba(0,0,0,0.3)"><img src="${recipientImg}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;"></div>`;
+        }
+    }
+
+    const myImgEl = document.querySelector('.user-profile img');
+    const myAvatar = myImgEl ? myImgEl.src : '';
+
+    // UI Layout logic
+    const localBox = document.getElementById('local-video');
+    if (type === 'voice') {
+        voicePlaceholder.style.display = 'flex';
+        document.getElementById('remote-video').style.display = 'none';
+        document.getElementById('camToggle').style.display = 'flex';
+        document.getElementById('camToggle').classList.add('off');
+        document.getElementById('camToggle').innerHTML = '<i class="fas fa-video-slash"></i>';
+        document.getElementById('flipToggle').style.display = 'flex';
+        document.getElementById('screenShareToggle').style.display = 'flex';
+        document.getElementById('switchToVideoBtn').style.display = 'none'; 
+        localBox.style.display = 'none';
+        dynBg.style.opacity = '1';
+    } else {
+        voicePlaceholder.style.display = 'none';
+        document.getElementById('remote-video').style.display = 'block';
+        document.getElementById('camToggle').style.display = 'flex';
+        document.getElementById('flipToggle').style.display = 'flex';
+        localBox.style.display = 'block';
+        dynBg.style.opacity = '0';
+    }
+
+    this.expandCall();
+    this.sounds.dialtone.play().catch(e => console.log("Audio blocked"));
+
+    socket.emit('request-call', {
+        to: activeChatUser,
+        from: userId,
+        fromName: displayMeAs,
+        fromAvatar: myAvatar,
+        type: type,
+        channelName: channelName
+    });
+},
 
     async acceptCall() {
-        this.state = 'active';
-        this.sounds.ringtone.pause();
-        this.sounds.ringtone.currentTime = 0;
-        document.getElementById('incomingToast').classList.remove('active');
-        document.getElementById('activeCallerName').innerText = document.getElementById('callerName').innerText;
-        this.expandCall();
+    this.state = 'active';
+    this.sounds.ringtone.pause();
+    this.sounds.ringtone.currentTime = 0;
+    document.getElementById('incomingToast').classList.remove('active');
+    
+    // Set status to Connecting for the receiver
+    document.getElementById('callStatusLabel').innerText = "Connecting...";
+    
+    this.expandCall();
 
         socket.emit('accept-call', {
             to: this.remoteUser,
@@ -545,26 +551,21 @@ socket.on('call-reaction', (data) => {
         await this.startAgoraStream(this.currentChannel);
     },
 
-    declineCall() {
-        if (this.remoteUser) {
-            const role = typeof userRole !== 'undefined' ? userRole : localStorage.getItem('userRole');
-            const myNameEl = document.querySelector('.user-profile h4');
-            let baseName = myNameEl ? myNameEl.innerText : (role === 'teacher' ? 'Teacher' : 'Student');
-            
-            let myDisplayName = (role === 'teacher' && !baseName.includes('Ustadh')) 
-                ? `Ustadh ${baseName}` 
-                : baseName;
+   declineCall() {
+    if (this.remoteUser) {
+        const myRole = typeof userRole !== 'undefined' ? userRole : localStorage.getItem('userRole');
+        const myDisplayName = (myRole === 'teacher') ? "TEACHER" : "STUDENT";
 
-            socket.emit('send_private_message', {
-                recipientId: this.remoteUser,
-                senderId: userId,
-                text: `📵 Missed ${this.callType} call from ${myDisplayName}`,
-                isCallLog: true
-            });
-            socket.emit('decline-call', { to: this.remoteUser });
-        }
-        this.endCall(false, true); 
-    },
+        socket.emit('send_private_message', {
+            recipientId: this.remoteUser,
+            senderId: userId,
+            text: `📵 Missed ${this.callType} call from ${myDisplayName}`,
+            isCallLog: true
+        });
+        socket.emit('decline-call', { to: this.remoteUser });
+    }
+    this.endCall(false, true); 
+},
 
     startTimer() {
         if (this.timerInterval) return; 
@@ -596,64 +597,104 @@ socket.on('call-reaction', (data) => {
     },
 
     async startAgoraStream(channelName) {
-        try {
-            const response = await fetch(`${API_BASE}/agora/token?channelName=${channelName}`, {
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-            });
-            const data = await response.json();
-            if (!data.success) throw new Error("Token failed");
+    try {
+        const response = await fetch(`${API_BASE}/agora/token?channelName=${channelName}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const data = await response.json();
+        if (!data.success) throw new Error("Token failed");
 
-            sessionStorage.setItem('activeCallChannel', channelName);
-            sessionStorage.setItem('activeCallRemoteUser', this.remoteUser);
-            sessionStorage.setItem('activeCallType', this.callType);
-            sessionStorage.setItem('activeCallRemoteName', document.getElementById('activeCallerName').innerText);
+        // Persist session for page reloads
+        sessionStorage.setItem('activeCallChannel', channelName);
+        sessionStorage.setItem('activeCallRemoteUser', this.remoteUser);
+        sessionStorage.setItem('activeCallType', this.callType);
+        sessionStorage.setItem('activeCallRemoteName', document.getElementById('activeCallerName').innerText);
 
-            this.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+        this.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
 
-            this.client.on("connection-state-change", (curState) => {
-                const statusLabel = document.getElementById('callStatusLabel');
-                const reconnectUI = document.getElementById('reconnectOverlay');
+        // --- NETWORK & STATE HANDLING ---
+        this.client.on("connection-state-change", (curState, revState) => {
+            const statusLabel = document.getElementById('callStatusLabel');
+            const reconnectUI = document.getElementById('reconnectOverlay');
 
-                if (curState === "CONNECTING") {
-                    statusLabel.innerText = "Connecting...";
-                } else if (curState === "CONNECTED") {
-                    statusLabel.innerText = "End-to-End Encrypted";
-                    reconnectUI.classList.remove('visible');
-                } else if (curState === "RECONNECTING") {
-                    statusLabel.innerText = "Signal Weak...";
-                    reconnectUI.classList.add('visible');
-                } else if (curState === "DISCONNECTED") {
-                    this.endCall(false);
-                }
-            });
+            console.log(`Connection state: ${curState}`);
 
-            this.client.on("user-published", async (user, mediaType) => {
-                await this.client.subscribe(user, mediaType);
-                if (mediaType === "video") user.videoTrack.play("remote-video");
-                if (mediaType === "audio") user.audioTrack.play();
-
-                if (this.state !== 'idle') this.startTimer();
-            });
-
-            await this.client.join(data.appId, channelName, data.token, null);
-
-            if (this.callType === 'video') {
-                [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
-                document.getElementById('local-video').style.display = 'block';
-                this.localTracks.videoTrack.play('local-video');
-                await this.client.publish([this.localTracks.audioTrack, this.localTracks.videoTrack]);
-            } else {
-                this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
-                await this.client.publish([this.localTracks.audioTrack]);
+            if (curState === "CONNECTING") {
+                statusLabel.innerText = "Connecting...";
+            } 
+            else if (curState === "CONNECTED") {
+                statusLabel.innerText = "End-to-End Encrypted";
+                reconnectUI.classList.remove('visible');
+            } 
+            else if (curState === "RECONNECTING") {
+                statusLabel.innerText = "Reconnecting...";
+                reconnectUI.classList.add('visible'); // Show WhatsApp-style blur/spinner
+            } 
+            else if (curState === "DISCONNECTED") {
+                this.endCall(false);
             }
+        });
 
-            document.getElementById('callStatusLabel').innerText = "End-to-End Encrypted";
-
-        } catch (err) {
-            console.error("Agora error:", err);
-            this.endCall();
+        this.client.on("user-published", async (user, mediaType) => {
+    await this.client.subscribe(user, mediaType);
+    if (mediaType === "video") user.videoTrack.play("remote-video");
+    
+    if (mediaType === "audio") {
+        user.audioTrack.play();
+        
+        // Ensure the new audio track respects the current speaker toggle
+        const isLoud = document.getElementById('speakerToggle').classList.contains('active-feature');
+        const speakers = await AgoraRTC.getPlaybackDevices();
+        if (speakers.length > 0) {
+            const target = isLoud ? 
+                (speakers.find(d => d.label.toLowerCase().includes('speaker')) || speakers[speakers.length - 1]) : 
+                (speakers.find(d => d.label.toLowerCase().includes('earpiece')) || speakers[0]);
+            
+            user.audioTrack.setPlaybackDevice(target.deviceId);
         }
-    },
+    }
+
+    if (this.state !== 'idle') this.startTimer();
+});
+
+        await this.client.join(data.appId, channelName, data.token, null);
+
+        if (this.callType === 'video') {
+            [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
+            document.getElementById('local-video').style.display = 'block';
+            this.localTracks.videoTrack.play('local-video');
+            await this.client.publish([this.localTracks.audioTrack, this.localTracks.videoTrack]);
+            
+            // VIDEO CALL: Default to Loudspeaker
+            this.setInitialAudioRoute(true); 
+        } else {
+            this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+            await this.client.publish([this.localTracks.audioTrack]);
+            
+            // VOICE CALL: Default to Earpiece (unless on Laptop)
+            const isLaptop = !/Mobi|Android/i.test(navigator.userAgent);
+            this.setInitialAudioRoute(isLaptop); 
+        }
+
+    } catch (err) {
+        console.error("Agora error:", err);
+        this.endCall();
+    }
+},
+
+// Helper function to set the initial state
+async setInitialAudioRoute(useLoudSpeaker) {
+    const btn = document.getElementById('speakerToggle');
+    if (useLoudSpeaker) {
+        btn.classList.add('active-feature');
+        btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+    } else {
+        btn.classList.remove('active-feature');
+        btn.innerHTML = '<i class="fas fa-volume-down"></i>';
+    }
+    // Note: Remote tracks might not be ready yet, 
+    // so this is handled in user-published as well.
+},
 
     toggleMic() {
         if (!this.localTracks.audioTrack) return;
@@ -664,17 +705,42 @@ socket.on('call-reaction', (data) => {
         btn.innerHTML = isEnabled ? '<i class="fas fa-microphone-slash"></i>' : '<i class="fas fa-microphone"></i>';
     },
 
-    toggleCam() {
-        if (!this.localTracks.videoTrack) return;
+    async toggleCam() {
         const btn = document.getElementById('camToggle');
+        
+        // If we are currently in voice mode or camera was never initialized
+        if (!this.localTracks.videoTrack) {
+            try {
+                this.localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
+                await this.client.publish(this.localTracks.videoTrack);
+                this.localTracks.videoTrack.play('local-video');
+                
+                // Update internal state and UI
+                this.callType = 'video';
+                document.getElementById('voice-placeholder').style.display = 'none';
+                document.getElementById('remote-video').style.display = 'block';
+                document.getElementById('local-video').style.display = 'block';
+                document.getElementById('dynamicBg').style.opacity = '0';
+                
+                // Notify the other user to prepare their UI for incoming video
+                socket.emit('call-type-changed', { 
+                    to: this.remoteUser, 
+                    newType: 'video' 
+                });
+            } catch (err) {
+                console.error("Failed to enable camera:", err);
+                return;
+            }
+        }
+
         const isEnabled = this.localTracks.videoTrack.enabled;
-        this.localTracks.videoTrack.setEnabled(!isEnabled);
+        await this.localTracks.videoTrack.setEnabled(!isEnabled);
+        
         btn.classList.toggle('off', isEnabled);
         btn.innerHTML = isEnabled ? '<i class="fas fa-video-slash"></i>' : '<i class="fas fa-video"></i>';
         document.getElementById('local-video').style.opacity = isEnabled ? '0' : '1';
+        document.getElementById('local-video').style.display = isEnabled ? 'none' : 'block';
     },
-
-    
 
 async flipCamera() {
         if (!this.localTracks.videoTrack) return;
@@ -705,21 +771,45 @@ async flipCamera() {
         }
     },
 
-    async toggleSpeaker() {
-        if (!this.localTracks.audioTrack) return;
-        const btn = document.getElementById('speakerToggle');
-        try {
-            const speakers = await AgoraRTC.getPlaybackDevices();
-            if (speakers.length < 2) return;
-            const nextSpeaker = speakers[1].deviceId;
-            this.client.remoteUsers.forEach(user => {
-                if (user.audioTrack) user.audioTrack.setPlaybackDevice(nextSpeaker);
-            });
-            btn.classList.toggle('active-feature');
-        } catch (e) {
-            console.warn("Speaker switch not supported.");
+ async toggleSpeaker() {
+    if (!this.client) return;
+    const btn = document.getElementById('speakerToggle');
+    
+    try {
+        const speakers = await AgoraRTC.getPlaybackDevices();
+        if (speakers.length === 0) return;
+
+        // On mobile, "default" is usually the earpiece in voice mode, 
+        // while "speaker" or "loudspeaker" is the external one.
+        // On laptops, we usually only have one "default" or "Realtek Audio".
+        
+        const isCurrentlyLoud = btn.classList.contains('active-feature');
+        let targetDevice;
+
+        if (isCurrentlyLoud) {
+            // Switch to Earpiece (Try to find 'earpiece' or use default)
+            targetDevice = speakers.find(d => d.label.toLowerCase().includes('earpiece')) || speakers[0];
+            btn.classList.remove('active-feature');
+            btn.innerHTML = '<i class="fas fa-volume-down"></i>';
+        } else {
+            // Switch to Loudspeaker
+            targetDevice = speakers.find(d => d.label.toLowerCase().includes('speaker')) || speakers[speakers.length - 1];
+            btn.classList.add('active-feature');
+            btn.innerHTML = '<i class="fas fa-volume-up"></i>';
         }
-    },
+
+        // Apply to all remote users' audio tracks
+        this.client.remoteUsers.forEach(user => {
+            if (user.audioTrack) {
+                user.audioTrack.setPlaybackDevice(targetDevice.deviceId);
+            }
+        });
+
+        console.log("Audio routed to:", targetDevice.label);
+    } catch (e) {
+        console.warn("Speaker routing not fully supported on this browser:", e);
+    }
+},
 
     async expandCall() {
         this.syncTheme();
@@ -845,30 +935,55 @@ async toggleScreenShare() {
     },
 
     sendReaction(emoji) {
-        this.animateReaction(emoji);
-        socket.emit('call-reaction', { to: this.remoteUser, emoji: emoji });
-        document.getElementById('reactionPicker').style.display = 'none';
-    },
+    // 1. Show it on our own screen immediately
+    this.animateReaction(emoji);
+    
+    // 2. Send to the other user via socket
+    if (this.remoteUser) {
+        socket.emit('call-reaction', { 
+            to: this.remoteUser, 
+            emoji: emoji 
+        });
+    }
+    
+    // 3. Hide the picker
+    document.getElementById('reactionPicker').style.display = 'none';
+},
 
-    animateReaction(emoji) {
-        const container = document.getElementById('reaction-container');
-        const el = document.createElement('div');
-        el.innerText = emoji;
-        el.style.cssText = `
-            position: absolute; bottom: 0; left: ${Math.random() * 80 + 10}%;
-            font-size: 30px; transition: all 3s ease-out; opacity: 1;
-            transform: translateY(0);
-        `;
-        container.appendChild(el);
+animateReaction(emoji) {
+    const container = document.getElementById('reaction-container');
+    if (!container) return;
 
-        // Trigger animation
-        setTimeout(() => {
-            el.style.transform = `translateY(-300px) translateX(${Math.random() * 40 - 20}px)`;
-            el.style.opacity = '0';
-        }, 50);
+    const el = document.createElement('div');
+    el.innerText = emoji;
+    
+    // Randomize horizontal position so multiple reactions don't stack perfectly
+    const randomLeft = Math.floor(Math.random() * 60) + 20; // Between 20% and 80%
+    
+    el.style.cssText = `
+        position: absolute; 
+        bottom: 0; 
+        left: ${randomLeft}%;
+        font-size: 35px; 
+        transition: all 3s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+        opacity: 1;
+        transform: translateY(0);
+        z-index: 100;
+        pointer-events: none;
+    `;
+    
+    container.appendChild(el);
 
-        setTimeout(() => el.remove(), 3000);
-    },
+    // Trigger the floating animation after a tiny delay
+    setTimeout(() => {
+        const drift = Math.random() * 100 - 50; // Random side-to-side drift
+        el.style.transform = `translateY(-400px) translateX(${drift}px)`;
+        el.style.opacity = '0';
+    }, 50);
+
+    // Clean up DOM after animation ends
+    setTimeout(() => el.remove(), 3000);
+},
     
     async endCall(shouldEmit = true, isRejected = false) {
         sessionStorage.removeItem('activeCallChannel');
