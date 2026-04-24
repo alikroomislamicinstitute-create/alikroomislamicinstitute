@@ -848,7 +848,6 @@ async flipCamera() {
 async toggleScreenShare() {
     try {
         if (!this.isScreenSharing) {
-            // 1. Create Screen Track
             this.screenTrack = await AgoraRTC.createScreenVideoTrack({
                 optimizationMode: "detail",
                 cursor: "always"
@@ -910,7 +909,7 @@ async toggleScreenShare() {
         // Fallback: Ensure state is reset even if unpublishing fails
         this.isScreenSharing = false;
     }
-}
+},
 
         async switchToVideoCall() {
         try {
@@ -1070,4 +1069,3 @@ document.addEventListener('DOMContentLoaded', () => {
         CallUI.init();
     }
 });
-
