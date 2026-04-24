@@ -19,22 +19,19 @@ const CallUI = {
     screenTrack: null,
     timerInterval: null,
     secondsElapsed: 0,
-        sounds: {
-    // Soft Notification Tone for Incoming Messages
-    notification: new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'),
-    
-    // Subtle Confirmation Tone for Outgoing Messages
-    confirmation: new Audio('https://assets.mixkit.co/active_storage/sfx/2870/2870-preview.mp3'),
-    
-    // Gentle Reconnect Alert for Network Recovery
-    reconnect: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3')
-},
+            sounds: {
+        ringtone: new Audio('https://assets.mixkit.co/active_storage/sfx/1350/1350-preview.mp3'),
+        dialtone: new Audio('https://assets.mixkit.co/active_storage/sfx/1352/1352-preview.mp3'),
+        reconnect: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'),
+        notification: new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3')
+    },
 
     
     
     init() {
-        this.sounds.ringtone.loop = true;
-        this.sounds.dialtone.loop = true;
+            init() {
+        if (this.sounds.ringtone) this.sounds.ringtone.loop = true;
+        if (this.sounds.dialtone) this.sounds.dialtone.loop = true;
         this.injectStyles();
         this.makeDraggable(document.getElementById('local-video'));
         this.listenForBackbutton();
@@ -459,7 +456,10 @@ const CallUI = {
     document.getElementById('switchToVideoBtn').style.display = 'none';
         }
 
-        this.sounds.ringtone.play().catch(e => console.log("Audio blocked"));
+                if (this.sounds.ringtone) {
+            this.sounds.ringtone.play().catch(e => console.log("Audio blocked: Interacting with the page first might be required."));
+        }
+
         
         if ('vibrate' in navigator) {
             navigator.vibrate([200, 100, 200]);
@@ -847,9 +847,8 @@ async toggleScreenShare() {
     }
 },
 
-async stopScreenShare() {
-    if (!this.isScreenSharing || !this.screenTrack) return;
-
+    async stopScreenShare() {
+        if (!this.isScreenSharing || !this.screenTrack) return;
     try {
         await this.client.unpublish(this.screenTrack);
         this.screenTrack.stop();
