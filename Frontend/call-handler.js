@@ -919,12 +919,12 @@ async toggleScreenShare() {
         this.isScreenSharing = false;
     },
 
-    async switchToVideoCall() {
+        async switchToVideoCall() {
         try {
             // 1. Create the video track
             this.localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
             
-            // 2. Publish the new video track to the existing stream
+            // 2. Publish the new video track
             await this.client.publish(this.localTracks.videoTrack);
             
             // 3. Update UI Elements
@@ -936,16 +936,17 @@ async toggleScreenShare() {
             document.getElementById('local-video').style.display = 'block';
             document.getElementById('dynamicBg').style.opacity = '0';
             
-            // Show video controls, hide switch button
+            // --- FIX START: Toggle visibility of specific buttons ---
             document.getElementById('camToggle').style.display = 'flex';
             document.getElementById('flipToggle').style.display = 'flex';
             document.getElementById('screenShareToggle').style.display = 'flex';
             document.getElementById('switchToVideoBtn').style.display = 'none';
+            // --- FIX END ---
 
             // 4. Play local video
             this.localTracks.videoTrack.play('local-video');
 
-            // 5. Notify the other user via Socket so their UI switches too
+            // 5. Notify the other user
             socket.emit('call-type-changed', { 
                 to: this.remoteUser, 
                 newType: 'video' 
