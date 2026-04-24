@@ -1037,6 +1037,7 @@ async stopScreenShare() {
     }
 };
 
+window.CallUI = CallUI;
 
 // Auto-initialize
 document.addEventListener('DOMContentLoaded', () => CallUI.init());
