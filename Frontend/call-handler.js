@@ -976,6 +976,9 @@ async toggleScreenShare() {
     }
 };
 
+// Add this at the bottom of call-handler.js
+window.CallUI = CallUI; 
 
-// Auto-initialize
+// Keep your existing init listener
 document.addEventListener('DOMContentLoaded', () => CallUI.init());
+
