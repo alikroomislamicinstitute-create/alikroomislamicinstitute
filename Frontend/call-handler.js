@@ -424,9 +424,6 @@ const CallUI = {
             }
         });
     },
-
-
-    },
         handleIncomingCall(data) {
         this.syncTheme(); 
         this.state = 'incoming';
