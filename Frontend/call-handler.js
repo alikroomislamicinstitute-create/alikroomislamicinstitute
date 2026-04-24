@@ -19,38 +19,26 @@ const CallUI = {
     screenTrack: null,
     timerInterval: null,
     secondsElapsed: 0,
-            sounds: {
-    // Modern Digital Pulse (Incoming Call)
-    ringtone: new Audio('https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3'), 
+    sounds: {
+        ringtone: new Audio('https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3'), // Incoming
+        dialtone: new Audio('https://assets.mixkit.co/active_storage/sfx/1354/1354-preview.mp3')  // Outgoing
+    },
     
-    // Rhythmic "Sound-Stop-Sound" (Outgoing Call)
-    dialtone: new Audio('https://assets.mixkit.co/active_storage/sfx/1354/1354-preview.mp3'), 
-    
-    // High-End Message Pop (Notification)
-    notification: new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'),
-    
-    // Tech Success Pulse (Reconnect)
-    reconnect: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3')
-},
     
     init() {
-    // Set looping for call sounds
-    if (this.sounds.ringtone) this.sounds.ringtone.loop = true;
-    if (this.sounds.dialtone) this.sounds.dialtone.loop = true;
-
-    this.injectStyles();
-    this.makeDraggable(document.getElementById('local-video'));
-    this.listenForBackbutton();
-    this.setupSocketListeners();
-    this.syncTheme();
-    this.setupProximitySensor();
-
-    const ssBtn = document.getElementById('screenShareToggle');
-    if (ssBtn) ssBtn.onclick = () => this.toggleScreenShare();
-
-    // Check for active session after reload
-    this.checkPersistentCall();
-},
+        this.sounds.ringtone.loop = true;
+        this.sounds.dialtone.loop = true;
+        this.injectStyles();
+        this.makeDraggable(document.getElementById('local-video'));
+        this.listenForBackbutton();
+        this.setupSocketListeners();
+        this.syncTheme();
+        this.setupProximitySensor();
+        const ssBtn = document.getElementById('screenShareToggle');
+        if(ssBtn) ssBtn.onclick = () => this.toggleScreenShare();
+        // Check for active session after reload
+        this.checkPersistentCall();
+    },
 
     checkPersistentCall() {
         const savedChannel = sessionStorage.getItem('activeCallChannel');
@@ -381,7 +369,6 @@ const CallUI = {
         document.body.appendChild(container);
     },
 
-    
     setupSocketListeners() {
         socket.on('incoming-call-notice', (data) => {
             this.handleIncomingCall(data);
@@ -395,10 +382,8 @@ const CallUI = {
         });
 
         socket.on('call-accepted', async (data) => {
-            if (this.sounds.dialtone) {
-                this.sounds.dialtone.pause();
-                this.sounds.dialtone.currentTime = 0;
-            }
+            this.sounds.dialtone.pause();
+            this.sounds.dialtone.currentTime = 0;
             document.getElementById('callStatusLabel').innerText = "Connecting...";
             await this.startAgoraStream(data.channelName);
         });
@@ -412,44 +397,27 @@ const CallUI = {
         });
 
         socket.on('call-type-changed', (data) => {
-            if (data.newType === 'video') {
-                this.callType = 'video';
-                document.getElementById('voice-placeholder').style.display = 'none';
-                document.getElementById('remote-video').style.display = 'block';
-                document.getElementById('local-video').style.display = 'block';
-                document.getElementById('dynamicBg').style.opacity = '0';
-                document.getElementById('camToggle').style.display = 'flex';
-                document.getElementById('flipToggle').style.display = 'flex';
-                document.getElementById('screenShareToggle').style.display = 'flex';
-                document.getElementById('switchToVideoBtn').style.display = 'none';
-            }
-        });
+    if (data.newType === 'video') {
+        this.callType = 'video';
+        // Update UI to show video containers
+        document.getElementById('voice-placeholder').style.display = 'none';
+        document.getElementById('remote-video').style.display = 'block';
+        document.getElementById('local-video').style.display = 'block';
+        document.getElementById('dynamicBg').style.opacity = '0';
+        
+        document.getElementById('camToggle').style.display = 'flex';
+        document.getElementById('flipToggle').style.display = 'flex';
+        document.getElementById('screenShareToggle').style.display = 'flex';
+        document.getElementById('switchToVideoBtn').style.display = 'none';
+    }
+});
 
-        socket.on('call-reaction', (data) => {
-            if (this.state !== 'idle') {
-                this.animateReaction(data.emoji);
-            }
-        });
+socket.on('call-reaction', (data) => {
+    this.animateReaction(data.emoji);
+});
+
     },
 
-    updateMediaSession(status) {
-        if ('mediaSession' in navigator) {
-            const role = typeof userRole !== 'undefined' ? userRole : localStorage.getItem('userRole');
-            const displayName = (this.state === 'incoming') 
-                ? (role === 'teacher' ? "Student" : "Ustadh Teacher")
-                : (role === 'student' ? "Ustadh Teacher" : "Student");
-
-            navigator.mediaSession.metadata = new MediaMetadata({
-                title: displayName,
-                artist: status === 'incoming' ? 'Incoming Call' : 'Calling...',
-                album: 'Al-Ikroom',
-                artwork: [
-                    { src: 'https://www.svgrepo.com/show/395874/book-education.svg', sizes: '96x96', type: 'image/svg+xml' }
-                ]
-            });
-        }
-    },
-    
     handleIncomingCall(data) {
         this.syncTheme(); 
         this.state = 'incoming';
@@ -458,38 +426,27 @@ const CallUI = {
         this.currentChannel = data.channelName;
         this.callType = data.type;
 
-        const role = typeof userRole !== 'undefined' ? userRole : localStorage.getItem('userRole');
-        const callerDisplayName = (role === 'teacher') ? "Student" : "Ustadh Teacher";
+        const callerDisplayName = data.fromName || "Unknown User";
         const callerAvatar = data.fromAvatar || '';
 
         document.getElementById('callerName').innerText = callerDisplayName;
         document.getElementById('activeCallerName').innerText = callerDisplayName;
-        document.getElementById('callStatusLabel').innerText = "Incoming...";
         
         const toastAvatar = document.getElementById('callerAvatar');
-        if (callerAvatar && toastAvatar) {
+        if (callerAvatar) {
             toastAvatar.innerHTML = `<img src="${callerAvatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
         }
 
         const dynBg = document.getElementById('dynamicBg');
-        if (callerAvatar && dynBg) {
+        if (callerAvatar) {
             dynBg.style.backgroundImage = `url(${callerAvatar})`;
         }
 
         document.getElementById('callTypeText').innerText = data.type;
         document.getElementById('incomingToast').classList.add('active');
+
+        this.sounds.ringtone.play().catch(e => console.log("Audio blocked"));
         
-        const switchBtn = document.getElementById('switchToVideoBtn');
-        if (switchBtn) {
-            switchBtn.style.display = (data.type === 'voice') ? 'flex' : 'none';
-        }
-
-        this.updateMediaSession('incoming');
-
-        if (this.sounds.ringtone) {
-            this.sounds.ringtone.play().catch(e => console.log("Audio interaction required"));
-        }
-
         if ('vibrate' in navigator) {
             navigator.vibrate([200, 100, 200]);
         }
@@ -508,68 +465,73 @@ const CallUI = {
         const channelName = `room_${Math.random().toString(36).slice(2, 9)}`;
         this.currentChannel = channelName;
         
+        const recipientHeader = document.querySelector('.chat-header .chat-user-info h4');
         const recipientImgEl = document.querySelector('.chat-header .chat-user-img img');
-        const role = typeof userRole !== 'undefined' ? userRole : localStorage.getItem('userRole');
-
-        const displayAs = (role === 'student') ? "Ustadh Teacher" : "Student";
-        document.getElementById('activeCallerName').innerText = displayAs;
-        document.getElementById('callStatusLabel').innerText = "Calling...";
         
+        const recipientName = recipientHeader ? recipientHeader.innerText : "User";
         const recipientImg = recipientImgEl ? recipientImgEl.src : '';
+                                     
+        document.getElementById('activeCallerName').innerText = recipientName;
+        
         const dynBg = document.getElementById('dynamicBg');
         const voicePlaceholder = document.getElementById('voice-placeholder');
-        
         if (recipientImg) {
-            if (dynBg) dynBg.style.backgroundImage = `url(${recipientImg})`;
+            dynBg.style.backgroundImage = `url(${recipientImg})`;
             if (voicePlaceholder) {
                 voicePlaceholder.innerHTML = `<div style="width:140px; height:140px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; border: 4px solid rgba(255,255,255,0.05); box-shadow: 0 15px 35px rgba(0,0,0,0.3)"><img src="${recipientImg}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;"></div>`;
             }
         }
 
+        const myNameEl = document.querySelector('.user-profile h4');
+        const role = typeof userRole !== 'undefined' ? userRole : localStorage.getItem('userRole');
+        
+        let myDisplayName = "";
+        if (role === 'teacher') {
+            const name = myNameEl ? myNameEl.innerText : "Teacher";
+            myDisplayName = name.includes('Ustadh') ? name : `Ustadh ${name}`;
+        } else {
+            myDisplayName = myNameEl ? myNameEl.innerText : "Student";
+        }
+        
         const myImgEl = document.querySelector('.user-profile img');
         const myAvatar = myImgEl ? myImgEl.src : '';
-        const localBox = document.getElementById('local-video');
 
+        const localBox = document.getElementById('local-video');
         if (type === 'voice') {
-            if (voicePlaceholder) voicePlaceholder.style.display = 'flex';
-            document.getElementById('remote-video').style.display = 'none';
-            document.getElementById('camToggle').style.display = 'none';
-            document.getElementById('flipToggle').style.display = 'none';
-            document.getElementById('screenShareToggle').style.display = 'none';
-            document.getElementById('switchToVideoBtn').style.display = 'flex'; 
-            if (localBox) localBox.style.display = 'none';
-            if (dynBg) dynBg.style.opacity = '1';
+    voicePlaceholder.style.display = 'flex';
+    document.getElementById('remote-video').style.display = 'none';
+    document.getElementById('camToggle').style.display = 'none';
+    document.getElementById('flipToggle').style.display = 'none';
+    document.getElementById('screenShareToggle').style.display = 'none'; // Voice doesn't need this yet
+    document.getElementById('switchToVideoBtn').style.display = 'flex'; // Show Switch Button
+    localBox.style.display = 'none';
+    dynBg.style.opacity = '1';
         } else {
-            if (voicePlaceholder) voicePlaceholder.style.display = 'none';
+            voicePlaceholder.style.display = 'none';
             document.getElementById('remote-video').style.display = 'block';
             document.getElementById('camToggle').style.display = 'flex';
             document.getElementById('flipToggle').style.display = 'flex';
-            if (localBox) localBox.style.display = 'block';
-            if (dynBg) dynBg.style.opacity = '0';
+            localBox.style.display = 'block';
+            dynBg.style.opacity = '0';
         }
 
         this.expandCall();
-        this.updateMediaSession('outgoing');
-
-        if (this.sounds.dialtone) {
-            this.sounds.dialtone.play().catch(e => console.log("Audio blocked"));
-        }
+        this.sounds.dialtone.play().catch(e => console.log("Audio blocked"));
 
         socket.emit('request-call', {
             to: activeChatUser,
             from: userId,
+            fromName: myDisplayName,
             fromAvatar: myAvatar,
             type: type,
             channelName: channelName
         });
     },
-    
+
     async acceptCall() {
         this.state = 'active';
-        if (this.sounds.ringtone) {
-            this.sounds.ringtone.pause();
-            this.sounds.ringtone.currentTime = 0;
-        }
+        this.sounds.ringtone.pause();
+        this.sounds.ringtone.currentTime = 0;
         document.getElementById('incomingToast').classList.remove('active');
         document.getElementById('activeCallerName').innerText = document.getElementById('callerName').innerText;
         this.expandCall();
@@ -582,7 +544,6 @@ const CallUI = {
 
         await this.startAgoraStream(this.currentChannel);
     },
-
 
     declineCall() {
         if (this.remoteUser) {
@@ -605,7 +566,7 @@ const CallUI = {
         this.endCall(false, true); 
     },
 
-        startTimer() {
+    startTimer() {
         if (this.timerInterval) return; 
 
         let startTime = sessionStorage.getItem('activeCallStartTime');
@@ -615,9 +576,6 @@ const CallUI = {
         }
 
         this.timerInterval = setInterval(() => {
-            // Only update UI if we aren't currently reconnecting
-            if (this.client && this.client.connectionState === "RECONNECTING") return;
-
             const now = Date.now();
             this.secondsElapsed = Math.floor((now - startTime) / 1000);
 
@@ -630,7 +588,6 @@ const CallUI = {
         }, 1000);
     },
 
-
     stopTimer() {
         if (this.timerInterval) {
             clearInterval(this.timerInterval);
@@ -638,96 +595,66 @@ const CallUI = {
         }
     },
 
-            async startAgoraStream(channelName) {
-    try {
-        const response = await fetch(`${API_BASE}/agora/token?channelName=${channelName}`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-        const data = await response.json();
-        if (!data.success) throw new Error("Token failed");
+    async startAgoraStream(channelName) {
+        try {
+            const response = await fetch(`${API_BASE}/agora/token?channelName=${channelName}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const data = await response.json();
+            if (!data.success) throw new Error("Token failed");
 
-        sessionStorage.setItem('activeCallChannel', channelName);
-        sessionStorage.setItem('activeCallRemoteUser', this.remoteUser);
-        sessionStorage.setItem('activeCallType', this.callType);
-        sessionStorage.setItem('activeCallRemoteName', document.getElementById('activeCallerName').innerText);
+            sessionStorage.setItem('activeCallChannel', channelName);
+            sessionStorage.setItem('activeCallRemoteUser', this.remoteUser);
+            sessionStorage.setItem('activeCallType', this.callType);
+            sessionStorage.setItem('activeCallRemoteName', document.getElementById('activeCallerName').innerText);
 
-        this.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+            this.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
 
-        // Connection State Logic
-        this.client.on("connection-state-change", (curState, revState) => {
-            const statusLabel = document.getElementById('callStatusLabel');
-            const reconnectUI = document.getElementById('reconnectOverlay');
-            const timerDisplay = document.getElementById('callDurationText');
+            this.client.on("connection-state-change", (curState) => {
+                const statusLabel = document.getElementById('callStatusLabel');
+                const reconnectUI = document.getElementById('reconnectOverlay');
 
-            if (curState === "CONNECTED") {
-                statusLabel.innerText = "End-to-End Encrypted";
-                reconnectUI.classList.remove('visible');
-                timerDisplay.style.color = "white";
-                this.sounds.reconnect.pause();
-            } 
-            else if (curState === "RECONNECTING") {
-                statusLabel.innerText = "Reconnecting...";
-                reconnectUI.classList.add('visible');
-                timerDisplay.style.color = "#ff4b4b";
-                this.sounds.reconnect.play().catch(e => {});
-            } 
-            else if (curState === "DISCONNECTED") {
-                this.endCall(false);
-            }
-        });
+                if (curState === "CONNECTING") {
+                    statusLabel.innerText = "Connecting...";
+                } else if (curState === "CONNECTED") {
+                    statusLabel.innerText = "End-to-End Encrypted";
+                    reconnectUI.classList.remove('visible');
+                } else if (curState === "RECONNECTING") {
+                    statusLabel.innerText = "Signal Weak...";
+                    reconnectUI.classList.add('visible');
+                } else if (curState === "DISCONNECTED") {
+                    this.endCall(false);
+                }
+            });
 
-        // Remote User Activity Monitoring
-        this.client.on("user-published", async (user, mediaType) => {
-            await this.client.subscribe(user, mediaType);
-            if (mediaType === "video") user.videoTrack.play("remote-video");
-            if (mediaType === "audio") user.audioTrack.play();
-            
+            this.client.on("user-published", async (user, mediaType) => {
+                await this.client.subscribe(user, mediaType);
+                if (mediaType === "video") user.videoTrack.play("remote-video");
+                if (mediaType === "audio") user.audioTrack.play();
+
+                if (this.state !== 'idle') this.startTimer();
+            });
+
+            await this.client.join(data.appId, channelName, data.token, null);
+
             if (this.callType === 'video') {
-                // Force loudspeaker for video calls
-                AgoraRTC.getPlaybackDevices().then(devices => {
-                    const speaker = devices.find(d => d.label.toLowerCase().includes('speaker')) || devices[0];
-                    user.audioTrack.setPlaybackDevice(speaker.deviceId);
-                });
-            }
-            
-            // If media starts flowing again, hide reconnecting UI
-            document.getElementById('reconnectOverlay').classList.remove('visible');
-            document.getElementById('callStatusLabel').innerText = "End-to-End Encrypted";
-            
-            if (this.state !== 'idle') this.startTimer();
-        });
-
-        // Handle when the OTHER person's network breaks
-        this.client.on("user-left", (user, reason) => {
-            if (reason === "ServerTimeOut") {
-                // Show "Reconnecting" on Teacher side because Student dropped
-                document.getElementById('callStatusLabel').innerText = "User connection lost...";
-                document.getElementById('reconnectOverlay').classList.add('visible');
-                document.getElementById('callDurationText').style.color = "#ff4b4b";
+                [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
+                document.getElementById('local-video').style.display = 'block';
+                this.localTracks.videoTrack.play('local-video');
+                await this.client.publish([this.localTracks.audioTrack, this.localTracks.videoTrack]);
             } else {
-                // Regular hang up
-                this.endCall(false);
+                this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+                await this.client.publish([this.localTracks.audioTrack]);
             }
-        });
 
-        document.getElementById('callStatusLabel').innerText = "Connecting...";
-        await this.client.join(data.appId, channelName, data.token, null);
+            document.getElementById('callStatusLabel').innerText = "End-to-End Encrypted";
 
-        if (this.callType === 'video') {
-            [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
-            document.getElementById('local-video').style.display = 'block';
-            this.localTracks.videoTrack.play('local-video');
-            await this.client.publish([this.localTracks.audioTrack, this.localTracks.videoTrack]);
-        } else {
-            this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
-            await this.client.publish([this.localTracks.audioTrack]);
+        } catch (err) {
+            console.error("Agora error:", err);
+            this.endCall();
         }
+    },
 
-    } catch (err) {
-        console.error("Agora error:", err);
-        this.endCall();
-    }
-},
     toggleMic() {
         if (!this.localTracks.audioTrack) return;
         const btn = document.getElementById('micToggle');
@@ -746,6 +673,8 @@ const CallUI = {
         btn.innerHTML = isEnabled ? '<i class="fas fa-video-slash"></i>' : '<i class="fas fa-video"></i>';
         document.getElementById('local-video').style.opacity = isEnabled ? '0' : '1';
     },
+
+    
 
 async flipCamera() {
         if (!this.localTracks.videoTrack) return;
@@ -776,46 +705,21 @@ async flipCamera() {
         }
     },
 
-        async toggleSpeaker() {
-        if (!this.client) return;
+    async toggleSpeaker() {
+        if (!this.localTracks.audioTrack) return;
         const btn = document.getElementById('speakerToggle');
-        const isLoudspeakerActive = btn.classList.contains('active-feature');
-
         try {
-            // Get all audio output devices
-            const devices = await AgoraRTC.getPlaybackDevices();
-            
-            // Standard strategy: 
-            // - Speakers usually have "Speaker" or "Loudspeaker" in the label.
-            // - Earpieces usually have "Receiver" or "Internal" or are the default.
-            
-            let targetDevice;
-
-            if (!isLoudspeakerActive) {
-                // Switching TO Loudspeaker
-                targetDevice = devices.find(d => d.label.toLowerCase().includes('speaker')) || devices[0];
-                console.log("Switching to Loudspeaker:", targetDevice.label);
-            } else {
-                // Switching TO Earpiece
-                targetDevice = devices.find(d => d.label.toLowerCase().includes('earpiece') || d.label.toLowerCase().includes('receiver')) || devices[0];
-                console.log("Switching to Earpiece/Receiver:", targetDevice.label);
-            }
-
-            // Apply to all remote users
+            const speakers = await AgoraRTC.getPlaybackDevices();
+            if (speakers.length < 2) return;
+            const nextSpeaker = speakers[1].deviceId;
             this.client.remoteUsers.forEach(user => {
-                if (user.audioTrack) {
-                    user.audioTrack.setPlaybackDevice(targetDevice.deviceId);
-                }
+                if (user.audioTrack) user.audioTrack.setPlaybackDevice(nextSpeaker);
             });
-
             btn.classList.toggle('active-feature');
-            btn.innerHTML = !isLoudspeakerActive ? '<i class="fas fa-volume-up"></i>' : '<i class="fas fa-volume-down"></i>';
-
         } catch (e) {
-            console.error("Speaker switch failed:", e);
+            console.warn("Speaker switch not supported.");
         }
     },
-
 
     async expandCall() {
         this.syncTheme();
@@ -846,77 +750,63 @@ async flipCamera() {
 
     
 async toggleScreenShare() {
-    try {
-        if (!this.isScreenSharing) {
-            this.screenTrack = await AgoraRTC.createScreenVideoTrack({
-                optimizationMode: "detail",
-                cursor: "always"
-            });
+        try {
+            if (!this.isScreenSharing) {
+                // 1. Create the screen track
+                this.screenTrack = await AgoraRTC.createScreenVideoTrack({
+                    optimizationMode: "detail", // Better for text/code
+                    cursor: "always"
+                });
 
-            // Handle manual "Stop Sharing" from browser bar
-            this.screenTrack.on("track-ended", () => this.stopScreenShare());
+                // 2. Handle if user clicks "Stop Sharing" on the browser's built-in bar
+                this.screenTrack.on("track-ended", () => {
+                    this.stopScreenShare();
+                });
 
-            // 2. Switch Tracks: Unpublish camera, publish screen
-            if (this.localTracks.videoTrack) {
-                await this.client.unpublish(this.localTracks.videoTrack);
+                // 3. Switch Tracks: Unpublish camera, publish screen
+                if (this.localTracks.videoTrack) {
+                    await this.client.unpublish(this.localTracks.videoTrack);
+                }
+                await this.client.publish(this.screenTrack);
+
+                // 4. Update UI
+                this.screenTrack.play('local-video');
+                document.getElementById('screenShareToggle').classList.add('active-feature');
+                this.isScreenSharing = true;
+            } else {
+                await this.stopScreenShare();
             }
-            await this.client.publish(this.screenTrack);
-
-            // 3. Play locally and update UI
-            this.screenTrack.play('local-video'); 
-            document.getElementById('screenShareToggle').classList.add('active-feature');
-            this.isScreenSharing = true;
-
-            // Notify remote user to prepare for incoming screen stream
-            socket.emit('screen-share-started', { to: this.remoteUser });
-
-        } else {
-            await this.stopScreenShare();
+        } catch (err) {
+            console.error("Screen share failed:", err);
         }
-    } catch (err) {
-        console.error("Screen share failed:", err);
-    }
-},
+    },
 
     async stopScreenShare() {
-    // 1. Guard clause: Ensure we are actually sharing before proceeding
-    if (!this.isScreenSharing || !this.screenTrack) return;
+        if (!this.isScreenSharing) return;
 
-    try {
-        // 2. Unpublish from the Agora client and destroy the track
+        // 1. Unpublish and close screen track
         await this.client.unpublish(this.screenTrack);
         this.screenTrack.stop();
         this.screenTrack.close();
         this.screenTrack = null;
 
-        // 3. Restore Camera: If a camera track exists, re-publish it automatically
+        // 2. Re-publish camera track if it exists
         if (this.localTracks.videoTrack) {
             await this.client.publish(this.localTracks.videoTrack);
             this.localTracks.videoTrack.play('local-video');
         }
 
-        // 4. Update local UI state
+        // 3. Reset UI
         document.getElementById('screenShareToggle').classList.remove('active-feature');
         this.isScreenSharing = false;
+    },
 
-        // 5. Notify the remote user so their UI can switch back to your video feed
-        if (this.remoteUser) {
-            socket.emit('screen-share-stopped', { to: this.remoteUser });
-        }
-
-    } catch (e) {
-        console.error("Stop screen share error:", e);
-        // Fallback: Ensure state is reset even if unpublishing fails
-        this.isScreenSharing = false;
-    }
-},
-
-        async switchToVideoCall() {
+    async switchToVideoCall() {
         try {
             // 1. Create the video track
             this.localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
             
-            // 2. Publish the new video track
+            // 2. Publish the new video track to the existing stream
             await this.client.publish(this.localTracks.videoTrack);
             
             // 3. Update UI Elements
@@ -928,17 +818,16 @@ async toggleScreenShare() {
             document.getElementById('local-video').style.display = 'block';
             document.getElementById('dynamicBg').style.opacity = '0';
             
-            // --- FIX START: Toggle visibility of specific buttons ---
+            // Show video controls, hide switch button
             document.getElementById('camToggle').style.display = 'flex';
             document.getElementById('flipToggle').style.display = 'flex';
             document.getElementById('screenShareToggle').style.display = 'flex';
             document.getElementById('switchToVideoBtn').style.display = 'none';
-            // --- FIX END ---
 
             // 4. Play local video
             this.localTracks.videoTrack.play('local-video');
 
-            // 5. Notify the other user
+            // 5. Notify the other user via Socket so their UI switches too
             socket.emit('call-type-changed', { 
                 to: this.remoteUser, 
                 newType: 'video' 
@@ -981,14 +870,12 @@ async toggleScreenShare() {
         setTimeout(() => el.remove(), 3000);
     },
     
-        async endCall(shouldEmit = true, isRejected = false) {
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.metadata = null;
-        }
-
-        // Clear Persistence
-        const storageKeys = ['activeCallChannel', 'activeCallRemoteUser', 'activeCallType', 'activeCallRemoteName', 'activeCallStartTime'];
-        storageKeys.forEach(key => sessionStorage.removeItem(key));
+    async endCall(shouldEmit = true, isRejected = false) {
+        sessionStorage.removeItem('activeCallChannel');
+        sessionStorage.removeItem('activeCallRemoteUser');
+        sessionStorage.removeItem('activeCallType');
+        sessionStorage.removeItem('activeCallRemoteName');
+        sessionStorage.removeItem('activeCallStartTime');
 
         if (this.state === 'idle') return;
 
@@ -1000,7 +887,6 @@ async toggleScreenShare() {
         this.stopTimer();
         this.state = 'idle';
 
-        // Log call in chat
         if (finalIsInitiator && !isRejected && finalRemoteUser) {
             const icon = finalCallType === 'video' ? '📹' : '📞';
             socket.emit('send_private_message', {
@@ -1013,7 +899,12 @@ async toggleScreenShare() {
 
         if (shouldEmit && finalRemoteUser) socket.emit('end-call', { to: finalRemoteUser });
 
-        // Cleanup Tracks
+        this.isInitiator = false;
+        this.currentChannel = null;
+        this.remoteUser = null;
+        this.sounds.ringtone.pause();
+        this.sounds.dialtone.pause();
+
         if (this.localTracks.audioTrack) {
             this.localTracks.audioTrack.stop();
             this.localTracks.audioTrack.close();
@@ -1024,48 +915,39 @@ async toggleScreenShare() {
             this.localTracks.videoTrack.close();
             this.localTracks.videoTrack = null;
         }
-        if (this.screenTrack) {
-            this.screenTrack.stop();
-            this.screenTrack.close();
-            this.screenTrack = null;
-            this.isScreenSharing = false;
-        }
 
-        // Leave Agora Channel
         if (this.client) {
-            try { await this.client.leave(); } catch (e) { console.error(e); }
+            try { await this.client.leave(); } catch (e) {}
             this.client = null;
         }
 
-        // UI Reset
+        if (this.screenTrack) {
+    this.screenTrack.stop();
+    this.screenTrack.close();
+    this.screenTrack = null;
+    this.isScreenSharing = false;
+}
+
         document.getElementById('callOverlay').classList.remove('active');
         document.getElementById('minimizedBar').classList.remove('active');
         document.getElementById('incomingToast').classList.remove('active');
         document.getElementById('reconnectOverlay').classList.remove('visible');
-        document.getElementById('local-video').style.display = 'none';
         
-        // Reset Buttons
-        const micBtn = document.getElementById('micToggle');
-        const camBtn = document.getElementById('camToggle');
-        if(micBtn) { micBtn.classList.remove('off'); micBtn.innerHTML = '<i class="fas fa-microphone"></i>'; }
-        if(camBtn) { camBtn.classList.remove('off'); camBtn.innerHTML = '<i class="fas fa-video"></i>'; }
+        document.getElementById('local-video').style.display = 'none';
+        document.getElementById('callDurationText').innerText = "00:00";
+        document.getElementById('miniTimer').innerText = "00:00";
+        
+        document.getElementById('micToggle').classList.remove('off');
+        document.getElementById('micToggle').innerHTML = '<i class="fas fa-microphone"></i>';
+        document.getElementById('camToggle').classList.remove('off');
+        document.getElementById('camToggle').innerHTML = '<i class="fas fa-video"></i>';
 
-        // Clean URL
         if (window.location.hash === '#active-call') {
             window.history.replaceState(null, '', window.location.pathname + window.location.search);
         }
-        
-        this.isInitiator = false;
-        this.remoteUser = null;
     }
 };
 
-// Global Access
-window.CallUI = CallUI;
 
 // Auto-initialize
-document.addEventListener('DOMContentLoaded', () => {
-    if (typeof CallUI !== 'undefined') {
-        CallUI.init();
-    }
-});
+document.addEventListener('DOMContentLoaded', () => CallUI.init());
