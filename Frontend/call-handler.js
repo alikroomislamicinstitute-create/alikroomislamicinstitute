@@ -453,6 +453,11 @@ socket.on('call-reaction', (data) => {
 
         document.getElementById('callTypeText').innerText = data.type;
         document.getElementById('incomingToast').classList.add('active');
+        if (data.type === 'voice') {
+    document.getElementById('switchToVideoBtn').style.display = 'flex'; // Show for receiver
+} else {
+    document.getElementById('switchToVideoBtn').style.display = 'none';
+        }
 
         this.sounds.ringtone.play().catch(e => console.log("Audio blocked"));
         
@@ -499,14 +504,15 @@ socket.on('call-reaction', (data) => {
 
         const localBox = document.getElementById('local-video');
         if (type === 'voice') {
-            voicePlaceholder.style.display = 'flex';
-            document.getElementById('remote-video').style.display = 'none';
-            document.getElementById('camToggle').style.display = 'none';
-            document.getElementById('flipToggle').style.display = 'none';
-            document.getElementById('screenShareToggle').style.display = 'none';
-            document.getElementById('switchToVideoBtn').style.display = 'flex';
-            localBox.style.display = 'none';
-            dynBg.style.opacity = '1';
+    voicePlaceholder.style.display = 'flex';
+    document.getElementById('remote-video').style.display = 'none';
+    document.getElementById('camToggle').style.display = 'none';
+    document.getElementById('flipToggle').style.display = 'none';
+    document.getElementById('screenShareToggle').style.display = 'none';
+    document.getElementById('switchToVideoBtn').style.display = 'flex'; // Show for initiator
+    localBox.style.display = 'none';
+    dynBg.style.opacity = '1';
+}
         } else {
             voicePlaceholder.style.display = 'none';
             document.getElementById('remote-video').style.display = 'block';
@@ -773,36 +779,61 @@ async flipCamera() {
 
     
 async toggleScreenShare() {
-        try {
-            if (!this.isScreenSharing) {
-                // 1. Create the screen track
-                this.screenTrack = await AgoraRTC.createScreenVideoTrack({
-                    optimizationMode: "detail", // Better for text/code
-                    cursor: "always"
-                });
+    try {
+        if (!this.isScreenSharing) {
+            // 1. Create Screen Track
+            this.screenTrack = await AgoraRTC.createScreenVideoTrack({
+                optimizationMode: "detail",
+                cursor: "always"
+            });
 
-                // 2. Handle if user clicks "Stop Sharing" on the browser's built-in bar
-                this.screenTrack.on("track-ended", () => {
-                    this.stopScreenShare();
-                });
+            // Handle manual "Stop Sharing" from browser bar
+            this.screenTrack.on("track-ended", () => this.stopScreenShare());
 
-                // 3. Switch Tracks: Unpublish camera, publish screen
-                if (this.localTracks.videoTrack) {
-                    await this.client.unpublish(this.localTracks.videoTrack);
-                }
-                await this.client.publish(this.screenTrack);
-
-                // 4. Update UI
-                this.screenTrack.play('local-video');
-                document.getElementById('screenShareToggle').classList.add('active-feature');
-                this.isScreenSharing = true;
-            } else {
-                await this.stopScreenShare();
+            // 2. Switch Tracks: Unpublish camera, publish screen
+            if (this.localTracks.videoTrack) {
+                await this.client.unpublish(this.localTracks.videoTrack);
             }
-        } catch (err) {
-            console.error("Screen share failed:", err);
+            await this.client.publish(this.screenTrack);
+
+            // 3. Play locally and update UI
+            this.screenTrack.play('local-video'); 
+            document.getElementById('screenShareToggle').classList.add('active-feature');
+            this.isScreenSharing = true;
+
+            // Notify remote user to prepare for incoming screen stream
+            socket.emit('screen-share-started', { to: this.remoteUser });
+
+        } else {
+            await this.stopScreenShare();
         }
-    },
+    } catch (err) {
+        console.error("Screen share failed:", err);
+    }
+},
+
+async stopScreenShare() {
+    if (!this.isScreenSharing || !this.screenTrack) return;
+
+    try {
+        await this.client.unpublish(this.screenTrack);
+        this.screenTrack.stop();
+        this.screenTrack.close();
+        this.screenTrack = null;
+
+        // Restore Camera if it was active
+        if (this.localTracks.videoTrack) {
+            await this.client.publish(this.localTracks.videoTrack);
+            this.localTracks.videoTrack.play('local-video');
+        }
+
+        document.getElementById('screenShareToggle').classList.remove('active-feature');
+        this.isScreenSharing = false;
+        socket.emit('screen-share-stopped', { to: this.remoteUser });
+    } catch (e) {
+        console.error("Stop screen share error:", e);
+    }
+},
 
     async stopScreenShare() {
         if (!this.isScreenSharing) return;
