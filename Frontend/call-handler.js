@@ -20,15 +20,15 @@ const CallUI = {
     timerInterval: null,
     secondsElapsed: 0,
         sounds: {
-        // Professional Digital Pulse for Incoming
-        ringtone: new Audio('https://assets.mixkit.co/active_storage/sfx/2569/2569-preview.mp3'), 
-        
-        // Clean Tech Blip for Outgoing
-        dialtone: new Audio('https://assets.mixkit.co/active_storage/sfx/2513/2513-preview.mp3'), 
-        
-        // Short System Alert for Reconnecting
-        reconnect: new Audio('https://assets.mixkit.co/active_storage/sfx/2561/2561-preview.mp3') 
-    },
+    // Soft Notification Tone for Incoming Messages
+    notification: new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'),
+    
+    // Subtle Confirmation Tone for Outgoing Messages
+    confirmation: new Audio('https://assets.mixkit.co/active_storage/sfx/2870/2870-preview.mp3'),
+    
+    // Gentle Reconnect Alert for Network Recovery
+    reconnect: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3')
+},
 
     
     
