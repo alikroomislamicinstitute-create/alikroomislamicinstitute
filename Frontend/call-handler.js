@@ -468,74 +468,74 @@ const CallUI = {
             navigator.vibrate([200, 100, 200]);
         }
     },
-           initiateCall(type) {
-        if (typeof activeChatUser === 'undefined' || !activeChatUser) {
-            return alert("Please select a user to call first.");
+
+initiateCall(type) {
+    if (typeof activeChatUser === 'undefined' || !activeChatUser) {
+        return alert("Please select a user to call first.");
+    }
+    
+    this.syncTheme();
+    this.state = 'outgoing';
+    this.isInitiator = true;
+    this.callType = type;
+    this.remoteUser = activeChatUser;
+    const channelName = `room_${Math.random().toString(36).slice(2, 9)}`;
+    this.currentChannel = channelName;
+    
+    const recipientImgEl = document.querySelector('.chat-header .chat-user-img img');
+    const role = typeof userRole !== 'undefined' ? userRole : localStorage.getItem('userRole');
+
+    const displayAs = (role === 'student') ? "Ustadh Teacher" : "Student";
+    document.getElementById('activeCallerName').innerText = displayAs;
+    document.getElementById('callStatusLabel').innerText = "Calling...";
+    
+    const recipientImg = recipientImgEl ? recipientImgEl.src : '';
+    const dynBg = document.getElementById('dynamicBg');
+    const voicePlaceholder = document.getElementById('voice-placeholder');
+    
+    if (recipientImg) {
+        dynBg.style.backgroundImage = `url(${recipientImg})`;
+        if (voicePlaceholder) {
+            voicePlaceholder.innerHTML = `<div style="width:140px; height:140px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; border: 4px solid rgba(255,255,255,0.05); box-shadow: 0 15px 35px rgba(0,0,0,0.3)"><img src="${recipientImg}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;"></div>`;
         }
-        
-        this.syncTheme();
-        this.state = 'outgoing';
-        this.isInitiator = true;
-        this.callType = type;
-        this.remoteUser = activeChatUser;
-        const channelName = `room_${Math.random().toString(36).slice(2, 9)}`;
-        this.currentChannel = channelName;
-        
-        const recipientImgEl = document.querySelector('.chat-header .chat-user-img img');
-        const role = typeof userRole !== 'undefined' ? userRole : localStorage.getItem('userRole');
+    }
 
-        // Hardcoded Display Logic for Caller Screen
-        const displayAs = (role === 'student') ? "Ustadh Teacher" : "Student";
-        document.getElementById('activeCallerName').innerText = displayAs;
-        
-        // Initial State
-        document.getElementById('callStatusLabel').innerText = "Calling...";
-        
-        const recipientImg = recipientImgEl ? recipientImgEl.src : '';
-        const dynBg = document.getElementById('dynamicBg');
-        const voicePlaceholder = document.getElementById('voice-placeholder');
-        
-        if (recipientImg) {
-            dynBg.style.backgroundImage = `url(${recipientImg})`;
-            if (voicePlaceholder) {
-                voicePlaceholder.innerHTML = `<div style="width:140px; height:140px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; border: 4px solid rgba(255,255,255,0.05); box-shadow: 0 15px 35px rgba(0,0,0,0.3)"><img src="${recipientImg}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;"></div>`;
-            }
-        }
+    const myImgEl = document.querySelector('.user-profile img');
+    const myAvatar = myImgEl ? myImgEl.src : '';
+    const localBox = document.getElementById('local-video');
 
-        const myImgEl = document.querySelector('.user-profile img');
-        const myAvatar = myImgEl ? myImgEl.src : '';
+    // CORRECTED LOGIC BLOCK
+    if (type === 'voice') {
+        voicePlaceholder.style.display = 'flex';
+        document.getElementById('remote-video').style.display = 'none';
+        document.getElementById('camToggle').style.display = 'none';
+        document.getElementById('flipToggle').style.display = 'none';
+        document.getElementById('screenShareToggle').style.display = 'none';
+        document.getElementById('switchToVideoBtn').style.display = 'flex'; 
+        localBox.style.display = 'none';
+        dynBg.style.opacity = '1';
+    } else {
+        voicePlaceholder.style.display = 'none';
+        document.getElementById('remote-video').style.display = 'block';
+        document.getElementById('camToggle').style.display = 'flex';
+        document.getElementById('flipToggle').style.display = 'flex';
+        localBox.style.display = 'block';
+        dynBg.style.opacity = '0';
+    }
 
-        const localBox = document.getElementById('local-video');
-        if (type === 'voice') {
-    voicePlaceholder.style.display = 'flex';
-    document.getElementById('remote-video').style.display = 'none';
-    document.getElementById('camToggle').style.display = 'none';
-    document.getElementById('flipToggle').style.display = 'none';
-    document.getElementById('screenShareToggle').style.display = 'none';
-    document.getElementById('switchToVideoBtn').style.display = 'flex'; // Show for initiator
-    localBox.style.display = 'none';
-    dynBg.style.opacity = '1';
-}
-        } else {
-            voicePlaceholder.style.display = 'none';
-            document.getElementById('remote-video').style.display = 'block';
-            document.getElementById('camToggle').style.display = 'flex';
-            document.getElementById('flipToggle').style.display = 'flex';
-            localBox.style.display = 'block';
-            dynBg.style.opacity = '0';
-        }
+    this.expandCall();
+    this.sounds.dialtone.play().catch(e => console.log("Audio blocked"));
 
-        this.expandCall();
-        this.sounds.dialtone.play().catch(e => console.log("Audio blocked"));
+    // This is the most important part that was being skipped:
+    socket.emit('request-call', {
+        to: activeChatUser,
+        from: userId,
+        fromAvatar: myAvatar,
+        type: type,
+        channelName: channelName
+    });
+},
 
-        socket.emit('request-call', {
-            to: activeChatUser,
-            from: userId,
-            fromAvatar: myAvatar,
-            type: type,
-            channelName: channelName
-        });
-    },
 
     
     async acceptCall() {
