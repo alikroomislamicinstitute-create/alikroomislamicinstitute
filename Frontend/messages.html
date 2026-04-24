@@ -125,9 +125,14 @@
         display: flex;  
         flex-direction: column;  
         transition: 0.3s ease;  
-        z-index: 10;  
+        z-index: 10; 
+        justify-content: space-between;   
     }  
-
+     
+     chat-active #messageInputArea {
+    display: flex !important;
+}
+  
     .chat-active #chatArea { left: 0; }  
 
     @media (min-width: 768px) {  
@@ -1054,7 +1059,11 @@ async function selectUser(id, name) {
     document.getElementById('headerAvatar').innerText = name.split(' ').map(n => n[0]).join('');  
     document.getElementById('messageInputArea').style.display = 'flex';  
     document.getElementById('callActions').style.display = 'block';  
-      
+    
+    const inputArea = document.getElementById('messageInputArea');
+    inputArea.style.setProperty('display', 'flex', 'important'); 
+    
+    document.getElementById('callActions').style.display = 'flex';  
     // Clear notification dot  
     const dot = document.getElementById(`dot-${id}`);  
     if (dot) dot.style.display = 'none';  
@@ -2086,4 +2095,4 @@ function showNotificationDot(senderId) {
 <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>  
 <script src="call-handler.js"></script>  
 </body>  
-</html>
+    </html>
