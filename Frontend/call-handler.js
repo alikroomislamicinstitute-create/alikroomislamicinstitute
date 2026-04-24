@@ -29,7 +29,6 @@ const CallUI = {
     
     
     init() {
-            init() {
         if (this.sounds.ringtone) this.sounds.ringtone.loop = true;
         if (this.sounds.dialtone) this.sounds.dialtone.loop = true;
         this.injectStyles();
