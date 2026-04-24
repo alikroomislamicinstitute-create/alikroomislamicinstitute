@@ -429,6 +429,24 @@ const CallUI = {
             }
         });
     },
+        updateMediaSession(status) {
+        if ('mediaSession' in navigator) {
+            const role = typeof userRole !== 'undefined' ? userRole : localStorage.getItem('userRole');
+            const displayName = (this.state === 'incoming') 
+                ? (role === 'teacher' ? "Student" : "Ustadh Teacher")
+                : (role === 'student' ? "Ustadh Teacher" : "Student");
+
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: displayName,
+                artist: status === 'incoming' ? 'Incoming Call' : 'Calling...',
+                album: 'Al-Ikroom',
+                artwork: [
+                    { src: 'https://www.svgrepo.com/show/395874/book-education.svg', sizes: '96x96', type: 'image/svg+xml' }
+                ]
+            });
+        }
+    },
+    
         handleIncomingCall(data) {
     this.syncTheme(); 
     this.state = 'incoming';
