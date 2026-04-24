@@ -396,12 +396,6 @@ const CallUI = {
             this.endCall(false);
         });
 
-        // Add this inside setupSocketListeners()
-socket.on('call-reaction', (data) => {
-    console.log("Reaction received:", data.emoji);
-    this.animateReaction(data.emoji); // This triggers the flying emoji on the receiver's screen
-});
-
         socket.on('call-type-changed', (data) => {
     if (data.newType === 'video') {
         this.callType = 'video';
@@ -416,7 +410,6 @@ socket.on('call-reaction', (data) => {
         document.getElementById('screenShareToggle').style.display = 'flex';
         document.getElementById('switchToVideoBtn').style.display = 'none';
     }
-            
 });
 
 socket.on('call-reaction', (data) => {
@@ -681,73 +674,53 @@ socket.on('call-reaction', (data) => {
         document.getElementById('local-video').style.opacity = isEnabled ? '0' : '1';
     },
 
-async flipCamera() {
-    if (!this.localTracks.videoTrack) {
-        console.warn("No video track found to flip.");
-        return;
-    }
     
-    try {
-        // 1. Get all available cameras
-        const cameras = await AgoraRTC.getCameras();
+
+async flipCamera() {
+        if (!this.localTracks.videoTrack) return;
         
-        if (cameras.length < 2) {
-            console.warn("Only one camera detected. Flip disabled.");
-            return;
-        }
+        try {
+            const cameras = await AgoraRTC.getCameras();
+            if (cameras.length < 2) {
+                console.warn("Only one camera detected.");
+                return;
+            }
 
-        // 2. Identify the currently active camera's Device ID
-        // getMediaStreamTrack() is more reliable than getTrackLabel()
-        const currentDeviceId = this.localTracks.videoTrack.getMediaStreamTrack().getSettings().deviceId;
-
-        // 3. Find the 'next' camera in the list that isn't the current one
-        const nextCam = cameras.find(c => c.deviceId !== currentDeviceId) || cameras[0];
-
-        // 4. Switch the device using Agora's built-in method
-        await this.localTracks.videoTrack.setDevice(nextCam.deviceId);
-        
-        // 5. Visual feedback (UI Rotation)
-        const btn = document.getElementById('flipToggle');
-        if (btn) {
-            btn.style.transition = 'transform 0.4s ease';
+            // Get current device ID
+            const currentDeviceId = this.localTracks.videoTrack.getTrackLabel();
+            // Find the other camera (switches between Front and Back on mobile)
+            const nextCam = cameras.find(c => c.label !== currentDeviceId) || cameras[0];
+            
+            // Switch the device
+            await this.localTracks.videoTrack.setDevice(nextCam.deviceId);
+            
+            // Visual feedback for the user
+            const btn = document.getElementById('flipToggle');
             btn.style.transform = 'rotate(180deg)';
-            setTimeout(() => {
-                btn.style.transform = 'rotate(0deg)';
-            }, 400);
-        }
+            setTimeout(() => btn.style.transform = 'rotate(0deg)', 300);
 
-        console.log(`Successfully flipped to: ${nextCam.label || 'Next Camera'}`);
-        
-    } catch (err) {
-        console.error("Camera flip encountered an error:", err);
-        // Fallback: If setDevice fails, try to recreate the track (rarely needed but safe)
-        if (err.message.includes('permission')) {
-            alert("Camera permission is required to switch devices.");
+            console.log("Switched to camera:", nextCam.label);
+        } catch (e) {
+            console.error("Flip failed:", e);
         }
-    }
-},
-
+    },
 
     async toggleSpeaker() {
-    const btn = document.getElementById('speakerToggle');
-    try {
-        const devices = await AgoraRTC.getPlaybackDevices();
-        // This only works on browsers supporting setSinkId (Desktop Chrome)
-        // Mobile browsers will ignore this.
-        if (this.client.remoteUsers.length > 0) {
-            const remoteUser = this.client.remoteUsers[0];
-            if (remoteUser.audioTrack) {
-                // Toggle between first and second output device
-                const nextDevice = devices[1] ? devices[1].deviceId : devices[0].deviceId;
-                await remoteUser.audioTrack.setPlaybackDevice(nextDevice);
-                btn.classList.toggle('active-feature');
-            }
+        if (!this.localTracks.audioTrack) return;
+        const btn = document.getElementById('speakerToggle');
+        try {
+            const speakers = await AgoraRTC.getPlaybackDevices();
+            if (speakers.length < 2) return;
+            const nextSpeaker = speakers[1].deviceId;
+            this.client.remoteUsers.forEach(user => {
+                if (user.audioTrack) user.audioTrack.setPlaybackDevice(nextSpeaker);
+            });
+            btn.classList.toggle('active-feature');
+        } catch (e) {
+            console.warn("Speaker switch not supported.");
         }
-    } catch (e) {
-        console.log("Speaker switching not supported on this device.");
-    }
-}
-    
+    },
+
     async expandCall() {
         this.syncTheme();
         if (document.pictureInPictureElement) await document.exitPictureInPicture();
@@ -777,38 +750,37 @@ async flipCamera() {
 
     
 async toggleScreenShare() {
-    try {
-        if (!this.isScreenSharing) {
-            // Check if browser supports screen sharing
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-                alert("Screen sharing is not supported on this browser/device (Mobile browsers often block this).");
-                return;
+        try {
+            if (!this.isScreenSharing) {
+                // 1. Create the screen track
+                this.screenTrack = await AgoraRTC.createScreenVideoTrack({
+                    optimizationMode: "detail", // Better for text/code
+                    cursor: "always"
+                });
+
+                // 2. Handle if user clicks "Stop Sharing" on the browser's built-in bar
+                this.screenTrack.on("track-ended", () => {
+                    this.stopScreenShare();
+                });
+
+                // 3. Switch Tracks: Unpublish camera, publish screen
+                if (this.localTracks.videoTrack) {
+                    await this.client.unpublish(this.localTracks.videoTrack);
+                }
+                await this.client.publish(this.screenTrack);
+
+                // 4. Update UI
+                this.screenTrack.play('local-video');
+                document.getElementById('screenShareToggle').classList.add('active-feature');
+                this.isScreenSharing = true;
+            } else {
+                await this.stopScreenShare();
             }
-
-            this.screenTrack = await AgoraRTC.createScreenVideoTrack({
-                encoderConfig: "1080p_1",
-                optimizationMode: "detail"
-            });
-
-            // Handle the "Stop Sharing" button built into the browser
-            this.screenTrack.on("track-ended", () => this.stopScreenShare());
-
-            if (this.localTracks.videoTrack) {
-                await this.client.unpublish(this.localTracks.videoTrack);
-            }
-            await this.client.publish(this.screenTrack);
-            
-            // On screen share, we play the screen in the local-video box
-            this.screenTrack.play('local-video');
-            this.isScreenSharing = true;
-            document.getElementById('screenShareToggle').classList.add('active-feature');
-        } else {
-            await this.stopScreenShare();
+        } catch (err) {
+            console.error("Screen share failed:", err);
         }
-    } catch (err) {
-        console.error("Screen share failed:", err);
-    }
-}
+    },
+
     async stopScreenShare() {
         if (!this.isScreenSharing) return;
 
@@ -976,9 +948,6 @@ async toggleScreenShare() {
     }
 };
 
-// Add this at the bottom of call-handler.js
-window.CallUI = CallUI; 
 
-// Keep your existing init listener
+// Auto-initialize
 document.addEventListener('DOMContentLoaded', () => CallUI.init());
-
