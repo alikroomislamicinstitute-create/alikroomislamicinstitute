@@ -20,28 +20,37 @@ const CallUI = {
     timerInterval: null,
     secondsElapsed: 0,
             sounds: {
-        ringtone: new Audio('https://assets.mixkit.co/active_storage/sfx/1350/1350-preview.mp3'),
-        dialtone: new Audio('https://assets.mixkit.co/active_storage/sfx/1352/1352-preview.mp3'),
-        reconnect: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'),
-        notification: new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3')
-    },
-
+    // Modern Digital Pulse (Incoming Call)
+    ringtone: new Audio('https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3'), 
     
+    // Rhythmic "Sound-Stop-Sound" (Outgoing Call)
+    dialtone: new Audio('https://assets.mixkit.co/active_storage/sfx/1354/1354-preview.mp3'), 
+    
+    // High-End Message Pop (Notification)
+    notification: new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'),
+    
+    // Tech Success Pulse (Reconnect)
+    reconnect: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3')
+},
     
     init() {
-        if (this.sounds.ringtone) this.sounds.ringtone.loop = true;
-        if (this.sounds.dialtone) this.sounds.dialtone.loop = true;
-        this.injectStyles();
-        this.makeDraggable(document.getElementById('local-video'));
-        this.listenForBackbutton();
-        this.setupSocketListeners();
-        this.syncTheme();
-        this.setupProximitySensor();
-        const ssBtn = document.getElementById('screenShareToggle');
-        if(ssBtn) ssBtn.onclick = () => this.toggleScreenShare();
-        // Check for active session after reload
-        this.checkPersistentCall();
-    },
+    // Set looping for call sounds
+    if (this.sounds.ringtone) this.sounds.ringtone.loop = true;
+    if (this.sounds.dialtone) this.sounds.dialtone.loop = true;
+
+    this.injectStyles();
+    this.makeDraggable(document.getElementById('local-video'));
+    this.listenForBackbutton();
+    this.setupSocketListeners();
+    this.syncTheme();
+    this.setupProximitySensor();
+
+    const ssBtn = document.getElementById('screenShareToggle');
+    if (ssBtn) ssBtn.onclick = () => this.toggleScreenShare();
+
+    // Check for active session after reload
+    this.checkPersistentCall();
+},
 
     checkPersistentCall() {
         const savedChannel = sessionStorage.getItem('activeCallChannel');
