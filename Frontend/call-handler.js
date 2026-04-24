@@ -417,7 +417,6 @@ socket.on('call-reaction', (data) => {
 });
 
     },
-
     handleIncomingCall(data) {
         this.syncTheme(); 
         this.state = 'incoming';
@@ -426,7 +425,8 @@ socket.on('call-reaction', (data) => {
         this.currentChannel = data.channelName;
         this.callType = data.type;
 
-        const callerDisplayName = data.fromName || "Unknown User";
+        // Use the display name provided by the initiator
+        const callerDisplayName = data.fromName || "User";
         const callerAvatar = data.fromAvatar || '';
 
         document.getElementById('callerName').innerText = callerDisplayName;
@@ -452,7 +452,7 @@ socket.on('call-reaction', (data) => {
         }
     },
 
-    initiateCall(type) {
+       initiateCall(type) {
         if (typeof activeChatUser === 'undefined' || !activeChatUser) {
             return alert("Please select a user to call first.");
         }
@@ -468,9 +468,16 @@ socket.on('call-reaction', (data) => {
         const recipientHeader = document.querySelector('.chat-header .chat-user-info h4');
         const recipientImgEl = document.querySelector('.chat-header .chat-user-img img');
         
-        const recipientName = recipientHeader ? recipientHeader.innerText : "User";
+        // LOGIC 1: What the caller sees on THEIR screen
+        let recipientName = recipientHeader ? recipientHeader.innerText : "User";
+        const role = typeof userRole !== 'undefined' ? userRole : localStorage.getItem('userRole');
+        
+        // If student is calling a teacher, show "Ustadh" locally
+        if (role === 'student' && !recipientName.includes('Ustadh')) {
+            recipientName = `Ustadh ${recipientName}`;
+        }
+        
         const recipientImg = recipientImgEl ? recipientImgEl.src : '';
-                                     
         document.getElementById('activeCallerName').innerText = recipientName;
         
         const dynBg = document.getElementById('dynamicBg');
@@ -482,15 +489,15 @@ socket.on('call-reaction', (data) => {
             }
         }
 
+        // LOGIC 2: What the receiver sees (fromName)
         const myNameEl = document.querySelector('.user-profile h4');
-        const role = typeof userRole !== 'undefined' ? userRole : localStorage.getItem('userRole');
-        
         let myDisplayName = "";
         if (role === 'teacher') {
             const name = myNameEl ? myNameEl.innerText : "Teacher";
             myDisplayName = name.includes('Ustadh') ? name : `Ustadh ${name}`;
         } else {
-            myDisplayName = myNameEl ? myNameEl.innerText : "Student";
+            // Students send "Student" to the teacher
+            myDisplayName = "Student"; 
         }
         
         const myImgEl = document.querySelector('.user-profile img');
@@ -498,14 +505,14 @@ socket.on('call-reaction', (data) => {
 
         const localBox = document.getElementById('local-video');
         if (type === 'voice') {
-    voicePlaceholder.style.display = 'flex';
-    document.getElementById('remote-video').style.display = 'none';
-    document.getElementById('camToggle').style.display = 'none';
-    document.getElementById('flipToggle').style.display = 'none';
-    document.getElementById('screenShareToggle').style.display = 'none'; // Voice doesn't need this yet
-    document.getElementById('switchToVideoBtn').style.display = 'flex'; // Show Switch Button
-    localBox.style.display = 'none';
-    dynBg.style.opacity = '1';
+            voicePlaceholder.style.display = 'flex';
+            document.getElementById('remote-video').style.display = 'none';
+            document.getElementById('camToggle').style.display = 'none';
+            document.getElementById('flipToggle').style.display = 'none';
+            document.getElementById('screenShareToggle').style.display = 'none';
+            document.getElementById('switchToVideoBtn').style.display = 'flex';
+            localBox.style.display = 'none';
+            dynBg.style.opacity = '1';
         } else {
             voicePlaceholder.style.display = 'none';
             document.getElementById('remote-video').style.display = 'block';
@@ -527,7 +534,7 @@ socket.on('call-reaction', (data) => {
             channelName: channelName
         });
     },
-
+    
     async acceptCall() {
         this.state = 'active';
         this.sounds.ringtone.pause();
