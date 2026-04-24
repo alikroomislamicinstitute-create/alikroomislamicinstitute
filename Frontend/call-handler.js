@@ -417,7 +417,7 @@ socket.on('call-reaction', (data) => {
 });
 
     },
-    handleIncomingCall(data) {
+        handleIncomingCall(data) {
         this.syncTheme(); 
         this.state = 'incoming';
         this.isInitiator = false;
@@ -425,12 +425,14 @@ socket.on('call-reaction', (data) => {
         this.currentChannel = data.channelName;
         this.callType = data.type;
 
-        // Use the display name provided by the initiator
-        const callerDisplayName = data.fromName || "User";
+        // Hardcoded Display Logic for Receiver
+        const role = typeof userRole !== 'undefined' ? userRole : localStorage.getItem('userRole');
+        const callerDisplayName = (role === 'teacher') ? "Student" : "Ustadh Teacher";
         const callerAvatar = data.fromAvatar || '';
 
         document.getElementById('callerName').innerText = callerDisplayName;
         document.getElementById('activeCallerName').innerText = callerDisplayName;
+        document.getElementById('callStatusLabel').innerText = "Incoming...";
         
         const toastAvatar = document.getElementById('callerAvatar');
         if (callerAvatar) {
@@ -451,8 +453,7 @@ socket.on('call-reaction', (data) => {
             navigator.vibrate([200, 100, 200]);
         }
     },
-
-       initiateCall(type) {
+           initiateCall(type) {
         if (typeof activeChatUser === 'undefined' || !activeChatUser) {
             return alert("Please select a user to call first.");
         }
@@ -465,23 +466,20 @@ socket.on('call-reaction', (data) => {
         const channelName = `room_${Math.random().toString(36).slice(2, 9)}`;
         this.currentChannel = channelName;
         
-        const recipientHeader = document.querySelector('.chat-header .chat-user-info h4');
         const recipientImgEl = document.querySelector('.chat-header .chat-user-img img');
-        
-        // LOGIC 1: What the caller sees on THEIR screen
-        let recipientName = recipientHeader ? recipientHeader.innerText : "User";
         const role = typeof userRole !== 'undefined' ? userRole : localStorage.getItem('userRole');
+
+        // Hardcoded Display Logic for Caller Screen
+        const displayAs = (role === 'student') ? "Ustadh Teacher" : "Student";
+        document.getElementById('activeCallerName').innerText = displayAs;
         
-        // If student is calling a teacher, show "Ustadh" locally
-        if (role === 'student' && !recipientName.includes('Ustadh')) {
-            recipientName = `Ustadh ${recipientName}`;
-        }
+        // Initial State
+        document.getElementById('callStatusLabel').innerText = "Calling...";
         
         const recipientImg = recipientImgEl ? recipientImgEl.src : '';
-        document.getElementById('activeCallerName').innerText = recipientName;
-        
         const dynBg = document.getElementById('dynamicBg');
         const voicePlaceholder = document.getElementById('voice-placeholder');
+        
         if (recipientImg) {
             dynBg.style.backgroundImage = `url(${recipientImg})`;
             if (voicePlaceholder) {
@@ -489,17 +487,6 @@ socket.on('call-reaction', (data) => {
             }
         }
 
-        // LOGIC 2: What the receiver sees (fromName)
-        const myNameEl = document.querySelector('.user-profile h4');
-        let myDisplayName = "";
-        if (role === 'teacher') {
-            const name = myNameEl ? myNameEl.innerText : "Teacher";
-            myDisplayName = name.includes('Ustadh') ? name : `Ustadh ${name}`;
-        } else {
-            // Students send "Student" to the teacher
-            myDisplayName = "Student"; 
-        }
-        
         const myImgEl = document.querySelector('.user-profile img');
         const myAvatar = myImgEl ? myImgEl.src : '';
 
@@ -528,12 +515,12 @@ socket.on('call-reaction', (data) => {
         socket.emit('request-call', {
             to: activeChatUser,
             from: userId,
-            fromName: myDisplayName,
             fromAvatar: myAvatar,
             type: type,
             channelName: channelName
         });
     },
+
     
     async acceptCall() {
         this.state = 'active';
@@ -602,7 +589,7 @@ socket.on('call-reaction', (data) => {
         }
     },
 
-    async startAgoraStream(channelName) {
+        async startAgoraStream(channelName) {
         try {
             const response = await fetch(`${API_BASE}/agora/token?channelName=${channelName}`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -627,9 +614,10 @@ socket.on('call-reaction', (data) => {
                     statusLabel.innerText = "End-to-End Encrypted";
                     reconnectUI.classList.remove('visible');
                 } else if (curState === "RECONNECTING") {
-                    statusLabel.innerText = "Signal Weak...";
+                    statusLabel.innerText = "Reconnecting...";
                     reconnectUI.classList.add('visible');
                 } else if (curState === "DISCONNECTED") {
+                    statusLabel.innerText = "Disconnected";
                     this.endCall(false);
                 }
             });
@@ -642,6 +630,8 @@ socket.on('call-reaction', (data) => {
                 if (this.state !== 'idle') this.startTimer();
             });
 
+            // Set state to connecting right before joining
+            document.getElementById('callStatusLabel').innerText = "Connecting...";
             await this.client.join(data.appId, channelName, data.token, null);
 
             if (this.callType === 'video') {
@@ -653,8 +643,6 @@ socket.on('call-reaction', (data) => {
                 this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
                 await this.client.publish([this.localTracks.audioTrack]);
             }
-
-            document.getElementById('callStatusLabel').innerText = "End-to-End Encrypted";
 
         } catch (err) {
             console.error("Agora error:", err);
