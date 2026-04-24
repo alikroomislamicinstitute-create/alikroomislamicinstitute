@@ -878,46 +878,37 @@ async toggleScreenShare() {
 },
 
     async stopScreenShare() {
-        if (!this.isScreenSharing || !this.screenTrack) return;
+    // 1. Guard clause: Ensure we are actually sharing before proceeding
+    if (!this.isScreenSharing || !this.screenTrack) return;
+
     try {
+        // 2. Unpublish from the Agora client and destroy the track
         await this.client.unpublish(this.screenTrack);
         this.screenTrack.stop();
         this.screenTrack.close();
         this.screenTrack = null;
 
-        // Restore Camera if it was active
+        // 3. Restore Camera: If a camera track exists, re-publish it automatically
         if (this.localTracks.videoTrack) {
             await this.client.publish(this.localTracks.videoTrack);
             this.localTracks.videoTrack.play('local-video');
         }
 
+        // 4. Update local UI state
         document.getElementById('screenShareToggle').classList.remove('active-feature');
         this.isScreenSharing = false;
-        socket.emit('screen-share-stopped', { to: this.remoteUser });
+
+        // 5. Notify the remote user so their UI can switch back to your video feed
+        if (this.remoteUser) {
+            socket.emit('screen-share-stopped', { to: this.remoteUser });
+        }
+
     } catch (e) {
         console.error("Stop screen share error:", e);
-    }
-},
-
-    async stopScreenShare() {
-        if (!this.isScreenSharing) return;
-
-        // 1. Unpublish and close screen track
-        await this.client.unpublish(this.screenTrack);
-        this.screenTrack.stop();
-        this.screenTrack.close();
-        this.screenTrack = null;
-
-        // 2. Re-publish camera track if it exists
-        if (this.localTracks.videoTrack) {
-            await this.client.publish(this.localTracks.videoTrack);
-            this.localTracks.videoTrack.play('local-video');
-        }
-
-        // 3. Reset UI
-        document.getElementById('screenShareToggle').classList.remove('active-feature');
+        // Fallback: Ensure state is reset even if unpublishing fails
         this.isScreenSharing = false;
-    },
+    }
+}
 
         async switchToVideoCall() {
         try {
@@ -989,88 +980,92 @@ async toggleScreenShare() {
         setTimeout(() => el.remove(), 3000);
     },
     
-    async endCall(shouldEmit = true, isRejected = false) {
-    if ('mediaSession' in navigator) {
-        navigator.mediaSession.metadata = null; // Clears the notification
+        async endCall(shouldEmit = true, isRejected = false) {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = null;
+        }
+
+        // Clear Persistence
+        const storageKeys = ['activeCallChannel', 'activeCallRemoteUser', 'activeCallType', 'activeCallRemoteName', 'activeCallStartTime'];
+        storageKeys.forEach(key => sessionStorage.removeItem(key));
+
+        if (this.state === 'idle') return;
+
+        const finalDuration = document.getElementById('callDurationText').innerText;
+        const finalCallType = this.callType;
+        const finalRemoteUser = this.remoteUser;
+        const finalIsInitiator = this.isInitiator;
+
+        this.stopTimer();
+        this.state = 'idle';
+
+        // Log call in chat
+        if (finalIsInitiator && !isRejected && finalRemoteUser) {
+            const icon = finalCallType === 'video' ? '📹' : '📞';
+            socket.emit('send_private_message', {
+                recipientId: finalRemoteUser,
+                senderId: userId,
+                text: `${icon} Call ended • ${finalDuration}`,
+                isCallLog: true
+            });
+        }
+
+        if (shouldEmit && finalRemoteUser) socket.emit('end-call', { to: finalRemoteUser });
+
+        // Cleanup Tracks
+        if (this.localTracks.audioTrack) {
+            this.localTracks.audioTrack.stop();
+            this.localTracks.audioTrack.close();
+            this.localTracks.audioTrack = null;
+        }
+        if (this.localTracks.videoTrack) {
+            this.localTracks.videoTrack.stop();
+            this.localTracks.videoTrack.close();
+            this.localTracks.videoTrack = null;
+        }
+        if (this.screenTrack) {
+            this.screenTrack.stop();
+            this.screenTrack.close();
+            this.screenTrack = null;
+            this.isScreenSharing = false;
+        }
+
+        // Leave Agora Channel
+        if (this.client) {
+            try { await this.client.leave(); } catch (e) { console.error(e); }
+            this.client = null;
+        }
+
+        // UI Reset
+        document.getElementById('callOverlay').classList.remove('active');
+        document.getElementById('minimizedBar').classList.remove('active');
+        document.getElementById('incomingToast').classList.remove('active');
+        document.getElementById('reconnectOverlay').classList.remove('visible');
+        document.getElementById('local-video').style.display = 'none';
+        
+        // Reset Buttons
+        const micBtn = document.getElementById('micToggle');
+        const camBtn = document.getElementById('camToggle');
+        if(micBtn) { micBtn.classList.remove('off'); micBtn.innerHTML = '<i class="fas fa-microphone"></i>'; }
+        if(camBtn) { camBtn.classList.remove('off'); camBtn.innerHTML = '<i class="fas fa-video"></i>'; }
+
+        // Clean URL
+        if (window.location.hash === '#active-call') {
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+        
+        this.isInitiator = false;
+        this.remoteUser = null;
     }
+};
 
-    sessionStorage.removeItem('activeCallChannel');
-    sessionStorage.removeItem('activeCallRemoteUser');
-    sessionStorage.removeItem('activeCallType');
-    sessionStorage.removeItem('activeCallRemoteName');
-    sessionStorage.removeItem('activeCallStartTime');
-
-    if (this.state === 'idle') return;
-
-    const finalDuration = document.getElementById('callDurationText').innerText;
-    const finalCallType = this.callType;
-    const finalRemoteUser = this.remoteUser;
-    const finalIsInitiator = this.isInitiator;
-
-    this.stopTimer();
-    this.state = 'idle';
-
-    if (finalIsInitiator && !isRejected && finalRemoteUser) {
-        const icon = finalCallType === 'video' ? '📹' : '📞';
-        socket.emit('send_private_message', {
-            recipientId: finalRemoteUser,
-            senderId: userId,
-            text: `${icon} Call ended • ${finalDuration}`,
-            isCallLog: true
-        });
-    }
-
-    if (shouldEmit && finalRemoteUser) socket.emit('end-call', { to: finalRemoteUser });
-
-    this.isInitiator = false;
-    this.currentChannel = null;
-    this.remoteUser = null;
-    this.sounds.ringtone.pause();
-    this.sounds.dialtone.pause();
-
-    if (this.localTracks.audioTrack) {
-        this.localTracks.audioTrack.stop();
-        this.localTracks.audioTrack.close();
-        this.localTracks.audioTrack = null;
-    }
-    if (this.localTracks.videoTrack) {
-        this.localTracks.videoTrack.stop();
-        this.localTracks.videoTrack.close();
-        this.localTracks.videoTrack = null;
-    }
-
-    if (this.client) {
-        try { await this.client.leave(); } catch (e) {}
-        this.client = null;
-    }
-
-    if (this.screenTrack) {
-        this.screenTrack.stop();
-        this.screenTrack.close();
-        this.screenTrack = null;
-        this.isScreenSharing = false;
-    }
-
-    document.getElementById('callOverlay').classList.remove('active');
-    document.getElementById('minimizedBar').classList.remove('active');
-    document.getElementById('incomingToast').classList.remove('active');
-    document.getElementById('reconnectOverlay').classList.remove('visible');
-    
-    document.getElementById('local-video').style.display = 'none';
-    document.getElementById('callDurationText').innerText = "00:00";
-    document.getElementById('miniTimer').innerText = "00:00";
-    
-    document.getElementById('micToggle').classList.remove('off');
-    document.getElementById('micToggle').innerHTML = '<i class="fas fa-microphone"></i>';
-    document.getElementById('camToggle').classList.remove('off');
-    document.getElementById('camToggle').innerHTML = '<i class="fas fa-video"></i>';
-
-    if (window.location.hash === '#active-call') {
-        window.history.replaceState(null, '', window.location.pathname + window.location.search);
-    }
-}
-
+// Global Access
 window.CallUI = CallUI;
 
 // Auto-initialize
-document.addEventListener('DOMContentLoaded', () => CallUI.init());
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof CallUI !== 'undefined') {
+        CallUI.init();
+    }
+});
+
