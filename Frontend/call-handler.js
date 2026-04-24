@@ -40,7 +40,7 @@ const CallUI = {
         this.checkPersistentCall();
     },
 
-    checkPersistentCall() {
+        checkPersistentCall() {
         const savedChannel = sessionStorage.getItem('activeCallChannel');
         if (savedChannel) {
             this.currentChannel = savedChannel;
@@ -57,6 +57,22 @@ const CallUI = {
         }
     },
 
+    updateMediaSession(title, status) {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: title,
+                artist: 'Al-Ikroom Call',
+                album: status,
+                artwork: [
+                    { src: 'https://alikroomislamicinstitute.onrender.com/assets/img/logo.png', sizes: '512x512', type: 'image/png' }
+                ]
+            });
+            // Allows the user to end the call from the notification bar directly
+            navigator.mediaSession.setActionHandler('stop', () => this.endCall());
+            navigator.mediaSession.setActionHandler('hangup', () => this.endCall());
+        }
+    },
+    
     setupProximitySensor() {
         if ('ProximitySensor' in window && this.callType === 'voice') {
             const sensor = new ProximitySensor();
