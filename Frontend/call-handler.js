@@ -621,47 +621,53 @@ socket.on('call-reaction', (data) => {
 
             this.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
 
+            // Connection State Logic
             this.client.on("connection-state-change", (curState, revState) => {
                 const statusLabel = document.getElementById('callStatusLabel');
                 const reconnectUI = document.getElementById('reconnectOverlay');
                 const timerDisplay = document.getElementById('callDurationText');
-                const miniTimer = document.getElementById('miniTimer');
 
-                if (curState === "CONNECTING") {
-                    statusLabel.innerText = "Connecting...";
-                } 
-                else if (curState === "CONNECTED") {
+                if (curState === "CONNECTED") {
                     statusLabel.innerText = "End-to-End Encrypted";
                     reconnectUI.classList.remove('visible');
-                    // Restore timer visibility
                     timerDisplay.style.color = "white";
                     this.sounds.reconnect.pause();
-                    this.sounds.reconnect.currentTime = 0;
                 } 
                 else if (curState === "RECONNECTING") {
                     statusLabel.innerText = "Reconnecting...";
                     reconnectUI.classList.add('visible');
-                    
-                    // WhatsApp Style: Change timer text to alert user
-                    timerDisplay.innerText = "RECONNECTING...";
                     timerDisplay.style.color = "#ff4b4b";
-                    miniTimer.innerText = "Reconnecting...";
-                    
-                    // Play alert sound
                     this.sounds.reconnect.play().catch(e => {});
                 } 
                 else if (curState === "DISCONNECTED") {
-                    statusLabel.innerText = "Disconnected";
                     this.endCall(false);
                 }
             });
 
+            // Remote User Activity Monitoring
             this.client.on("user-published", async (user, mediaType) => {
                 await this.client.subscribe(user, mediaType);
                 if (mediaType === "video") user.videoTrack.play("remote-video");
                 if (mediaType === "audio") user.audioTrack.play();
-
+                
+                // If media starts flowing again, hide reconnecting UI
+                document.getElementById('reconnectOverlay').classList.remove('visible');
+                document.getElementById('callStatusLabel').innerText = "End-to-End Encrypted";
+                
                 if (this.state !== 'idle') this.startTimer();
+            });
+
+            // Handle when the OTHER person's network breaks
+            this.client.on("user-left", (user, reason) => {
+                if (reason === "ServerTimeOut") {
+                    // Show "Reconnecting" on Teacher side because Student dropped
+                    document.getElementById('callStatusLabel').innerText = "User connection lost...";
+                    document.getElementById('reconnectOverlay').classList.add('visible');
+                    document.getElementById('callDurationText').style.color = "#ff4b4b";
+                } else {
+                    // Regular hang up
+                    this.endCall(false);
+                }
             });
 
             document.getElementById('callStatusLabel').innerText = "Connecting...";
@@ -682,7 +688,6 @@ socket.on('call-reaction', (data) => {
             this.endCall();
         }
     },
-
 
     toggleMic() {
         if (!this.localTracks.audioTrack) return;
