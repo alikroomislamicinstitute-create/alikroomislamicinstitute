@@ -607,96 +607,95 @@ initiateCall(type) {
     },
 
             async startAgoraStream(channelName) {
-        try {
-            const response = await fetch(`${API_BASE}/agora/token?channelName=${channelName}`, {
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-            });
-            const data = await response.json();
-            if (!data.success) throw new Error("Token failed");
+    try {
+        const response = await fetch(`${API_BASE}/agora/token?channelName=${channelName}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const data = await response.json();
+        if (!data.success) throw new Error("Token failed");
 
-            sessionStorage.setItem('activeCallChannel', channelName);
-            sessionStorage.setItem('activeCallRemoteUser', this.remoteUser);
-            sessionStorage.setItem('activeCallType', this.callType);
-            sessionStorage.setItem('activeCallRemoteName', document.getElementById('activeCallerName').innerText);
+        sessionStorage.setItem('activeCallChannel', channelName);
+        sessionStorage.setItem('activeCallRemoteUser', this.remoteUser);
+        sessionStorage.setItem('activeCallType', this.callType);
+        sessionStorage.setItem('activeCallRemoteName', document.getElementById('activeCallerName').innerText);
 
-            this.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+        this.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
 
-            // Connection State Logic
-            this.client.on("connection-state-change", (curState, revState) => {
-                const statusLabel = document.getElementById('callStatusLabel');
-                const reconnectUI = document.getElementById('reconnectOverlay');
-                const timerDisplay = document.getElementById('callDurationText');
+        // Connection State Logic
+        this.client.on("connection-state-change", (curState, revState) => {
+            const statusLabel = document.getElementById('callStatusLabel');
+            const reconnectUI = document.getElementById('reconnectOverlay');
+            const timerDisplay = document.getElementById('callDurationText');
 
-                if (curState === "CONNECTED") {
-                    statusLabel.innerText = "End-to-End Encrypted";
-                    reconnectUI.classList.remove('visible');
-                    timerDisplay.style.color = "white";
-                    this.sounds.reconnect.pause();
-                } 
-                else if (curState === "RECONNECTING") {
-                    statusLabel.innerText = "Reconnecting...";
-                    reconnectUI.classList.add('visible');
-                    timerDisplay.style.color = "#ff4b4b";
-                    this.sounds.reconnect.play().catch(e => {});
-                } 
-                else if (curState === "DISCONNECTED") {
-                    this.endCall(false);
-                }
-            });
-
-            // Remote User Activity Monitoring
-            this.client.on("user-published", async (user, mediaType) => {
-                await this.client.subscribe(user, mediaType);
-                if (mediaType === "video") user.videoTrack.play("remote-video");
-                if (mediaType === "audio") user.audioTrack.play();
-                if (this.callType === 'video') {
-            // Force loudspeaker for video calls
-            AgoraRTC.getPlaybackDevices().then(devices => {
-                const speaker = devices.find(d => d.label.toLowerCase().includes('speaker')) || devices[0];
-                user.audioTrack.setPlaybackDevice(speaker.deviceId);
-            });
-        }
+            if (curState === "CONNECTED") {
+                statusLabel.innerText = "End-to-End Encrypted";
+                reconnectUI.classList.remove('visible');
+                timerDisplay.style.color = "white";
+                this.sounds.reconnect.pause();
+            } 
+            else if (curState === "RECONNECTING") {
+                statusLabel.innerText = "Reconnecting...";
+                reconnectUI.classList.add('visible');
+                timerDisplay.style.color = "#ff4b4b";
+                this.sounds.reconnect.play().catch(e => {});
+            } 
+            else if (curState === "DISCONNECTED") {
+                this.endCall(false);
             }
-                
-                // If media starts flowing again, hide reconnecting UI
-                document.getElementById('reconnectOverlay').classList.remove('visible');
-                document.getElementById('callStatusLabel').innerText = "End-to-End Encrypted";
-                
-                if (this.state !== 'idle') this.startTimer();
-            });
+        });
 
-            // Handle when the OTHER person's network breaks
-            this.client.on("user-left", (user, reason) => {
-                if (reason === "ServerTimeOut") {
-                    // Show "Reconnecting" on Teacher side because Student dropped
-                    document.getElementById('callStatusLabel').innerText = "User connection lost...";
-                    document.getElementById('reconnectOverlay').classList.add('visible');
-                    document.getElementById('callDurationText').style.color = "#ff4b4b";
-                } else {
-                    // Regular hang up
-                    this.endCall(false);
-                }
-            });
-
-            document.getElementById('callStatusLabel').innerText = "Connecting...";
-            await this.client.join(data.appId, channelName, data.token, null);
-
+        // Remote User Activity Monitoring
+        this.client.on("user-published", async (user, mediaType) => {
+            await this.client.subscribe(user, mediaType);
+            if (mediaType === "video") user.videoTrack.play("remote-video");
+            if (mediaType === "audio") user.audioTrack.play();
+            
             if (this.callType === 'video') {
-                [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
-                document.getElementById('local-video').style.display = 'block';
-                this.localTracks.videoTrack.play('local-video');
-                await this.client.publish([this.localTracks.audioTrack, this.localTracks.videoTrack]);
-            } else {
-                this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
-                await this.client.publish([this.localTracks.audioTrack]);
+                // Force loudspeaker for video calls
+                AgoraRTC.getPlaybackDevices().then(devices => {
+                    const speaker = devices.find(d => d.label.toLowerCase().includes('speaker')) || devices[0];
+                    user.audioTrack.setPlaybackDevice(speaker.deviceId);
+                });
             }
+            
+            // If media starts flowing again, hide reconnecting UI
+            document.getElementById('reconnectOverlay').classList.remove('visible');
+            document.getElementById('callStatusLabel').innerText = "End-to-End Encrypted";
+            
+            if (this.state !== 'idle') this.startTimer();
+        });
 
-        } catch (err) {
-            console.error("Agora error:", err);
-            this.endCall();
+        // Handle when the OTHER person's network breaks
+        this.client.on("user-left", (user, reason) => {
+            if (reason === "ServerTimeOut") {
+                // Show "Reconnecting" on Teacher side because Student dropped
+                document.getElementById('callStatusLabel').innerText = "User connection lost...";
+                document.getElementById('reconnectOverlay').classList.add('visible');
+                document.getElementById('callDurationText').style.color = "#ff4b4b";
+            } else {
+                // Regular hang up
+                this.endCall(false);
+            }
+        });
+
+        document.getElementById('callStatusLabel').innerText = "Connecting...";
+        await this.client.join(data.appId, channelName, data.token, null);
+
+        if (this.callType === 'video') {
+            [this.localTracks.audioTrack, this.localTracks.videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
+            document.getElementById('local-video').style.display = 'block';
+            this.localTracks.videoTrack.play('local-video');
+            await this.client.publish([this.localTracks.audioTrack, this.localTracks.videoTrack]);
+        } else {
+            this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+            await this.client.publish([this.localTracks.audioTrack]);
         }
-    },
 
+    } catch (err) {
+        console.error("Agora error:", err);
+        this.endCall();
+    }
+},
     toggleMic() {
         if (!this.localTracks.audioTrack) return;
         const btn = document.getElementById('micToggle');
@@ -715,8 +714,6 @@ initiateCall(type) {
         btn.innerHTML = isEnabled ? '<i class="fas fa-video-slash"></i>' : '<i class="fas fa-video"></i>';
         document.getElementById('local-video').style.opacity = isEnabled ? '0' : '1';
     },
-
-    
 
 async flipCamera() {
         if (!this.localTracks.videoTrack) return;
