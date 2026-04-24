@@ -854,6 +854,16 @@ overflow: hidden;
 </section>
 
 </div>  
+<script>
+    window.onerror = function(message, source, lineno, colno, error) {
+        alert("AL-IKROOM ERROR DETECTED!\n\n" + 
+              "Message: " + message + "\n" +
+              "Line: " + lineno + "\n" +
+              "File: " + source);
+        return false; 
+    };
+</script>
+
 <script src="https://alikroomislamicinstitute.onrender.com/socket.io/socket.io.js"></script>  <script>  
     window.addEventListener('beforeunload', () => {  
     console.log("⚠️ PAGE IS RELOADING");  
