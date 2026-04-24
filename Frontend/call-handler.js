@@ -19,10 +19,17 @@ const CallUI = {
     screenTrack: null,
     timerInterval: null,
     secondsElapsed: 0,
-    sounds: {
-        ringtone: new Audio('https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3'), // Incoming
-        dialtone: new Audio('https://assets.mixkit.co/active_storage/sfx/1354/1354-preview.mp3')  // Outgoing
+        sounds: {
+        // Professional Digital Pulse for Incoming
+        ringtone: new Audio('https://assets.mixkit.co/active_storage/sfx/2569/2569-preview.mp3'), 
+        
+        // Clean Tech Blip for Outgoing
+        dialtone: new Audio('https://assets.mixkit.co/active_storage/sfx/2513/2513-preview.mp3'), 
+        
+        // Short System Alert for Reconnecting
+        reconnect: new Audio('https://assets.mixkit.co/active_storage/sfx/2561/2561-preview.mp3') 
     },
+
     
     
     init() {
@@ -560,7 +567,7 @@ socket.on('call-reaction', (data) => {
         this.endCall(false, true); 
     },
 
-    startTimer() {
+        startTimer() {
         if (this.timerInterval) return; 
 
         let startTime = sessionStorage.getItem('activeCallStartTime');
@@ -570,6 +577,9 @@ socket.on('call-reaction', (data) => {
         }
 
         this.timerInterval = setInterval(() => {
+            // Only update UI if we aren't currently reconnecting
+            if (this.client && this.client.connectionState === "RECONNECTING") return;
+
             const now = Date.now();
             this.secondsElapsed = Math.floor((now - startTime) / 1000);
 
@@ -582,6 +592,7 @@ socket.on('call-reaction', (data) => {
         }, 1000);
     },
 
+
     stopTimer() {
         if (this.timerInterval) {
             clearInterval(this.timerInterval);
@@ -589,7 +600,7 @@ socket.on('call-reaction', (data) => {
         }
     },
 
-        async startAgoraStream(channelName) {
+            async startAgoraStream(channelName) {
         try {
             const response = await fetch(`${API_BASE}/agora/token?channelName=${channelName}`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -604,19 +615,36 @@ socket.on('call-reaction', (data) => {
 
             this.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
 
-            this.client.on("connection-state-change", (curState) => {
+            this.client.on("connection-state-change", (curState, revState) => {
                 const statusLabel = document.getElementById('callStatusLabel');
                 const reconnectUI = document.getElementById('reconnectOverlay');
+                const timerDisplay = document.getElementById('callDurationText');
+                const miniTimer = document.getElementById('miniTimer');
 
                 if (curState === "CONNECTING") {
                     statusLabel.innerText = "Connecting...";
-                } else if (curState === "CONNECTED") {
+                } 
+                else if (curState === "CONNECTED") {
                     statusLabel.innerText = "End-to-End Encrypted";
                     reconnectUI.classList.remove('visible');
-                } else if (curState === "RECONNECTING") {
+                    // Restore timer visibility
+                    timerDisplay.style.color = "white";
+                    this.sounds.reconnect.pause();
+                    this.sounds.reconnect.currentTime = 0;
+                } 
+                else if (curState === "RECONNECTING") {
                     statusLabel.innerText = "Reconnecting...";
                     reconnectUI.classList.add('visible');
-                } else if (curState === "DISCONNECTED") {
+                    
+                    // WhatsApp Style: Change timer text to alert user
+                    timerDisplay.innerText = "RECONNECTING...";
+                    timerDisplay.style.color = "#ff4b4b";
+                    miniTimer.innerText = "Reconnecting...";
+                    
+                    // Play alert sound
+                    this.sounds.reconnect.play().catch(e => {});
+                } 
+                else if (curState === "DISCONNECTED") {
                     statusLabel.innerText = "Disconnected";
                     this.endCall(false);
                 }
@@ -630,7 +658,6 @@ socket.on('call-reaction', (data) => {
                 if (this.state !== 'idle') this.startTimer();
             });
 
-            // Set state to connecting right before joining
             document.getElementById('callStatusLabel').innerText = "Connecting...";
             await this.client.join(data.appId, channelName, data.token, null);
 
@@ -649,6 +676,7 @@ socket.on('call-reaction', (data) => {
             this.endCall();
         }
     },
+
 
     toggleMic() {
         if (!this.localTracks.audioTrack) return;
