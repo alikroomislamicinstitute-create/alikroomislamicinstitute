@@ -376,7 +376,7 @@ const CallUI = {
         document.body.appendChild(container);
     },
 
-    setupSocketListeners() {
+            setupSocketListeners() {
         socket.on('incoming-call-notice', (data) => {
             this.handleIncomingCall(data);
             socket.emit('call-ringing', { to: data.from });
@@ -404,24 +404,27 @@ const CallUI = {
         });
 
         socket.on('call-type-changed', (data) => {
-    if (data.newType === 'video') {
-        this.callType = 'video';
-        // Update UI to show video containers
-        document.getElementById('voice-placeholder').style.display = 'none';
-        document.getElementById('remote-video').style.display = 'block';
-        document.getElementById('local-video').style.display = 'block';
-        document.getElementById('dynamicBg').style.opacity = '0';
-        
-        document.getElementById('camToggle').style.display = 'flex';
-        document.getElementById('flipToggle').style.display = 'flex';
-        document.getElementById('screenShareToggle').style.display = 'flex';
-        document.getElementById('switchToVideoBtn').style.display = 'none';
-    }
-});
+            if (data.newType === 'video') {
+                this.callType = 'video';
+                document.getElementById('voice-placeholder').style.display = 'none';
+                document.getElementById('remote-video').style.display = 'block';
+                document.getElementById('local-video').style.display = 'block';
+                document.getElementById('dynamicBg').style.opacity = '0';
+                document.getElementById('camToggle').style.display = 'flex';
+                document.getElementById('flipToggle').style.display = 'flex';
+                document.getElementById('screenShareToggle').style.display = 'flex';
+                document.getElementById('switchToVideoBtn').style.display = 'none';
+            }
+        });
 
-socket.on('call-reaction', (data) => {
-    this.animateReaction(data.emoji);
-});
+        // FIXED: Explicitly listen for the reaction from socket
+        socket.on('call-reaction', (data) => {
+            if (this.state !== 'idle') {
+                this.animateReaction(data.emoji);
+            }
+        });
+    },
+
 
     },
         handleIncomingCall(data) {
@@ -649,6 +652,14 @@ socket.on('call-reaction', (data) => {
                 await this.client.subscribe(user, mediaType);
                 if (mediaType === "video") user.videoTrack.play("remote-video");
                 if (mediaType === "audio") user.audioTrack.play();
+                if (this.callType === 'video') {
+            // Force loudspeaker for video calls
+            AgoraRTC.getPlaybackDevices().then(devices => {
+                const speaker = devices.find(d => d.label.toLowerCase().includes('speaker')) || devices[0];
+                user.audioTrack.setPlaybackDevice(speaker.deviceId);
+            });
+        }
+            }
                 
                 // If media starts flowing again, hide reconnecting UI
                 document.getElementById('reconnectOverlay').classList.remove('visible');
@@ -739,21 +750,46 @@ async flipCamera() {
         }
     },
 
-    async toggleSpeaker() {
-        if (!this.localTracks.audioTrack) return;
+        async toggleSpeaker() {
+        if (!this.client) return;
         const btn = document.getElementById('speakerToggle');
+        const isLoudspeakerActive = btn.classList.contains('active-feature');
+
         try {
-            const speakers = await AgoraRTC.getPlaybackDevices();
-            if (speakers.length < 2) return;
-            const nextSpeaker = speakers[1].deviceId;
+            // Get all audio output devices
+            const devices = await AgoraRTC.getPlaybackDevices();
+            
+            // Standard strategy: 
+            // - Speakers usually have "Speaker" or "Loudspeaker" in the label.
+            // - Earpieces usually have "Receiver" or "Internal" or are the default.
+            
+            let targetDevice;
+
+            if (!isLoudspeakerActive) {
+                // Switching TO Loudspeaker
+                targetDevice = devices.find(d => d.label.toLowerCase().includes('speaker')) || devices[0];
+                console.log("Switching to Loudspeaker:", targetDevice.label);
+            } else {
+                // Switching TO Earpiece
+                targetDevice = devices.find(d => d.label.toLowerCase().includes('earpiece') || d.label.toLowerCase().includes('receiver')) || devices[0];
+                console.log("Switching to Earpiece/Receiver:", targetDevice.label);
+            }
+
+            // Apply to all remote users
             this.client.remoteUsers.forEach(user => {
-                if (user.audioTrack) user.audioTrack.setPlaybackDevice(nextSpeaker);
+                if (user.audioTrack) {
+                    user.audioTrack.setPlaybackDevice(targetDevice.deviceId);
+                }
             });
+
             btn.classList.toggle('active-feature');
+            btn.innerHTML = !isLoudspeakerActive ? '<i class="fas fa-volume-up"></i>' : '<i class="fas fa-volume-down"></i>';
+
         } catch (e) {
-            console.warn("Speaker switch not supported.");
+            console.error("Speaker switch failed:", e);
         }
     },
+
 
     async expandCall() {
         this.syncTheme();
