@@ -430,49 +430,51 @@ const CallUI = {
         });
     },
         handleIncomingCall(data) {
-        this.syncTheme(); 
-        this.state = 'incoming';
-        this.isInitiator = false;
-        this.remoteUser = data.from;
-        this.currentChannel = data.channelName;
-        this.callType = data.type;
+    this.syncTheme(); 
+    this.state = 'incoming';
+    this.isInitiator = false;
+    this.remoteUser = data.from;
+    this.currentChannel = data.channelName;
+    this.callType = data.type;
 
-        // Hardcoded Display Logic for Receiver
-        const role = typeof userRole !== 'undefined' ? userRole : localStorage.getItem('userRole');
-        const callerDisplayName = (role === 'teacher') ? "Student" : "Ustadh Teacher";
-        const callerAvatar = data.fromAvatar || '';
+    // Hardcoded Display Logic for Receiver
+    const role = typeof userRole !== 'undefined' ? userRole : localStorage.getItem('userRole');
+    const callerDisplayName = (role === 'teacher') ? "Student" : "Ustadh Teacher";
+    const callerAvatar = data.fromAvatar || '';
 
-        document.getElementById('callerName').innerText = callerDisplayName;
-        document.getElementById('activeCallerName').innerText = callerDisplayName;
-        document.getElementById('callStatusLabel').innerText = "Incoming...";
-        
-        const toastAvatar = document.getElementById('callerAvatar');
-        if (callerAvatar) {
-            toastAvatar.innerHTML = `<img src="${callerAvatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
-        }
+    document.getElementById('callerName').innerText = callerDisplayName;
+    document.getElementById('activeCallerName').innerText = callerDisplayName;
+    document.getElementById('callStatusLabel').innerText = "Incoming...";
+    
+    const toastAvatar = document.getElementById('callerAvatar');
+    if (callerAvatar) {
+        toastAvatar.innerHTML = `<img src="${callerAvatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+    }
 
-        const dynBg = document.getElementById('dynamicBg');
-        if (callerAvatar) {
-            dynBg.style.backgroundImage = `url(${callerAvatar})`;
-        }
+    const dynBg = document.getElementById('dynamicBg');
+    if (callerAvatar) {
+        dynBg.style.backgroundImage = `url(${callerAvatar})`;
+    }
 
-        document.getElementById('callTypeText').innerText = data.type;
-        document.getElementById('incomingToast').classList.add('active');
-        if (data.type === 'voice') {
-    document.getElementById('switchToVideoBtn').style.display = 'flex'; // Show for receiver
-} else {
-    document.getElementById('switchToVideoBtn').style.display = 'none';
-        }
+    document.getElementById('callTypeText').innerText = data.type;
+    document.getElementById('incomingToast').classList.add('active');
+    if (data.type === 'voice') {
+        document.getElementById('switchToVideoBtn').style.display = 'flex'; // Show for receiver
+    } else {
+        document.getElementById('switchToVideoBtn').style.display = 'none';
+    }
 
-                if (this.sounds.ringtone) {
-            this.sounds.ringtone.play().catch(e => console.log("Audio blocked: Interacting with the page first might be required."));
-        }
+    // Media Session Integration
+    this.updateMediaSession('incoming');
 
-        
-        if ('vibrate' in navigator) {
-            navigator.vibrate([200, 100, 200]);
-        }
-    },
+    if (this.sounds.ringtone) {
+        this.sounds.ringtone.play().catch(e => console.log("Audio blocked: Interacting with the page first might be required."));
+    }
+
+    if ('vibrate' in navigator) {
+        navigator.vibrate([200, 100, 200]);
+    }
+},
 
 initiateCall(type) {
     if (typeof activeChatUser === 'undefined' || !activeChatUser) {
@@ -529,6 +531,10 @@ initiateCall(type) {
     }
 
     this.expandCall();
+
+    // Media Session Integration
+    this.updateMediaSession('outgoing');
+
     this.sounds.dialtone.play().catch(e => console.log("Audio blocked"));
 
     // This is the most important part that was being skipped:
@@ -540,8 +546,6 @@ initiateCall(type) {
         channelName: channelName
     });
 },
-
-
     
     async acceptCall() {
         this.state = 'active';
@@ -967,82 +971,85 @@ async toggleScreenShare() {
     },
     
     async endCall(shouldEmit = true, isRejected = false) {
-        sessionStorage.removeItem('activeCallChannel');
-        sessionStorage.removeItem('activeCallRemoteUser');
-        sessionStorage.removeItem('activeCallType');
-        sessionStorage.removeItem('activeCallRemoteName');
-        sessionStorage.removeItem('activeCallStartTime');
-
-        if (this.state === 'idle') return;
-
-        const finalDuration = document.getElementById('callDurationText').innerText;
-        const finalCallType = this.callType;
-        const finalRemoteUser = this.remoteUser;
-        const finalIsInitiator = this.isInitiator;
-
-        this.stopTimer();
-        this.state = 'idle';
-
-        if (finalIsInitiator && !isRejected && finalRemoteUser) {
-            const icon = finalCallType === 'video' ? '📹' : '📞';
-            socket.emit('send_private_message', {
-                recipientId: finalRemoteUser,
-                senderId: userId,
-                text: `${icon} Call ended • ${finalDuration}`,
-                isCallLog: true
-            });
-        }
-
-        if (shouldEmit && finalRemoteUser) socket.emit('end-call', { to: finalRemoteUser });
-
-        this.isInitiator = false;
-        this.currentChannel = null;
-        this.remoteUser = null;
-        this.sounds.ringtone.pause();
-        this.sounds.dialtone.pause();
-
-        if (this.localTracks.audioTrack) {
-            this.localTracks.audioTrack.stop();
-            this.localTracks.audioTrack.close();
-            this.localTracks.audioTrack = null;
-        }
-        if (this.localTracks.videoTrack) {
-            this.localTracks.videoTrack.stop();
-            this.localTracks.videoTrack.close();
-            this.localTracks.videoTrack = null;
-        }
-
-        if (this.client) {
-            try { await this.client.leave(); } catch (e) {}
-            this.client = null;
-        }
-
-        if (this.screenTrack) {
-    this.screenTrack.stop();
-    this.screenTrack.close();
-    this.screenTrack = null;
-    this.isScreenSharing = false;
-}
-
-        document.getElementById('callOverlay').classList.remove('active');
-        document.getElementById('minimizedBar').classList.remove('active');
-        document.getElementById('incomingToast').classList.remove('active');
-        document.getElementById('reconnectOverlay').classList.remove('visible');
-        
-        document.getElementById('local-video').style.display = 'none';
-        document.getElementById('callDurationText').innerText = "00:00";
-        document.getElementById('miniTimer').innerText = "00:00";
-        
-        document.getElementById('micToggle').classList.remove('off');
-        document.getElementById('micToggle').innerHTML = '<i class="fas fa-microphone"></i>';
-        document.getElementById('camToggle').classList.remove('off');
-        document.getElementById('camToggle').innerHTML = '<i class="fas fa-video"></i>';
-
-        if (window.location.hash === '#active-call') {
-            window.history.replaceState(null, '', window.location.pathname + window.location.search);
-        }
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = null; // Clears the notification
     }
-};
+
+    sessionStorage.removeItem('activeCallChannel');
+    sessionStorage.removeItem('activeCallRemoteUser');
+    sessionStorage.removeItem('activeCallType');
+    sessionStorage.removeItem('activeCallRemoteName');
+    sessionStorage.removeItem('activeCallStartTime');
+
+    if (this.state === 'idle') return;
+
+    const finalDuration = document.getElementById('callDurationText').innerText;
+    const finalCallType = this.callType;
+    const finalRemoteUser = this.remoteUser;
+    const finalIsInitiator = this.isInitiator;
+
+    this.stopTimer();
+    this.state = 'idle';
+
+    if (finalIsInitiator && !isRejected && finalRemoteUser) {
+        const icon = finalCallType === 'video' ? '📹' : '📞';
+        socket.emit('send_private_message', {
+            recipientId: finalRemoteUser,
+            senderId: userId,
+            text: `${icon} Call ended • ${finalDuration}`,
+            isCallLog: true
+        });
+    }
+
+    if (shouldEmit && finalRemoteUser) socket.emit('end-call', { to: finalRemoteUser });
+
+    this.isInitiator = false;
+    this.currentChannel = null;
+    this.remoteUser = null;
+    this.sounds.ringtone.pause();
+    this.sounds.dialtone.pause();
+
+    if (this.localTracks.audioTrack) {
+        this.localTracks.audioTrack.stop();
+        this.localTracks.audioTrack.close();
+        this.localTracks.audioTrack = null;
+    }
+    if (this.localTracks.videoTrack) {
+        this.localTracks.videoTrack.stop();
+        this.localTracks.videoTrack.close();
+        this.localTracks.videoTrack = null;
+    }
+
+    if (this.client) {
+        try { await this.client.leave(); } catch (e) {}
+        this.client = null;
+    }
+
+    if (this.screenTrack) {
+        this.screenTrack.stop();
+        this.screenTrack.close();
+        this.screenTrack = null;
+        this.isScreenSharing = false;
+    }
+
+    document.getElementById('callOverlay').classList.remove('active');
+    document.getElementById('minimizedBar').classList.remove('active');
+    document.getElementById('incomingToast').classList.remove('active');
+    document.getElementById('reconnectOverlay').classList.remove('visible');
+    
+    document.getElementById('local-video').style.display = 'none';
+    document.getElementById('callDurationText').innerText = "00:00";
+    document.getElementById('miniTimer').innerText = "00:00";
+    
+    document.getElementById('micToggle').classList.remove('off');
+    document.getElementById('micToggle').innerHTML = '<i class="fas fa-microphone"></i>';
+    document.getElementById('camToggle').classList.remove('off');
+    document.getElementById('camToggle').innerHTML = '<i class="fas fa-video"></i>';
+
+    if (window.location.hash === '#active-call') {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+}
 
 window.CallUI = CallUI;
 
