@@ -24,7 +24,7 @@ const io = new Server(server, {
             "http://localhost:5000",
             "http://127.0.0.1:5500",
             "http://localhost:5500",
-             "https://alikroomislamicinstitute.onrender.com",
+            "https://alikroomislamicinstitute.onrender.com",
         ],
         methods: ["GET", "POST"]
     }
@@ -46,37 +46,37 @@ io.on('connection', (socket) => {
     // ================================
     // SEND MESSAGE
     // ================================
-socket.on('send_private_message', async (data) => {
-    const { senderId, recipientId, text, fileUrl, fileName, fileType, thumbnailUrl } = data;
+    socket.on('send_private_message', async (data) => {
+        const { senderId, recipientId, text, fileUrl, fileName, fileType, thumbnailUrl } = data;
 
-    try {
-        const newMessage = await Message.create({
-            sender: senderId,
-            recipient: recipientId,
-            text: text || "",
-            fileUrl: fileUrl || null,
-            fileName: fileName || null,
-            fileType: fileType || null,
-            thumbnailUrl: thumbnailUrl || null,
-            status: 'sent'
-        });
+        try {
+            const newMessage = await Message.create({
+                sender: senderId,
+                recipient: recipientId,
+                text: text || "",
+                fileUrl: fileUrl || null,
+                fileName: fileName || null,
+                fileType: fileType || null,
+                thumbnailUrl: thumbnailUrl || null,
+                status: 'sent'
+            });
 
-        io.to(recipientId).emit('receive_private_message', newMessage);
-        io.to(senderId).emit('message_sent', newMessage);
+            io.to(recipientId).emit('receive_private_message', newMessage);
+            io.to(senderId).emit('message_sent', newMessage);
 
-        await Message.findByIdAndUpdate(newMessage._id, {
-            status: 'delivered'
-        });
+            await Message.findByIdAndUpdate(newMessage._id, {
+                status: 'delivered'
+            });
 
-        io.to(senderId).emit('message_status_update', {
-            messageId: newMessage._id,
-            status: 'delivered'
-        });
+            io.to(senderId).emit('message_status_update', {
+                messageId: newMessage._id,
+                status: 'delivered'
+            });
 
-    } catch (err) {
-        console.error("Message error:", err);
-    }
-});
+        } catch (err) {
+            console.error("Message error:", err);
+        }
+    });
 
     // ================================
     // MESSAGE SEEN (CRITICAL FIX)
@@ -104,7 +104,6 @@ socket.on('send_private_message', async (data) => {
 
     // ================================
     // ALTERNATIVE: BULK CHAT SEEN
-    // (optional but useful for your UI)
     // ================================
     socket.on('mark_chat_seen', async ({ senderId, recipientId }) => {
         try {
@@ -134,62 +133,48 @@ socket.on('send_private_message', async (data) => {
 
     // ================================
     // CALL SIGNALING HANDLERS
-   // --- Inside io.on('connection', (socket) => { ... ---
+    // ================================
 
-// ================================
-// CALL SIGNALING HANDLERS (FIXED)
-// ================================
+    socket.on('request-call', (data) => {
+        console.log(`📞 Call request: ${data.fromName} (${data.from}) → ${data.to}`);
+        if (!data.to) return console.log("❌ Missing recipient ID");
 
-// 1. CALL REQUEST
-socket.on('request-call', (data) => {
-    console.log(`📞 Call request: ${data.fromName} (${data.from}) → ${data.to}`);
-
-    if (!data.to) return console.log("❌ Missing recipient ID");
-
-    io.to(data.to).emit('incoming-call-notice', {
-        from: data.from,
-        fromName: data.fromName,
-        type: data.type,
-        channelName: data.channelName
+        io.to(data.to).emit('incoming-call-notice', {
+            from: data.from,
+            fromName: data.fromName,
+            type: data.type,
+            channelName: data.channelName
+        });
     });
-});
 
-// 2. CALL ACCEPTED
-socket.on('accept-call', (data) => {
-    console.log(`✅ Call accepted by ${data.from} → ${data.to}`);
-
-    io.to(data.to).emit('call-accepted', {
-        from: data.from,
-        channelName: data.channelName
+    socket.on('accept-call', (data) => {
+        console.log(`✅ Call accepted by ${data.from} → ${data.to}`);
+        io.to(data.to).emit('call-accepted', {
+            from: data.from,
+            channelName: data.channelName
+        });
     });
-});
 
-// 3. CALL DECLINED
-socket.on('decline-call', (data) => {
-    console.log(`❌ Call declined by ${data.from}`);
-
-    io.to(data.to).emit('call-declined', {
-        from: data.from
+    socket.on('decline-call', (data) => {
+        console.log(`❌ Call declined by ${data.from}`);
+        io.to(data.to).emit('call-declined', {
+            from: data.from
+        });
     });
-});
 
-// 4. CALL ENDED
-socket.on('end-call', (data) => {
-    console.log(`🔴 Call ended by ${data.from}`);
-
-    io.to(data.to).emit('call-ended', {
-        from: data.from
+    socket.on('end-call', (data) => {
+        console.log(`🔴 Call ended by ${data.from}`);
+        io.to(data.to).emit('call-ended', {
+            from: data.from
+        });
     });
-});
 
-// Server-side socket logic
-socket.on('call-reaction', (data) => {
-    // Forward the emoji to the recipient
-    io.to(data.to).emit('call-reaction', {
-        emoji: data.emoji,
-        from: socket.id // Optional
+    socket.on('call-reaction', (data) => {
+        io.to(data.to).emit('call-reaction', {
+            emoji: data.emoji,
+            from: socket.id
+        });
     });
-});
 
     socket.on('disconnect', () => {
         onlineUsers.delete(socket.id);
@@ -220,7 +205,12 @@ if (!fs.existsSync(thumbPath)) {
 
 // --- MIDDLEWARE ---
 app.use(cors({
-    origin: ['http://127.0.0.1:5500', 'http://localhost:5500', 'http://localhost:5000', 'http://alikroomislamicinstitute.onrender.com],
+    origin: [
+        'http://127.0.0.1:5500', 
+        'http://localhost:5500', 
+        'http://localhost:5000', 
+        'https://alikroomislamicinstitute.onrender.com'
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -229,8 +219,6 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
-// --- Inside server.js ---
-
 
 // Serve the uploads folder statically
 const uploadPath = path.join(__dirname, 'uploads');
@@ -251,6 +239,10 @@ app.use((req, res, next) => {
 app.post('/api/messages/upload', upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });
 
+    // FIX: Define protocol and host for dynamic production URLs
+    const protocol = req.protocol;
+    const host = req.get('host');
+
     let type = 'document';
     const mime = req.file.mimetype;
 
@@ -259,18 +251,17 @@ app.post('/api/messages/upload', upload.single('file'), async (req, res) => {
     else if (mime.includes('audio') || mime.includes('webm')) type = 'audio';
 
     const fileUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+
     // =========================
     // 🎬 VIDEO THUMBNAIL LOGIC
     // =========================
     if (type === 'video') {
         const thumbnailName = req.file.filename + '.jpg';
-        const thumbnailPath = path.join(__dirname, 'uploads/thumbnails', thumbnailName);
-
         try {
             await new Promise((resolve, reject) => {
                 ffmpeg(path.join(__dirname, 'uploads', req.file.filename))
                     .screenshots({
-                        timestamps: ['1'], // 1 second into video
+                        timestamps: ['1'],
                         filename: thumbnailName,
                         folder: path.join(__dirname, 'uploads/thumbnails'),
                         size: '320x240'
@@ -283,7 +274,7 @@ app.post('/api/messages/upload', upload.single('file'), async (req, res) => {
                 url: fileUrl,
                 name: req.file.originalname,
                 type: type,
-                const thumbnailUrl = `${protocol}://${host}/uploads/thumbnails/${thumbnailName}`;
+                thumbnailUrl: `${protocol}://${host}/uploads/thumbnails/${thumbnailName}`
             });
 
         } catch (err) {
@@ -404,7 +395,8 @@ app.use('/api/student', require('./routes/student'));
 app.use('/api/news', require('./routes/newsRoutes'));
 app.use('/api/messages', require('./routes/message'));
 app.use('/api/chat', require('./routes/chat'));
-app.use('/api/agora', agoraRoutes)
+app.use('/api/agora', agoraRoutes);
+
 // ✅ SERVE FRONTEND (MUST BE LAST)
 app.use(express.static(path.join(__dirname, '../Frontend')));
 
@@ -412,7 +404,7 @@ app.get('/health', (req, res) => {
     res.status(200).send('OK');
 });
 
-app.use((req, res) => {
+app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../Frontend/index.html'));
 });
 
@@ -446,3 +438,4 @@ setInterval(async () => {
 }, 60 * 60 * 1000); 
 
 startServer();
+
