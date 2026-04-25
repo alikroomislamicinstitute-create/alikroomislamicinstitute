@@ -407,9 +407,10 @@ app.get('/health', (req, res) => {
 });
 
 // FIX: Express 5 wildcard compatible path
-app.get('/:any*', (req, res) => {
+app.get(/^(?!\/api).+/, (req, res) => {
     res.sendFile(path.join(__dirname, '../Frontend/index.html'));
 });
+
 
 // --- DATABASE & SERVER START ---
 const startServer = async () => {
