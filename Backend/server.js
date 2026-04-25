@@ -404,9 +404,10 @@ app.get('/health', (req, res) => {
     res.status(200).send('OK');
 });
 
-app.get('*', (req, res) => {
+app.get('/:any*', (req, res) => {
     res.sendFile(path.join(__dirname, '../Frontend/index.html'));
 });
+
 
 // --- DATABASE & SERVER START ---
 const startServer = async () => {
