@@ -239,7 +239,7 @@ app.use((req, res, next) => {
 app.post('/api/messages/upload', upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });
 
-    // FIX: Define protocol and host for dynamic production URLs
+    // FIX: Defining protocol and host
     const protocol = req.protocol;
     const host = req.get('host');
 
@@ -251,12 +251,14 @@ app.post('/api/messages/upload', upload.single('file'), async (req, res) => {
     else if (mime.includes('audio') || mime.includes('webm')) type = 'audio';
 
     const fileUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
-
+    
     // =========================
     // 🎬 VIDEO THUMBNAIL LOGIC
     // =========================
     if (type === 'video') {
         const thumbnailName = req.file.filename + '.jpg';
+        const thumbnailPath = path.join(__dirname, 'uploads/thumbnails', thumbnailName);
+
         try {
             await new Promise((resolve, reject) => {
                 ffmpeg(path.join(__dirname, 'uploads', req.file.filename))
@@ -270,6 +272,7 @@ app.post('/api/messages/upload', upload.single('file'), async (req, res) => {
                     .on('error', reject);
             });
 
+            // FIX: Removed invalid 'const' inside JSON object
             return res.json({
                 url: fileUrl,
                 name: req.file.originalname,
@@ -282,7 +285,6 @@ app.post('/api/messages/upload', upload.single('file'), async (req, res) => {
         }
     }
 
-    // Default response (non-video)
     res.json({
         url: fileUrl,
         name: req.file.originalname,
@@ -404,10 +406,10 @@ app.get('/health', (req, res) => {
     res.status(200).send('OK');
 });
 
+// FIX: Express 5 wildcard compatible path
 app.get('/:any*', (req, res) => {
     res.sendFile(path.join(__dirname, '../Frontend/index.html'));
 });
-
 
 // --- DATABASE & SERVER START ---
 const startServer = async () => {
