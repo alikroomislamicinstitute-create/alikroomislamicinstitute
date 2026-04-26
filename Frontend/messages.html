@@ -939,15 +939,15 @@ overflow: hidden;
     };
 </script>
 
-<script src="http://localhost:5000/socket.io/socket.io.js"></script>  
+<script src="https://alikroomislamicinstitute.onrender.com/socket.io/socket.io.js"></script>  
 <script>  
     window.addEventListener('beforeunload', () => {  
     console.log("⚠️ PAGE IS RELOADING");  
 });  
 const token = localStorage.getItem('token');  
 const userId = token ? JSON.parse(atob(token.split('.')[1])).id : null;  
-const API_BASE = 'http://localhost:5000/api';  
-const socket = io('http://localhost:5000');  
+const API_BASE = 'https://alikroomislamicinstitute.onrender.com/api';  
+const socket = io('https://alikroomislamicinstitute.onrender.com');  
 // Simple function to get ID from token if you don't have a profile fetch handy  
   
   
