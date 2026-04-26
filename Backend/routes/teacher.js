@@ -293,7 +293,7 @@ router.delete('/assessments/:id', verifyToken, async (req, res) => {
 // ANNOUNCEMENT MANAGEMENT
 // ==========================================
 
-router.get('/my-announcements', verifyToken, async (req, res) => {
+router.get('/announcements/all', verifyToken, async (req, res) => {
     try {
         const announcements = await Announcement.find({ author: req.user.id })
             .sort({ createdAt: -1 });
