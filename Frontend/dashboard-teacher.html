@@ -852,12 +852,34 @@ async function updateStudentProgress(studentId, courseName, newProgress) {
 async function loadManageAnnouncements() {
     try {
         const res = await fetch(`${API_BASE}/announcements/all`, { headers: getAuthHeaders() });
+
+        // 1. Check if the server response is OK (status 200-299)
+        if (!res.ok) {
+            console.error(`Fetch failed with status: ${res.status}`);
+            const list = document.getElementById('manageAnnouncementsList');
+            if (list) {
+                list.innerHTML = `<p style="color:var(--danger); font-size:0.85rem; text-align:center; padding:15px;">
+                    Error loading history (${res.status}).
+                </p>`;
+            }
+            return;
+        }
+
+        // 2. Extra safety: Check if the response is actually JSON
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            console.error("Oops! Received non-JSON response from server.");
+            return;
+        }
+
         const data = await res.json();
         const list = document.getElementById('manageAnnouncementsList');
+        
         if (!data.announcements || data.announcements.length === 0) {
             list.innerHTML = `<p style="opacity:0.5; font-size:0.85rem; text-align:center; padding:15px;">No history.</p>`;
             return;
         }
+
         list.innerHTML = data.announcements.map(ann => `
             <div class="student-item" style="border-left: 5px solid var(--primary-green);">
                 <div style="flex-grow: 1;">
@@ -865,12 +887,19 @@ async function loadManageAnnouncements() {
                     <div style="font-size:0.75rem; opacity:0.7;">${ann.message.substring(0, 45)}...</div>
                 </div>
                 <div style="display:flex; gap:10px;">
-                    <button onclick="prepareEdit('${ann._id}', '${ann.title}', '${escape(ann.message)}')" class="nav-btn" style="color:var(--primary-green); padding:5px;"><i class="fa-solid fa-pen"></i></button>
-                    <button onclick="deleteAnnouncement('${ann._id}')" class="nav-btn" style="color:var(--danger); padding:5px;"><i class="fa-solid fa-trash"></i></button>
+                    <button onclick="prepareEdit('${ann._id}', '${ann.title}', '${escape(ann.message)}')" class="nav-btn" style="color:var(--primary-green); padding:5px;">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button onclick="deleteAnnouncement('${ann._id}')" class="nav-btn" style="color:var(--danger); padding:5px;">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
                 </div>
             </div>
         `).join('');
-    } catch (err) { console.error(err); }
+        
+    } catch (err) { 
+        console.error("Announcement Load Error:", err); 
+    }
 }
 
 function prepareEdit(id, title, msg) {
