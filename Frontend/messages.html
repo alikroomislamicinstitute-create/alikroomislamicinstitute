@@ -939,15 +939,15 @@ overflow: hidden;
     };
 </script>
 
-<script src="https://alikroomislamicinstitute.onrender.com/socket.io/socket.io.js"></script>  
+<script src="http://localhost:5000/socket.io/socket.io.js"></script>  
 <script>  
     window.addEventListener('beforeunload', () => {  
     console.log("⚠️ PAGE IS RELOADING");  
 });  
 const token = localStorage.getItem('token');  
 const userId = token ? JSON.parse(atob(token.split('.')[1])).id : null;  
-const API_BASE = 'https://alikroomislamicinstitute.onrender.com/api';  
-const socket = io('https://alikroomislamicinstitute.onrender.com');  
+const API_BASE = 'http://localhost:5000/api';  
+const socket = io('http://localhost:5000');  
 // Simple function to get ID from token if you don't have a profile fetch handy  
   
   
@@ -1305,6 +1305,7 @@ function displayMessage(msg, type) {
     // Check for Placeholder (Upload/Download progress state)
     if (msg.isPlaceholder || msg.isDownloading) {
         isMedia = true;
+        const fileLink = msg.fileUrl.replace("http://", "https://");
         const actionText = msg.isPlaceholder ? "Uploading..." : "Downloading...";
         const barClass = msg.isPlaceholder ? "upload-progress-bar" : "download-progress-bar";
         
@@ -1572,20 +1573,25 @@ async function downloadMedia(url, filename) {
 
 // --- CACHE LOGIC USING INDEXEDDB ---
 
-// 1. Check file size before download
 async function fetchSize(url, elementId) {
     try {
-        const response = await fetch(url, { method: 'HEAD' });
+        // Force HTTPS to avoid Mixed Content error
+        const secureUrl = url.replace("http://", "https://");
+        
+        const response = await fetch(secureUrl, { method: 'HEAD' });
         const size = response.headers.get('content-length');
         if (size) {
             const mb = (size / (1024 * 1024)).toFixed(2);
             document.getElementById(elementId).innerText = `${mb} MB`;
         }
-    } catch (e) { document.getElementById(elementId).innerText = "Size Unknown"; }
+    } catch (e) { 
+        document.getElementById(elementId).innerText = "Size Unknown"; 
+    }
 }
 
 // 2. The "Whole Download" and Save Logic
 async function saveToLocal(msgId, url) {
+    const secureUrl = url.replace("http://", "https://");
     const progressTrack = document.getElementById(`dt-${msgId}`);
     const progressBar = document.getElementById(`dpb-${msgId}`);
     const overlayIcon = document.querySelector(`#overlay-${msgId} i`);
@@ -1637,6 +1643,7 @@ async function saveToLocal(msgId, url) {
 
 // 3. Smart Play: Check Database first, then Network
 async function handleVideoClick(msgId, url) {
+    const secureUrl = url.replace("http://", "https://");
     const dbRequest = indexedDB.open("AlIkroomMedia", 1);
     
     dbRequest.onsuccess = e => {
