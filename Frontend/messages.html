@@ -341,30 +341,39 @@
         flex-shrink: 0;  
     }  
 
-    .video-wrapper {  
-position: relative;  
-width: 100%;  
-border-radius: 10px;  
-overflow: hidden;  
-cursor: pointer;  
-background: #000;
-
+.chat-media, 
+.video-wrapper {  
+    width: 100%;  
+    max-width: 300px; /* Increased from 220px/250px */
+    border-radius: 12px;  
+    overflow: hidden;  
+    cursor: pointer;  
+    background: #000;
+    display: block;
 }
 
-.media-bubble {
-padding: 5px;
-}
-
+/* Ensure the thumbnail fills the width and maintains height */
 .video-thumb {
-width: 100%;
-aspect-ratio: 16/9;
-object-fit: cover;
-display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 10; /* Gives it a more substantial presence */
+    object-fit: cover;
+    display: block;
 }
 
-.media-bubble .video-wrapper {
-width: 100%;
-max-width: 100%;
+/* Adjust the media bubble padding to let the video shine */
+.media-bubble {
+    padding: 6px !important;
+    max-width: 320px !important;
+}
+
+/* Fix for mobile screens so it still looks big */
+@media (max-width: 768px) {
+    .chat-media,
+    .video-wrapper,
+    .bubble.media-bubble {
+        max-width: 260px !important;
+    }
 }
 
 /* PLAY BUTTON OVERLAY */
@@ -535,16 +544,50 @@ max-width: 220px;
     .received-bubble { background: #ffffff; color: #303030; border: 1px solid var(--glass-border); border-radius: 15px 15px 15px 0; }  
     [data-theme="dark"] .received-bubble { background: #202c33; color: #e9edef; border: none; }  
       
-    .chat-media {  
-        width: 100%;  
-        max-width: 250px;  
-        max-height: 300px;  
-        border-radius: 10px;  
-        display: block;  
-        margin-bottom: 5px;  
-        object-fit: cover;  
-        box-sizing: border-box;  
-    }  
+    /* UPDATED: Increased size for better identification */
+.chat-media {  
+    width: 100%;  
+    max-width: 400px; /* Increased from 250px */
+    max-height: 500px; 
+    border-radius: 12px;  
+    display: block;  
+    margin-bottom: 5px;  
+    object-fit: cover;  
+    box-sizing: border-box;  
+}
+
+.video-wrapper {  
+    position: relative;  
+    width: 100%;  
+    max-width: 400px; /* Match image width */
+    border-radius: 12px;  
+    overflow: hidden;  
+    cursor: pointer;  
+    background: #000;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2); /* Added depth */
+}
+
+.video-thumb {
+    width: 100%;
+    aspect-ratio: 16 / 9; /* Ensures a standard video shape */
+    object-fit: cover;
+    display: block;
+}
+
+/* Ensure the bubble itself allows the larger width */
+.bubble.media-bubble {
+    max-width: 420px; 
+    padding: 8px;
+}
+
+/* Responsive adjustment for mobile */
+@media (max-width: 768px) {
+    .chat-media,
+    .video-wrapper,
+    .bubble.media-bubble {
+        max-width: 280px; /* Slightly larger than before for mobile too */
+    }
+}  
 
     .chat-audio {  
         width: 100%;  
@@ -1177,20 +1220,24 @@ function displayMessage(msg, type) {
                         onclick="openMediaModal('${fileLink}', 'image')">  
                 </div>`;  
         }   
+
         else if (msg.fileType === 'video') {  
-            content = `  
-                <div class="video-wrapper" onclick="openMediaModal('${fileLink}', 'video')">  
-                    <img src="${msg.thumbnailUrl || fileLink || '/default-thumb.png'}" class="video-thumb" />  
-                    <div class="video-play-overlay">  
-                        <i class="fa-solid fa-play"></i>  
-                    </div>  
-                </div>  
-                <div style="display:flex; justify-content:flex-end; margin-top:5px;">  
-                    <a href="${fileLink}" download style="font-size:0.8rem; opacity:0.8; text-decoration:none;">  
-                        <i class="fa-solid fa-download"></i> Download  
-                    </a>  
-                </div>`;  
-        }  
+    content = `  
+        <div class="video-wrapper" onclick="openMediaModal('${fileLink}', 'video')">  
+            <img src="${msg.thumbnailUrl || fileLink}" class="video-thumb" onerror="this.src='https://placehold.co/600x400/000000/FFFFFF/png?text=Video+Preview'"/>  
+            <div class="video-play-overlay">  
+                <i class="fa-solid fa-play"></i>  
+            </div>  
+        </div>  
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; padding: 2px 5px;">  
+            <span style="font-size:0.7rem; opacity:0.8; font-weight:600;">
+                <i class="fa-solid fa-video"></i> VIDEO
+            </span>
+            <button onclick="downloadMedia('${fileLink}', 'video_${Date.now()}.mp4')" style="background:none; border:none; cursor:pointer; font-size:0.75rem; color: var(--primary-green); font-weight:bold; padding:0;">  
+                <i class="fa-solid fa-circle-down"></i> SAVE
+            </button>  
+        </div>`;  
+}
         else if (msg.fileType === 'audio' || msg.fileUrl.match(/\.(mp3|wav|m4a|ogg)$/)) {  
             const barsCount = 25;   
             let barsHtml = '';  
@@ -1327,6 +1374,36 @@ function displayMessage(msg, type) {
     });  
 }
   
+async function downloadMedia(url, filename) {
+    try {
+        // 1. Fetch the data
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Download failed');
+        
+        // 2. Convert to a Blob (Binary Large Object)
+        const blob = await response.blob();
+        
+        // 3. Create a temporary local URL for the blob
+        const blobUrl = window.URL.createObjectURL(blob);
+        
+        // 4. Create a hidden anchor element
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = filename || 'video.mp4'; // This attribute forces download
+        
+        // 5. Append, click, and cleanup
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // 6. Revoke the URL to free up memory
+        window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+        console.error("Force download failed:", err);
+        // Fallback: only open in new tab if the fetch fails (e.g., CORS issues)
+        window.open(url, '_blank');
+    }
+}
   
 let isSeeking = false;  
   
