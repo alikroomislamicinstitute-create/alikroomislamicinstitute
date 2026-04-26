@@ -291,11 +291,19 @@
        #messageInputArea {  
         padding: 15px;  
         background: var(--nav-bg);  
-        display: none; /* Keep hidden until user is selected */  
+        display: none; 
         gap: 10px;  
         align-items: center;  
         position: relative;  
         border-top: 1px solid var(--glass-border);
+        z-index: 100;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Force visibility when chat is active */
+    .chat-active #messageInputArea {
+        display: flex !important;
     }  
 
     /* Style for the 'Replying' bubble inside the message history */
@@ -731,25 +739,28 @@ overflow: hidden;
     }
 
 @media (max-width: 768px) {  
-        .sidebar {  
-            width: 100% !important;  
-            position: absolute;  
-            z-index: 10;  
-            transition: transform 0.3s ease;  
-        }  
+        #contactsPanel { 
+            width: 100% !important; 
+            position: absolute; 
+        }
+        
+        #chatArea { 
+            width: 100% !important; 
+            height: 100dvh; /* Dynamic viewport height for mobile keyboards */
+        }
 
         #callActions {  
             display: flex !important;  
             flex-direction: row !important;  
-            flex-wrap: nowrap;  
-            align-items: center;  
             gap: 12px;  
         }  
 
-        #callActions button { flex-shrink: 0; }  
-        .body-wrapper.chat-active .sidebar { transform: translateX(-100%); }  
-        .main-content { width: 100% !important; margin-left: 0 !important; }  
-    }  
+        /* Ensure the input area is pinned to the bottom on mobile */
+        #messageInputArea {
+            padding-bottom: env(safe-area-inset-bottom, 15px);
+        }
+    }
+
 </style>
 
 </head>  
@@ -1059,20 +1070,29 @@ async function selectUser(id, name) {
     clearSelection();  
       
     // UI Transitions  
-    document.getElementById('bodyWrapper').classList.add('chat-active');  
+    const body = document.getElementById('bodyWrapper');
+    body.classList.add('chat-active');  
+    
     document.getElementById('activeContactName').innerText = name;  
     document.getElementById('headerAvatar').innerText = name.split(' ').map(n => n[0]).join('');  
-    document.getElementById('messageInputArea').style.display = 'flex';  
+    
+    // Explicitly ensure display and trigger a layout reflow
+    const inputArea = document.getElementById('messageInputArea');
+    inputArea.style.display = 'flex'; 
+    
     document.getElementById('callActions').style.display = 'block';  
       
-    // Clear notification dot  
     const dot = document.getElementById(`dot-${id}`);  
     if (dot) dot.style.display = 'none';  
   
     await loadChatHistory(id);  
-  
-    // Use the global userId we defined at the top here  
-    socket.emit('mark_chat_seen', { senderId: id, recipientId: userId });  
+    socket.emit('mark_chat_seen', { senderId: id, recipientId: userId });
+
+    // Focus input after short delay to ensure keyboard doesn't hide the UI
+    setTimeout(() => {
+        document.getElementById('msgText').focus();
+        document.getElementById('messageHistory').scrollTop = document.getElementById('messageHistory').scrollHeight;
+    }, 300);
 }  
   
 async function loadChatHistory(otherId) {  
