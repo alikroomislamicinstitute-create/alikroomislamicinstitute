@@ -939,15 +939,15 @@ overflow: hidden;
     };
 </script>
 
-<script src="https://alikroomislamicinstitute.onrender.com/socket.io/socket.io.js"></script>  
+<script src="http://localhost:5000/socket.io/socket.io.js"></script>  
 <script>  
     window.addEventListener('beforeunload', () => {  
     console.log("⚠️ PAGE IS RELOADING");  
 });  
 const token = localStorage.getItem('token');  
 const userId = token ? JSON.parse(atob(token.split('.')[1])).id : null;  
-const API_BASE = 'https://alikroomislamicinstitute.onrender.com/api';  
-const socket = io('https://alikroomislamicinstitute.onrender.com');  
+const API_BASE = 'http://localhost:5000/api';  
+const socket = io('http://localhost:5000');  
 // Simple function to get ID from token if you don't have a profile fetch handy  
   
   
@@ -1349,21 +1349,28 @@ function displayMessage(msg, type) {
                 </div>`;  
         }   
         else if (msg.fileType === 'video') {  
-            content = `  
-                <div class="video-wrapper" onclick="openMediaModal('${fileLink}', 'video')">  
-                    <img src="${msg.thumbnailUrl || fileLink}" class="video-thumb" onerror="this.src='https://placehold.co/600x400/000000/FFFFFF/png?text=Video+Preview'"/>  
-                    <div class="video-play-overlay">  
-                        <i class="fa-solid fa-play"></i>  
-                    </div>  
-                </div>  
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; padding: 2px 5px;">  
-                    <span style="font-size:0.7rem; opacity:0.8; font-weight:600;">
-                        <i class="fa-solid fa-video"></i> VIDEO
-                    </span>
-                    <button onclick="downloadMedia('${fileLink}', 'video_${Date.now()}.mp4')" style="background:none; border:none; cursor:pointer; font-size:0.75rem; color: var(--primary-green); font-weight:bold; padding:0;">  
-                        <i class="fa-solid fa-circle-down"></i> SAVE
-                    </button>  
-                </div>`;  
+            content = `
+                <div class="video-container-wrapper" id="video-cont-${msgId}">
+                    <div class="video-wrapper" onclick="handleVideoClick('${msgId}', '${fileLink}')">
+                        <img src="${msg.thumbnailUrl || fileLink}" class="video-thumb" id="thumb-${msgId}" />
+                        <div class="video-play-overlay" id="overlay-${msgId}">
+                            <i class="fa-solid fa-download"></i>
+                        </div>
+                        <div class="download-track" id="dt-${msgId}" style="display:none; position:absolute; bottom:0; width:100%; height:4px; background:rgba(255,255,255,0.2);">
+                            <div class="download-progress-bar" id="dpb-${msgId}" style="width:0%; height:100%; background:var(--primary-green);"></div>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-top:8px;">
+                        <span id="size-${msgId}" style="font-size:0.7rem; opacity:0.7;">Checking size...</span>
+                        <button onclick="saveToLocal('${msgId}', '${fileLink}')" class="download-btn-styled" style="background:var(--primary-green); color:white; border:none; border-radius:4px; font-size:0.7rem; padding:2px 8px; cursor:pointer;">
+                            <i class="fa-solid fa-cloud-arrow-down"></i> DOWNLOAD
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Automatically fetch size for the UI
+            fetchSize(fileLink, `size-${msgId}`);
         }
         else if (msg.fileType === 'audio' || msg.fileUrl.match(/\.(mp3|wav|m4a|ogg)$/)) {  
             const barsCount = 25;  
@@ -1500,6 +1507,37 @@ function displayMessage(msg, type) {
         chatBox.scrollTop = chatBox.scrollHeight;  
     });  
 }
+
+async function downloadMedia(url, filename) {
+    try {
+        // 1. Fetch the data
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Download failed');
+        
+        // 2. Convert to a Blob (Binary Large Object)
+        const blob = await response.blob();
+        
+        // 3. Create a temporary local URL for the blob
+        const blobUrl = window.URL.createObjectURL(blob);
+        
+        // 4. Create a hidden anchor element
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = filename || 'video.mp4'; // This attribute forces download
+        
+        // 5. Append, click, and cleanup
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // 6. Revoke the URL to free up memory
+        window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+        console.error("Force download failed:", err);
+        // Fallback: only open in new tab if the fetch fails (e.g., CORS issues)
+        window.open(url, '_blank');
+    }
+}
   
 async function downloadMedia(url, filename) {
     try {
@@ -1530,6 +1568,98 @@ async function downloadMedia(url, filename) {
         // Fallback: only open in new tab if the fetch fails (e.g., CORS issues)
         window.open(url, '_blank');
     }
+}
+
+// --- CACHE LOGIC USING INDEXEDDB ---
+
+// 1. Check file size before download
+async function fetchSize(url, elementId) {
+    try {
+        const response = await fetch(url, { method: 'HEAD' });
+        const size = response.headers.get('content-length');
+        if (size) {
+            const mb = (size / (1024 * 1024)).toFixed(2);
+            document.getElementById(elementId).innerText = `${mb} MB`;
+        }
+    } catch (e) { document.getElementById(elementId).innerText = "Size Unknown"; }
+}
+
+// 2. The "Whole Download" and Save Logic
+async function saveToLocal(msgId, url) {
+    const progressTrack = document.getElementById(`dt-${msgId}`);
+    const progressBar = document.getElementById(`dpb-${msgId}`);
+    const overlayIcon = document.querySelector(`#overlay-${msgId} i`);
+    
+    progressTrack.style.display = 'block';
+    
+    try {
+        const response = await fetch(url);
+        const reader = response.body.getReader();
+        const contentLength = +response.headers.get('Content-Length');
+        
+        let receivedLength = 0;
+        let chunks = []; 
+        
+        while(true) {
+            const {done, value} = await reader.read();
+            if (done) break;
+            chunks.push(value);
+            receivedLength += value.length;
+            
+            // Update UI progress
+            let step = (receivedLength / contentLength) * 100;
+            progressBar.style.width = step + '%';
+        }
+
+        // Combine chunks into a single Blob (The "Whole" file)
+        const blob = new Blob(chunks);
+        
+        // SAVE TO BROWSER DATABASE (IndexedDB)
+        const dbRequest = indexedDB.open("AlIkroomMedia", 1);
+        dbRequest.onupgradeneeded = e => e.target.result.createObjectStore("videos");
+        
+        dbRequest.onsuccess = e => {
+            const db = e.target.result;
+            const transaction = db.transaction("videos", "readwrite");
+            transaction.objectStore("videos").put(blob, url); // Map URL to the Blob
+            
+            // UI Feedback
+            overlayIcon.className = 'fa-solid fa-play';
+            progressTrack.style.display = 'none';
+            alert("Video saved offline! No more reloading needed.");
+        };
+
+    } catch (err) {
+        alert("Download failed. Check your connection.");
+        progressTrack.style.display = 'none';
+    }
+}
+
+// 3. Smart Play: Check Database first, then Network
+async function handleVideoClick(msgId, url) {
+    const dbRequest = indexedDB.open("AlIkroomMedia", 1);
+    
+    dbRequest.onsuccess = e => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains("videos")) {
+            openMediaModal(url, 'video'); // Fallback to stream
+            return;
+        }
+
+        const transaction = db.transaction("videos", "readonly");
+        const getRequest = transaction.objectStore("videos").get(url);
+
+        getRequest.onsuccess = () => {
+            if (getRequest.result) {
+                // FILE FOUND LOCALLY!
+                const localUrl = URL.createObjectURL(getRequest.result);
+                openMediaModal(localUrl, 'video');
+            } else {
+                // NOT DOWNLOADED YET
+                alert("Please click the DOWNLOAD button to watch without breaking.");
+            }
+        };
+    };
 }
   
 let isSeeking = false;  
