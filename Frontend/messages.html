@@ -766,20 +766,41 @@ max-width: 100%;
 overflow: hidden;
 }
     
-        .upload-container {
-        width: 100%;
-        background: rgba(0,0,0,0.1);
-        height: 4px;
-        border-radius: 2px;
-        margin-top: 8px;
-        overflow: hidden;
-    }
-    .upload-progress-bar {
-        background: var(--primary-green);
-        height: 100%;
-        width: 0%;
-        transition: width 0.2s ease;
-    }
+  .upload-container {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.1);
+    height: 4px;
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+[data-theme="dark"] .upload-container {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.upload-progress-bar, .download-progress-bar {
+    background: var(--primary-green);
+    height: 100%;
+    width: 0%;
+    transition: width 0.2s ease-out;
+}
+
+.media-loader-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Subtle pulse for the "Downloading/Uploading" text */
+.loader-text {
+    animation: pulseText 1.5s infinite ease-in-out;
+}
+
+@keyframes pulseText {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
 
 @media (max-width: 768px) {  
         #contactsPanel { 
@@ -918,7 +939,8 @@ overflow: hidden;
     };
 </script>
 
-<script src="https://alikroomislamicinstitute.onrender.com/socket.io/socket.io.js"></script>  <script>  
+<script src="https://alikroomislamicinstitute.onrender.com/socket.io/socket.io.js"></script>  
+<script>  
     window.addEventListener('beforeunload', () => {  
     console.log("⚠️ PAGE IS RELOADING");  
 });  
@@ -930,17 +952,100 @@ const socket = io('https://alikroomislamicinstitute.onrender.com');
   
   
 socket.on('receive_private_message', (msg) => {
+    // Check if the sender is the currently active chat
     if (activeChatUser === msg.sender || activeChatUser === msg.senderId) {
-        displayMessage(msg, 'received');
         
-        // If it's a file, show a brief "downloading" simulation 
-        if(msg.fileUrl) {
-            simulateDownload(msg._id || msg.id);
+        if (msg.fileUrl) {
+            // 1. Create a temporary message object with a downloading state
+            const tempMsg = { ...msg, isDownloading: true };
+            
+            // 2. Display the message shell (with the progress bar)
+            displayMessage(tempMsg, 'received');
+            
+            // 3. Trigger the animation logic
+            handleDownloadAnimation(msg._id || msg.id);
+        } else {
+            // Normal text message
+            displayMessage(msg, 'received');
         }
+        
     } else {
+        // Show notification if the chat isn't open
         showNotificationDot(msg.sender || msg.senderId);
     }
 });
+
+/**
+ * Handles the visual simulation of downloading media.
+ * Swaps the loader for the actual player when finished.
+ */
+function handleDownloadAnimation(msgId) {
+    const container = document.querySelector(`#msg-${msgId} .download-track`);
+    const bar = document.querySelector(`#msg-${msgId} .download-progress-bar`);
+    const mediaContent = document.querySelector(`#msg-${msgId} .actual-media-content`);
+    const loaderText = document.querySelector(`#msg-${msgId} .loader-text`);
+    const loaderBox = document.querySelector(`#msg-${msgId} .media-loader-box`);
+
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += Math.random() * 25; 
+        if (bar) bar.style.width = Math.min(progress, 100) + '%';
+
+        if (progress >= 100) {
+            clearInterval(interval);
+            
+            setTimeout(() => {
+                if (container) container.style.display = 'none';
+                if (loaderText) loaderText.style.display = 'none';
+                
+                if (mediaContent) {
+                    const placeholder = mediaContent.querySelector('.voice-note-placeholder');
+                    
+                    if (placeholder && loaderBox) {
+                        // Retrieve the URL we stored in Step 1
+                        const fileUrl = loaderBox.dataset.url;
+                        
+                        // Reconstruct the Waveform UI
+                        const barsCount = 25;
+                        let barsHtml = '';
+                        for (let i = 0; i < barsCount; i++) {
+                            const h = Math.floor(Math.random() * 15) + 5;
+                            barsHtml += `<span style="height:${h}px"></span>`;
+                        }
+
+                        // Replace the "Ready" text with the actual Audio Player
+                        placeholder.outerHTML = `
+                            <div class="voice-note" id="vn-${msgId}">
+                                <button class="play-btn" onclick="toggleVN('${msgId}', this)">
+                                    <i class="fa-solid fa-play"></i>
+                                </button>
+                                <div class="waveform" id="wave-${msgId}" 
+                                     onmousedown="startSeek(event, '${msgId}')" 
+                                     ontouchstart="startSeek(event, '${msgId}')"
+                                     style="cursor: pointer; position: relative; padding: 5px 0;">
+                                     ${barsHtml}
+                                </div>
+                                <audio id="audio-${msgId}" src="${fileUrl}" 
+                                    ontimeupdate="syncWave('${msgId}')" 
+                                    onended="resetVN('${msgId}')"
+                                    onloadedmetadata="const d=formatDuration(this.duration); document.getElementById('duration-${msgId}').innerText=d;">
+                                </audio>
+                                <span class="voice-duration" id="duration-${msgId}">0:00</span>
+                            </div>`;
+                    }
+
+                    // Reveal the media with a smooth animation
+                    mediaContent.style.display = 'block';
+                    mediaContent.style.opacity = '0';
+                    mediaContent.animate(
+                        [{ opacity: 0 }, { opacity: 1 }], 
+                        { duration: 400, fill: 'forwards' }
+                    );
+                }
+            }, 400);
+        }
+    }, 150);
+}
 
 function simulateDownload(msgId) {
     const bubble = document.querySelector(`#msg-${msgId} .bubble`);
@@ -1197,18 +1302,41 @@ function displayMessage(msg, type) {
   
     // ---------------- CONTENT RENDERING HIERARCHY ----------------  
     
-    // Check for Placeholder first (Upload progress)
-    if (msg.isPlaceholder) {
-        isMedia = true; 
-        content = `
-            <div style="min-width: 150px;">
-                <p style="margin:0 0 8px 0; font-size: 0.85rem;">${msg.text}</p>
-                <div class="upload-container">
-                    <div class="upload-progress-bar"></div>
+    // Check for Placeholder (Upload/Download progress state)
+    if (msg.isPlaceholder || msg.isDownloading) {
+        isMedia = true;
+        const actionText = msg.isPlaceholder ? "Uploading..." : "Downloading...";
+        const barClass = msg.isPlaceholder ? "upload-progress-bar" : "download-progress-bar";
+        
+        // Prepare the actual media content that will be revealed later
+        let hiddenMediaHtml = '';
+        if (msg.fileUrl) {
+            const fileLink = msg.fileUrl;
+            if (msg.fileType === 'image') {
+                hiddenMediaHtml = `<img src="${fileLink}" class="chat-media" onclick="openMediaModal('${fileLink}', 'image')">`;
+            } else if (msg.fileType === 'video') {
+                hiddenMediaHtml = `
+                    <div class="video-wrapper" onclick="openMediaModal('${fileLink}', 'video')">
+                        <img src="${msg.thumbnailUrl || fileLink}" class="video-thumb" onerror="this.src='https://placehold.co/600x400/000000/FFFFFF/png?text=Video+Preview'"/>
+                        <div class="video-play-overlay"><i class="fa-solid fa-play"></i></div>
+                    </div>`;
+            } else if (msg.fileType === 'audio' || msg.fileUrl.match(/\.(mp3|wav|m4a|ogg)$/)) {
+                hiddenMediaHtml = `<div class="voice-note-placeholder">Voice Note Ready</div>`;
+            } else {
+                hiddenMediaHtml = `<div class="chat-file"><i class="fas fa-file"></i><span>${msg.fileName || 'Document'}</span></div>`;
+            }
+        }
+            content = `<div class="media-loader-box" data-url="${msg.fileUrl}" style="min-width: 180px; padding: 10px;">
+                <p class="loader-text" style="margin:0 0 8px 0; font-size: 0.8rem; font-weight:600;">${actionText}</p>
+                <div class="download-track" style="background: rgba(0,0,0,0.1); height:6px; border-radius:3px; overflow:hidden;">
+                    <div class="${barClass}" style="background: var(--primary-green); height:100%; width:0%; transition: width 0.3s ease;"></div>
+                </div>
+                <div class="actual-media-content" style="display: none; margin-top: 10px;">
+                    ${hiddenMediaHtml}
                 </div>
             </div>`;
     } 
-    // Check for Media Files
+    // Check for regular Media Files (not in downloading state)
     else if (msg.fileUrl) {  
         isMedia = true;  
         const fileLink = msg.fileUrl;  
@@ -1220,26 +1348,25 @@ function displayMessage(msg, type) {
                         onclick="openMediaModal('${fileLink}', 'image')">  
                 </div>`;  
         }   
-
         else if (msg.fileType === 'video') {  
-    content = `  
-        <div class="video-wrapper" onclick="openMediaModal('${fileLink}', 'video')">  
-            <img src="${msg.thumbnailUrl || fileLink}" class="video-thumb" onerror="this.src='https://placehold.co/600x400/000000/FFFFFF/png?text=Video+Preview'"/>  
-            <div class="video-play-overlay">  
-                <i class="fa-solid fa-play"></i>  
-            </div>  
-        </div>  
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; padding: 2px 5px;">  
-            <span style="font-size:0.7rem; opacity:0.8; font-weight:600;">
-                <i class="fa-solid fa-video"></i> VIDEO
-            </span>
-            <button onclick="downloadMedia('${fileLink}', 'video_${Date.now()}.mp4')" style="background:none; border:none; cursor:pointer; font-size:0.75rem; color: var(--primary-green); font-weight:bold; padding:0;">  
-                <i class="fa-solid fa-circle-down"></i> SAVE
-            </button>  
-        </div>`;  
-}
+            content = `  
+                <div class="video-wrapper" onclick="openMediaModal('${fileLink}', 'video')">  
+                    <img src="${msg.thumbnailUrl || fileLink}" class="video-thumb" onerror="this.src='https://placehold.co/600x400/000000/FFFFFF/png?text=Video+Preview'"/>  
+                    <div class="video-play-overlay">  
+                        <i class="fa-solid fa-play"></i>  
+                    </div>  
+                </div>  
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; padding: 2px 5px;">  
+                    <span style="font-size:0.7rem; opacity:0.8; font-weight:600;">
+                        <i class="fa-solid fa-video"></i> VIDEO
+                    </span>
+                    <button onclick="downloadMedia('${fileLink}', 'video_${Date.now()}.mp4')" style="background:none; border:none; cursor:pointer; font-size:0.75rem; color: var(--primary-green); font-weight:bold; padding:0;">  
+                        <i class="fa-solid fa-circle-down"></i> SAVE
+                    </button>  
+                </div>`;  
+        }
         else if (msg.fileType === 'audio' || msg.fileUrl.match(/\.(mp3|wav|m4a|ogg)$/)) {  
-            const barsCount = 25;   
+            const barsCount = 25;  
             let barsHtml = '';  
             for (let i = 0; i < barsCount; i++) {  
                 const h = Math.floor(Math.random() * 15) + 5;  
@@ -1255,7 +1382,7 @@ function displayMessage(msg, type) {
                          onmousedown="startSeek(event, '${msgId}')"   
                          ontouchstart="startSeek(event, '${msgId}')"  
                          style="cursor: pointer; position: relative; padding: 5px 0;">  
-                        ${barsHtml}  
+                         ${barsHtml}  
                     </div>  
                     <audio id="audio-${msgId}" src="${fileLink}"   
                         ontimeupdate="syncWave('${msgId}')"   
@@ -2108,56 +2235,53 @@ async function uploadFile(input) {
     const file = input.files[0];
     if (!file || !activeChatUser) return;
 
-    // 1. Create a Temporary ID for the progress tracker
     const tempId = 'up-' + Date.now();
     
-    // 2. Immediately inject a "placeholder" bubble into the chat
+    // Inject placeholder bubble for sender
     displayMessage({
         _id: tempId,
-        text: `Uploading ${file.name}...`,
+        text: `Sending ${file.name}...`,
         status: 'pending',
         timestamp: new Date(),
-        isPlaceholder: true // Logic to show progress bar
+        isPlaceholder: true 
     }, 'sent');
 
     const formData = new FormData();
     formData.append('file', file);
 
-    try {
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', `${API_BASE}/messages/upload`, true);
-        xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('token')}`);
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${API_BASE}/messages/upload`, true);
+    xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('token')}`);
 
-        // 3. TRACK UPLOAD PROGRESS
-        xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-                const percent = Math.round((e.loaded / e.total) * 100);
-                const progressEl = document.querySelector(`#msg-${tempId} .upload-progress-bar`);
-                if (progressEl) progressEl.style.width = percent + '%';
+    // Update the progress bar width based on upload %
+    xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            const progressEl = document.querySelector(`#msg-${tempId} .upload-progress-bar`);
+            if (progressEl) {
+                progressEl.style.width = percent + '%';
+                // Optional: Update text to show percentage
+                const textEl = document.querySelector(`#msg-${tempId} p`);
+                if(textEl) textEl.innerText = `Uploading ${percent}%`;
             }
-        };
+        }
+    };
 
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                const data = JSON.parse(xhr.responseText);
-                // 4. Send via socket once uploaded
-                socket.emit('send_private_message', {
-                    senderId: currentUserId,
-                    recipientId: activeChatUser,
-                    fileUrl: data.url,
-                    fileName: data.name,
-                    fileType: getFileType(file.name),
-                    tempId: tempId // To replace the placeholder
-                });
-                // Remove placeholder
-                document.getElementById(`msg-${tempId}`).remove();
-            }
-        };
-
-        xhr.send(formData);
-    } catch (err) {
-        console.error("Upload failed:", err);
-    }
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            const data = JSON.parse(xhr.responseText);
+            socket.emit('send_private_message', {
+                senderId: currentUserId,
+                recipientId: activeChatUser,
+                fileUrl: data.url,
+                fileName: data.name,
+                fileType: getFileType(file.name)
+            });
+            // Remove progress placeholder
+            document.getElementById(`msg-${tempId}`)?.remove();
+        }
+    };
+    xhr.send(formData);
 }
 
 function getFileType(filename) {  
