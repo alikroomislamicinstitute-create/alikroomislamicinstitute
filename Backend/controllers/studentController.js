@@ -83,25 +83,38 @@ exports.getStudentDashboard = async (req, res) => {
 };
 
 // GET /api/student/resource/download/:id (Untouched logic)
+
+// Inside your studentController.js or wherever downloadResource is executed:
 exports.downloadResource = async (req, res) => {
     try {
-        const resource = await Resource.findById(req.params.id);
-
+        const resourceId = req.params.id;
+        const resource = await Resource.findById(resourceId);
+        
         if (!resource) {
             return res.status(404).json({ success: false, message: "Resource not found" });
         }
 
-        const filePath = path.join(__dirname, '..', resource.fileUrl);
+        // Map path to absolute storage file system target location
+        const filePath = path.join(__dirname, '..', resource.fileUrl); 
 
         if (!fs.existsSync(filePath)) {
-            console.error(`File missing at: ${filePath}`);
-            return res.status(404).json({ success: false, message: "Physical file not found on server" });
+            return res.status(404).json({ success: false, message: "Physical file file asset missing from storage filesystem node" });
         }
 
-        res.download(filePath, resource.title || "resource_download");
+        const stat = fs.statSync(filePath);
+
+        // Crucial response headers for the frontend progress loader tool
+        res.writeHead(200, {
+            'Content-Type': 'application/pdf', // fallback or dynamically calculated mime type
+            'Content-Length': stat.size,
+            'Content-Disposition': `attachment; filename="${resource.title.replace(/"/g, '\\"')}"`
+        });
+
+        const readStream = fs.createReadStream(filePath);
+        readStream.pipe(res);
 
     } catch (err) {
-        console.error("❌ Download Error:", err);
-        res.status(500).json({ success: false, message: "Error processing download" });
+        console.error("Download handler runtime error instance:", err);
+        res.status(500).json({ success: false, message: "Internal application stream error" });
     }
 };
