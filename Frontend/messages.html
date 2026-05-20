@@ -3531,71 +3531,228 @@ preview.style.display = 'none';
 
 
 async function sendChatMessage() {
+    const messageInput = document.getElementById("msgText");
+    const content = messageInput ? messageInput.value.trim() : "";
 
-const messageInput = document.getElementById("msgText");
+    // 1. Structural Guard Rails
+    if (!activeChatUser) {
+        return alert("Please select an active chat thread first.");
+    }
+    if (!content && !currentReplyTarget) {
+        return; // Reject empty triggers if no attachment context exists
+    }
 
-const content = messageInput.value.trim();
+    try {
+        // 2. Build Structured Payload Structure
+        const messagePayload = {
+            recipientId: activeChatUser,
+            senderId: currentUserId || userId,
+            text: content,
+            timestamp: new Date().toISOString(),
+            status: 'sent'
+        };
 
+        // 3. Mount Rich Metadata Block (If handling a Reply context)
+        if (currentReplyTarget) {
+            const targetId = currentReplyTarget._id || currentReplyTarget.id;
+            messagePayload.replyTo = targetId;
+            
+            // Build Contextual Display Strings
+            const targetName = currentReplyTarget.senderId === currentUserId ? "You" : (document.getElementById('activeContactName')?.innerText || "User");
+            messagePayload.replySender = targetName;
 
-if (!content || !activeChatUser) return;
+            if (currentReplyTarget.fileType === 'audio') messagePayload.replyText = "🎤 Voice Note";
+            else if (currentReplyTarget.fileType === 'image') messagePayload.replyText = "📷 Photo";
+            else if (currentReplyTarget.fileType === 'video') messagePayload.replyText = "🎥 Video";
+            else if (currentReplyTarget.fileUrl) messagePayload.replyText = "📄 Document";
+            else messagePayload.replyText = currentReplyTarget.text || "";
+        }
 
+        // 4. Fire Transmission Pipeline Through WebSockets
+        socket.emit('send_private_message', messagePayload);
 
-// Build the object
+        // 5. Instantly Append to Local DOM Engine for Zero-Latency Visual Feedback
+        displayMessage(messagePayload, 'sent');
 
-const messageData = {
+        // 6. Housekeeping & State Reset Layers
+        if (messageInput) {
+            messageInput.value = "";
+        }
+        
+        // Terminate any active typography broadcasts
+        socket.emit('stop_typing', { recipientId: activeChatUser, senderId: currentUserId });
+        
+        // Destruct reply components gracefully
+        cancelReply();
+        handleTyping(); // Recalculates asset buttons visibility status (Mic vs Send icons)
 
-senderId: currentUserId,
-
-recipientId: activeChatUser,
-
-text: content
-
-};
-
-
-// 🔥 ATTACH THE REPLY DATA
-
-if (currentReplyTarget) {
-
-messageData.replyTo = currentReplyTarget._id || currentReplyTarget.id;
-
-messageData.replySender = currentReplyTarget.senderId === currentUserId ? "You" : (document.getElementById('activeContactName')?.innerText || "User");
-
-
-// Logic for the text preview inside the bubble
-
-if (currentReplyTarget.fileUrl) {
-
-const type = currentReplyTarget.fileType || 'file';
-
-messageData.replyText = type === 'audio' ? "🎤 Voice Note" : type === 'image' ? "📷 Photo" : "📄 Document";
-
-} else {
-
-messageData.replyText = currentReplyTarget.text;
-
+    } catch (error) {
+        console.error("Message processing pipeline failure:", error);
+        alert("System encountered a problem broadcasting your transmission. Please trace console.");
+    }
 }
 
+/**
+ * 7. Unified Media Asset Upload Strategy Core
+ */
+async function uploadFile(inputElement) {
+    const file = inputElement?.files?.[0];
+    if (!file || !activeChatUser) return;
+
+    // Direct structural validation checks
+    const maxBytes = 50 * 1024 * 1024; // 50MB Absolute Roof Limit
+    if (file.size > maxBytes) {
+        alert("Transmitting target exceeds standard platform limits (Max 50MB permitted).");
+        inputElement.value = "";
+        return;
+    }
+
+    // Generate unique temporary IDs for our reactive UI tracking nodes
+    const runtimePlaceholderId = 'upl-' + Date.now();
+    
+    // Explicitly parse operational structural buckets
+    let assetClass = 'document';
+    if (file.type.startsWith('image/')) assetClass = 'image';
+    else if (file.type.startsWith('video/')) assetClass = 'video';
+    else if (file.type.startsWith('audio/')) assetClass = 'audio';
+
+    // Build local placeholder shell to render immediate upload progress tracker
+    const mockFilePayload = {
+        _id: runtimePlaceholderId,
+        sender: currentUserId,
+        senderId: currentUserId,
+        recipientId: activeChatUser,
+        text: `Sending standard file trace context: ${file.name}`,
+        fileType: assetClass,
+        fileName: file.name,
+        isPlaceholder: true, 
+        timestamp: new Date().toISOString()
+    };
+
+    // Render interactive monitoring component instantly
+    displayMessage(mockFilePayload, 'sent');
+
+    // Acquire precise element references within DOM
+    const DOMWrapperNode = document.getElementById(`msg-${runtimePlaceholderId}`);
+    const trackProgressBar = DOMWrapperNode?.querySelector('.upload-progress-bar');
+
+    // Build standards-compliant multi-part data stream
+    const dataForm = new FormData();
+    dataForm.append('file', file);
+    dataForm.append('recipientId', activeChatUser);
+
+    try {
+        const networkRequest = new XMLHttpRequest();
+        networkRequest.open('POST', `${API_BASE}/messages/upload`, true);
+        networkRequest.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('token')}`);
+
+        // Hook tracking hooks directly into HTTP stream pipeline events
+        networkRequest.upload.onprogress = (progressEvent) => {
+            if (progressEvent.lengthComputable && trackProgressBar) {
+                const numericRatio = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+                trackProgressBar.style.width = `${numericRatio}%`;
+                
+                const indicatorText = DOMWrapperNode?.querySelector('.loader-text');
+                if (indicatorText) indicatorText.innerText = `Uploading: ${numericRatio}%`;
+            }
+        };
+
+        networkRequest.onload = function () {
+            if (networkRequest.status >= 200 && networkRequest.status < 300) {
+                const structuralResponse = JSON.parse(networkRequest.responseText);
+                
+                // Erase raw layout placeholders safely
+                DOMWrapperNode?.remove();
+
+                // Build clean final output block structure out of data returns
+                const cleanBroadCastPackage = {
+                    recipientId: activeChatUser,
+                    senderId: currentUserId,
+                    text: "",
+                    fileUrl: structuralResponse.fileUrl,
+                    fileType: assetClass,
+                    fileName: file.name,
+                    timestamp: new Date().toISOString()
+                };
+
+                // Propagate validated asset back up onto server layers 
+                socket.emit('send_private_message', cleanBroadCastPackage);
+                displayMessage(cleanBroadCastPackage, 'sent');
+            } else {
+                throw new Error(`Cloud gateway network rejected resource payload with code: ${networkRequest.status}`);
+            }
+            inputElement.value = ""; // Clear file selector handle link safely
+        };
+
+        networkRequest.onerror = function () {
+            throw new Error("Physical networking transport loop interrupted or dropped mid-flight.");
+        };
+
+        networkRequest.send(dataForm);
+
+    } catch (systemCrash) {
+        console.error("Critical crash tracing cloud transmission operations:", systemCrash);
+        const textNode = DOMWrapperNode?.querySelector('.loader-text');
+        if (textNode) {
+            textNode.innerText = "Upload Refused/Failed";
+            textNode.style.color = "#ef4444";
+        }
+        inputElement.value = "";
+    }
 }
 
+/**
+ * 8. Micro-Framework Hook Interceptor Modules
+ */
+function goToDashboard() {
+    window.location.href = '/dashboard.html';
+}
 
-try {
+function toggleTheme() {
+    const activeState = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', activeState);
+    localStorage.setItem('theme', activeState);
+    
+    // Explicitly cascade state changes down to modern active Call overlays
+    if (typeof CallUI !== 'undefined' && CallUI.syncTheme) {
+        CallUI.syncTheme();
+    }
+}
 
-socket.emit('send_private_message', messageData);
+function closeChat() {
+    document.getElementById('bodyWrapper')?.classList.remove('chat-active');
+    activeChatUser = null;
+    clearSelection();
+}
 
+function openMediaModal(url, type) {
+    const elementModal = document.getElementById('mediaModal');
+    const innerContentFrame = document.getElementById('modalContent');
+    if (!elementModal || !innerContentFrame) return;
 
-// Reset UI
+    if (type === 'image') {
+        innerContentFrame.innerHTML = `<img src="${url}" style="max-width:95vw; max-height:85vh; object-fit:contain; border-radius:4px;"/>`;
+    } else if (type === 'video') {
+        innerContentFrame.innerHTML = `
+            <video src="${url}" controls autoplay style="max-width:95vw; max-height:85vh; background:#000; border-radius:8px;">
+                Your client interface implementation engine architecture does not parse standalone video stream parameters natively.
+            </video>`;
+    }
+    elementModal.style.display = 'flex';
+}
 
-messageInput.value = "";
+function closeMediaModal() {
+    const targetModal = document.getElementById('mediaModal');
+    const contentBox = document.getElementById('modalContent');
+    if (targetModal) targetModal.style.display = 'none';
+    if (contentBox) contentBox.innerHTML = ''; // Terminate processing components/audio execution contexts instantly
+}
 
-cancelReply(); // This clears currentReplyTarget and hides the preview bar
-
-handleTyping();
-
-} catch (err) {
-
-console.error("Message send error:", err);
-
+function showNotificationDot(userIdSource) {
+    const monitoringTargetNode = document.getElementById(`dot-${userIdSource}`);
+    if (monitoringTargetNode) {
+        monitoringTargetNode.style.display = 'block';
+    }
 }
 
 }
