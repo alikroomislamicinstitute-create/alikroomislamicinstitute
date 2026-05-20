@@ -153,23 +153,6 @@
     border-radius: 15px;
     padding: 15px;
   }
-  /* Progress Bar Animation styling */
-.download-progress-container {
-  width: 100%;
-  background-color: rgba(0, 0, 0, 0.05);
-  border-radius: 10px;
-  margin-top: 8px;
-  display: none;
-  height: 6px;
-  overflow: hidden;
-}
-.download-progress-bar {
-  height: 100%;
-  width: 0%;
-  background: var(--accent-sage);
-  transition: width 0.1s ease;
-}
-
 </style>
 </head>
 <body>
@@ -561,91 +544,81 @@ async function fetchAnnouncements() {
         resGrid.innerHTML = hasRes ? "" : `<div class="glass-card" style="grid-column:1/-1; text-align:center; opacity:0.5; border:2px dashed var(--glass-border); background:none; padding: 20px;">${t.noResources}</div>`;
         if (hasRes) {
             data.resources.forEach(r => {
-    resGrid.innerHTML += `
-        <div class="glass-card" style="display:flex; flex-direction:column; gap:10px; padding:15px 20px;">
-            <div style="display:flex; gap:15px; align-items:center; width:100%;">
-                <div style="font-size:1.4rem; color:var(--primary-green);"><i class="fa-solid fa-file-pdf"></i></div>
-                <div style="flex-grow:1;">
-                    <div style="font-weight:700; font-size:0.9rem;">${r.title}</div>
-                    <div style="font-size:0.75rem; opacity:0.6;">${r.course || 'General'}</div>
-                    <div style="margin-top:5px; display:flex; gap:10px;">
-                        <a href="javascript:void(0)" onclick="openPdfModal('${r.fileUrl}')" style="color:var(--primary-green); font-size:0.7rem; font-weight:700; text-decoration:none;"><i class="fa-solid fa-eye"></i> ${t.view}</a>
+                resGrid.innerHTML += `
+                    <div class="glass-card" style="display:flex; gap:15px; align-items:center; padding:15px 20px;">
+                        <div style="font-size:1.4rem; color:var(--primary-green);"><i class="fa-solid fa-file-pdf"></i></div>
+                        <div style="flex-grow:1;">
+                            <div style="font-weight:700; font-size:0.9rem;">${r.title}</div>
+                            <div style="font-size:0.75rem; opacity:0.6;">${r.course || 'General'}</div>
+                            <div style="margin-top:5px; display:flex; gap:10px;">
+                                <a href="javascript:void(0)" onclick="openPdfModal('${r.fileUrl}')" style="color:var(--primary-green); font-size:0.7rem; font-weight:700; text-decoration:none;"><i class="fa-solid fa-eye"></i> ${t.view}</a>
+                            </div>
+                        </div>
+                        <a href="javascript:void(0)" onclick="downloadResource('${r._id}', '${r.title}')" style="color:var(--primary-green); font-size:1.2rem;"><i class="fa-solid fa-circle-down"></i></a>
                     </div>
-                </div>
-                <a href="javascript:void(0)" id="dl-btn-${r._id}" onclick="downloadResource('${r._id}', '${r.title}')" style="color:var(--primary-green); font-size:1.2rem;"><i class="fa-solid fa-circle-down"></i></a>
-            </div>
-            <div class="download-progress-container" id="progress-cont-${r._id}">
-                <div class="download-progress-bar" id="progress-bar-${r._id}"></div>
-            </div>
-        </div>
-    `;
-});
-
+                `;
+            });
         }
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         document.getElementById('themeText').innerText = isDark ? t.light : t.dark;
         document.querySelector('#themeToggle i').className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
     }
 
-    function downloadResource(id, filename) {
-    const pContainer = document.getElementById(`progress-cont-${id}`);
-    const pBar = document.getElementById(`progress-bar-${id}`);
-    const dlBtn = document.getElementById(`dl-btn-${id}`);
-    
-    if (pContainer) pContainer.style.display = 'block';
-    if (dlBtn) dlBtn.style.pointerEvents = 'none'; // Prevent double clicking
-
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', `${BACKEND_URL}/student/resource/download/${id}`, true);
-    
-    // Set authentication headers
-    const token = localStorage.getItem('token');
-    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-    
-    xhr.responseType = 'blob';
-
-    // Track download progress events
-    xhr.onprogress = function(e) {
-        if (e.lengthComputable) {
-            const percentage = Math.round((e.loaded / e.total) * 100);
-            if (pBar) {
-                pBar.style.width = percentage + '%';
-            }
-        }
-    };
-
-    xhr.onload = function() {
-        if (xhr.status === 200) {
-            const blob = xhr.response;
+    async function downloadResource(id, filename) {
+        try {
+            const response = await fetch(`${BACKEND_URL}/student/resource/download/${id}`, {
+                headers: getAuthHeaders()
+            });
+            const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = filename || 'resource';
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            a.remove();
-        } else {
-            alert("Could not download file from backend server.");
+            a.href = url; a.download = filename || 'resource';
+            document.body.appendChild(a); a.click();
+            window.URL.revokeObjectURL(url); a.remove();
+        } catch (err) { alert("Could not download file."); }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        const menuToggle = document.getElementById('menuToggle');
+        const navMenu = document.getElementById('navMenu');
+
+        menuToggle.onclick = (e) => {
+            e.stopPropagation();
+            menuToggle.classList.toggle('change');
+            navMenu.classList.toggle('active');
+        };
+
+        document.getElementById('themeToggle').onclick = () => {
+            const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            render();
+        };
+
+        document.getElementById('langToggle').onclick = () => {
+            currentLang = currentLang === 'en' ? 'ar' : 'en';
+            localStorage.setItem('lang', currentLang);
+            render();
+        };
+
+        document.getElementById('logoutBtn').onclick = () => {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        };
+
+        document.addEventListener('click', () => {
+            menuToggle.classList.remove('change');
+            navMenu.classList.remove('active');
+        });
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('pdfModal');
+            if (event.target == modal) {
+                closePdfModal();
+            }
         }
-        
-        // Reset element states
-        setTimeout(() => {
-            if (pContainer) pContainer.style.display = 'none';
-            if (pBar) pBar.style.width = '0%';
-            if (dlBtn) dlBtn.style.pointerEvents = 'auto';
-        }, 1000);
-    };
-
-    xhr.onerror = function() {
-        alert("A network connection error occurred.");
-        if (pContainer) pContainer.style.display = 'none';
-        if (dlBtn) dlBtn.style.pointerEvents = 'auto';
-    };
-
-    xhr.send();
-}
 
         render();
         fetchAnnouncements();
