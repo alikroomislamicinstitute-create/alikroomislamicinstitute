@@ -212,27 +212,27 @@
             transition: 0.2s;
         }
         #targetStudentsContainer {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 10px;
-    padding: 10px;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    max-height: 150px;
-    overflow-y: auto;
-}
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
 
-.checkbox-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #f8fafc;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    border: 1px solid #e2e8f0;
-}
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-gradient);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            border: 1px solid var(--glass-border);
+        }
         .checkbox-item:hover { background: rgba(27, 110, 95, 0.05); }
         .checkbox-item input[type="checkbox"] { width: auto; cursor: pointer; }
         .checkbox-item span { font-size: 0.9rem; color: var(--text-color); }
@@ -272,6 +272,7 @@
         }
     </style>
 </head>
+<body>
 <header>
     <div class="header-brand">
         <img src="Al-Ikroom Logo.png" alt="Logo" class="logo">
@@ -288,9 +289,9 @@
 
     <nav class="nav-menu" id="navMenu">
         <a href="attendance-teacher.html" class="nav-link">
-    <i class="fa-solid fa-clipboard-user"></i> 
-    <span>Attendance</span>
-</a>
+            <i class="fa-solid fa-clipboard-user"></i> 
+            <span>Attendance</span>
+        </a>
         <a href="assessment-teacher.html" class="nav-link">
             <i class="fa-solid fa-file-circle-plus"></i> 
             <span>Assessments</span>
@@ -360,7 +361,7 @@
                             <input type="checkbox" name="eligibleStudents" value="all" checked>
                             <span>All Students (Default)</span>
                         </label>
-                        </div>
+                    </div>
                     <div style="font-size: 0.75rem; margin-top: 5px; opacity: 0.7;">
                         Check specific students or leave "All" selected.
                     </div>
@@ -389,33 +390,33 @@
         </div>
 
         <div class="glass-card">
-         <form id="announcementForm" onsubmit="event.preventDefault(); submitAnnouncement();">
-    <h3 class="section-title"><i class="fa-solid fa-bullhorn"></i> Post Announcement</h3>
-    
-    <div class="form-group">
-        <label>Target Course</label>
-        <select id="annCourse" required onchange="updateAnnStudentList(this.value)">
-            <option value="">Select a Course</option>
-        </select>
-    </div>
+            <form id="announcementForm" onsubmit="event.preventDefault(); submitAnnouncement();">
+                <h3 class="section-title"><i class="fa-solid fa-bullhorn"></i> Post Announcement</h3>
+                
+                <div class="form-group">
+                    <label>Target Course</label>
+                    <select id="annCourse" required onchange="updateAnnStudentList(this.value)">
+                        <option value="">Select a Course</option>
+                    </select>
+                </div>
 
-    <div class="form-group">
-        <label>Target Specific Students (Optional)</label>
-        <div class="checkbox-container" id="annTargetStudentsContainer">
-            <label class="checkbox-item">
-                <input type="checkbox" name="annEligibleStudents" value="all" checked>
-                <span>All Students in Course</span>
-            </label>
-        </div>
-        <div style="font-size: 0.75rem; margin-top: 5px; opacity: 0.7;">
-            Select specific students or leave "All" checked.
-        </div>
-    </div>
+                <div class="form-group">
+                    <label>Target Specific Students (Optional)</label>
+                    <div class="checkbox-container" id="annTargetStudentsContainer">
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="annEligibleStudents" value="all" checked>
+                            <span>All Students in Course</span>
+                        </label>
+                    </div>
+                    <div style="font-size: 0.75rem; margin-top: 5px; opacity: 0.7;">
+                        Select specific students or leave "All" checked.
+                    </div>
+                </div>
 
-    <div class="form-group">
-        <label>Headline</label>
-        <input type="text" id="annTitle" placeholder="Class Update" required>
-    </div>
+                <div class="form-group">
+                    <label>Headline</label>
+                    <input type="text" id="annTitle" placeholder="Class Update" required>
+                </div>
                 <div class="form-group">
                     <label>Message</label>
                     <input type="hidden" id="role" value="teacher"> 
@@ -528,7 +529,6 @@
 })();
 </script>
 
-
 <script>
 const currentTheme = localStorage.getItem('theme') || 'light';
 document.documentElement.setAttribute('data-theme', currentTheme);
@@ -586,6 +586,7 @@ themeToggle.onclick = () => {
 };
 
 updateThemeUI(currentTheme);
+
 function renderStudentsLocally() {
     const filterEl = document.getElementById('rosterFilter');
     const list = document.getElementById('studentList');
@@ -593,7 +594,6 @@ function renderStudentsLocally() {
     
     const selectedCourse = filterEl.value;
 
-    // Show prompt if no course is selected
     if (!selectedCourse) {
         list.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:40px; opacity:0.5;">Please select a program to view the student roster.</td></tr>`;
         return;
@@ -649,6 +649,7 @@ function renderStudentsLocally() {
         `;
     }).join('');
 }
+
 function toggleAssessmentPanel() {
     const panel = document.getElementById('assessmentPanel');
     panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
@@ -693,12 +694,11 @@ async function refreshDashboard() {
                 }).join('');
 
                 const options = data.managedCourses.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-const placeholder = `<option value="" disabled selected>Select a Course</option>`;
+                const placeholder = `<option value="" disabled selected>Select a Course</option>`;
 
-// Update all three dropdowns with the placeholder
-document.getElementById('rosterFilter').innerHTML = placeholder + options;
-document.getElementById('resCourse').innerHTML = placeholder + options;
-document.getElementById('annCourse').innerHTML = placeholder + options;
+                document.getElementById('rosterFilter').innerHTML = placeholder + options;
+                document.getElementById('resCourse').innerHTML = placeholder + options;
+                document.getElementById('annCourse').innerHTML = placeholder + options;
 
             } else {
                 courseContainer.innerHTML = `<p style="opacity:0.5; text-align:center;">No courses assigned.</p>`;
@@ -710,67 +710,86 @@ document.getElementById('annCourse').innerHTML = placeholder + options;
     } catch (err) { console.error("Sync Error:", err); }
 }
 
-async function uploadResource() {
+function uploadResource() {
     const title = document.getElementById('resTitle').value;
     const course = document.getElementById('resCourse').value;
     const fileInput = document.getElementById('resFile');
     const btn = document.getElementById('btnUpload');
 
-    // 1. Existing validation
+    if (!course) return alert("Please select a target course");
+    if (!title.trim()) return alert("Please enter a title");
     if (!fileInput.files[0]) return alert("Please select a file");
 
-    // 2. Existing FormData initialization
     const form = document.getElementById("uploadForm");
     const formData = new FormData();
     formData.append('title', title);
     formData.append('course', course); 
     formData.append('file', fileInput.files[0]);
 
-    // Get all checked student IDs, excluding 'all'
-const selectedCheckboxes = document.querySelectorAll('input[name="eligibleStudents"]:checked');
-
-let eligibleStudents = Array.from(selectedCheckboxes)
-    .map(cb => cb.value)
-    .filter(val => val !== 'all');
+    const selectedCheckboxes = document.querySelectorAll('input[name="eligibleStudents"]:checked');
+    let eligibleStudents = Array.from(selectedCheckboxes)
+        .map(cb => cb.value)
+        .filter(val => val !== 'all');
     const isForAllStudents = eligibleStudents.length === 0;
 
-formData.append('isForAllStudents', isForAllStudents);
+    formData.append('isForAllStudents', isForAllStudents);
+    eligibleStudents.forEach(id => formData.append('selectedStudents', id));
 
-// Append each student ID
-eligibleStudents.forEach(id => formData.append('selectedStudents', id));
-    // 3. Existing Button UI State
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Uploading... (0%)';
 
-    try {
-        // 4. Existing Fetch Call
-        const res = await fetch(`${API_BASE}/upload-resource`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-            body: formData
-        });
-
-        const data = await res.json();
-        if (data.success) {
-            alert("Upload Successful!");
-            // Ensure this matches your HTML form ID (it was 'uploadForm' in your snippet)
-       document.getElementById('uploadForm').reset();
-            if (form) form.reset();
-             loadManageResources(); 
-        } else {
-            alert("Upload failed: " + (data.message || data.error));
+    const xhr = new XMLHttpRequest();
+    
+    xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+            const percentComplete = Math.round((e.loaded / e.total) * 100);
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Uploading... (${percentComplete}%)`;
         }
-    } catch (err) {
-        console.error(err);
-        alert("Server error during upload");
-    } finally {
-        // 5. Existing Reset Button UI
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Upload Material';
-    }
+    });
+
+    xhr.addEventListener('load', () => {
+        let data;
+        try {
+            data = JSON.parse(xhr.responseText);
+        } catch (err) {
+            data = { success: false, message: "Invalid server response layout." };
+        }
+
+        if (xhr.status >= 200 && xhr.status < 300 && data.success) {
+            alert("Upload Successful!");
+            if (form) form.reset();
+            
+            const container = document.getElementById('targetStudentsContainer');
+            if (container) {
+                container.innerHTML = `
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="eligibleStudents" value="all" checked>
+                        <span>All Students (Default)</span>
+                    </label>
+                `;
+            }
+            loadManageResources(); 
+        } else {
+            alert("Upload failed: " + (data.message || data.error || "Unknown error encountered."));
+        }
+        resetUploadButton(btn);
+    });
+
+    xhr.addEventListener('error', () => {
+        alert("Server error during connection routing layout.");
+        resetUploadButton(btn);
+    });
+
+    xhr.open('POST', `${API_BASE}/upload-resource`);
+    xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('token')}`);
+    xhr.send(formData);
 }
 
-// 1. Function to fetch and display ONLY this teacher's resources
+function resetUploadButton(btn) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Upload Material';
+}
+
 async function loadManageResources() {
     const container = document.getElementById('manageResourcesList');
     if (!container) return;
@@ -806,8 +825,6 @@ async function loadManageResources() {
     }
 }
 
-// 2. Update your Upload Form Listener
-name="resource"
 async function deleteResource(id) {
     if (!confirm("Remove this resource permanently?")) return;
 
@@ -828,13 +845,14 @@ async function deleteResource(id) {
         }
 
         if (data.success) {
-            loadManageResources(); // refresh list
+            loadManageResources();
         }
 
     } catch (err) {
         console.error("Delete error:", err);
     }
 }
+
 async function updateStudentProgress(studentId, courseName, newProgress) {
     try {
         const res = await fetch(`${API_BASE}/students/progress/${studentId}`, {
@@ -853,7 +871,6 @@ async function loadManageAnnouncements() {
     try {
         const res = await fetch(`${API_BASE}/announcements/all`, { headers: getAuthHeaders() });
 
-        // 1. Check if the server response is OK (status 200-299)
         if (!res.ok) {
             console.error(`Fetch failed with status: ${res.status}`);
             const list = document.getElementById('manageAnnouncementsList');
@@ -865,7 +882,6 @@ async function loadManageAnnouncements() {
             return;
         }
 
-        // 2. Extra safety: Check if the response is actually JSON
         const contentType = res.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
             console.error("Oops! Received non-JSON response from server.");
@@ -944,7 +960,6 @@ async function submitAnnouncement() {
     const message = document.getElementById('annMessage').value;
     const course = document.getElementById('annCourse').value;
 
-    // Get selected students
     const selectedCheckboxes = document.querySelectorAll('input[name="annEligibleStudents"]:checked');
     let eligibleStudents = Array.from(selectedCheckboxes)
         .map(cb => cb.value)
@@ -976,7 +991,6 @@ async function submitAnnouncement() {
     } catch (err) { console.error(err); }
 }
 
-// Inside dashboard-teacher.html
 async function deleteAnnouncement(id) {
     if (!confirm('Are you sure you want to delete this announcement?')) return;
 
@@ -992,7 +1006,6 @@ async function deleteAnnouncement(id) {
 
         if (data.success) {
             alert('Announcement deleted successfully');
-            // FIX: Use the correct function name defined in your script
             loadManageAnnouncements(); 
         } else {
             alert('Error: ' + data.message);
@@ -1024,12 +1037,11 @@ document.addEventListener('DOMContentLoaded', () => {
         loadManageResources();
     }
 });
-// Change 'resourceCourse' to 'resCourse' to match your HTML ID
+
 document.getElementById('resCourse').addEventListener('change', (e) => {
     const courseName = e.target.value;
     const container = document.getElementById('targetStudentsContainer');
 
-    // Reset with "All"
     container.innerHTML = `
         <label class="checkbox-item">
             <input type="checkbox" name="eligibleStudents" value="all" checked>
@@ -1039,7 +1051,6 @@ document.getElementById('resCourse').addEventListener('change', (e) => {
 
     if (!courseName) return;
 
-    // 🔥 Filter from already loaded students (same as roster logic)
     const studentsInCourse = globalStudentData.filter(s =>
         s.enrolledCourses &&
         s.enrolledCourses.some(c => {
@@ -1051,7 +1062,6 @@ document.getElementById('resCourse').addEventListener('change', (e) => {
         })
     );
 
-    // Populate checkboxes
     studentsInCourse.forEach(student => {
         const label = document.createElement('label');
         label.className = 'checkbox-item';
@@ -1062,7 +1072,9 @@ document.getElementById('resCourse').addEventListener('change', (e) => {
         container.appendChild(label);
     });
 });
+
 document.getElementById('logoutBtn').onclick = logoutUser;
+
 document.addEventListener('change', (e) => {
     const name = e.target.name;
     if (name === 'eligibleStudents' || name === 'annEligibleStudents') {
@@ -1072,15 +1084,12 @@ document.addEventListener('change', (e) => {
 
         if (e.target.value === 'all') {
             if (e.target.checked) {
-                // Uncheck individual students if "All" is selected
                 others.forEach(cb => cb.checked = false);
             }
         } else {
             if (e.target.checked) {
-                // Uncheck "All" if a specific student is selected
                 allCheckbox.checked = false;
             }
-            // Fallback: If nothing is checked, default back to "All"
             const anyChecked = Array.from(others).some(cb => cb.checked);
             if (!anyChecked) {
                 allCheckbox.checked = true;
@@ -1088,7 +1097,6 @@ document.addEventListener('change', (e) => {
         }
     }
 });
-
 </script>
 </body>
 </html>
