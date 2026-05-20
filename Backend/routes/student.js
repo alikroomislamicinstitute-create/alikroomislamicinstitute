@@ -3,6 +3,7 @@ const router = express.Router();
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
+const mongoose = require('mongoose'); // Consolidated all global requires to the top
 
 // Models
 const User = require('../models/User'); 
@@ -11,6 +12,7 @@ const Course = require('../models/Course');
 const Assessment = require('../models/Assessment'); 
 const Announcement = require('../models/Announcement');
 const Attendance = require('../models/Attendance');
+const Absence = require('../models/Absence');
 
 // Middleware & Controllers
 const { verifyToken } = require('../middleware/authMiddleware'); 
@@ -39,29 +41,29 @@ const upload = multer({
 // ==========================================
 // DASHBOARD DATA (SYNC ENGINE)
 // ==========================================
-
 router.get('/my-dashboard', verifyToken, studentController.getStudentDashboard);
 
 // ==========================================
 // CHAT & INSTRUCTOR SYSTEM
 // ==========================================
 
+// FIXED: Consolidated into a single, comprehensive fallback handler
 router.get('/my-teachers', verifyToken, async (req, res) => {
     try {
         const student = await User.findById(req.user.id).select('enrolledCourses');
-        if (!student) return res.status(404).json({ message: "Student not found" });
+        if (!student) return res.status(404).json({ success: false, message: "Student not found" });
 
-        const enrolledCourseIds = student.enrolledCourses.map(c => c.course);
+        const courseNames = student.enrolledCourses.map(c => c.courseName);
 
         const teachers = await User.find({
             role: 'teacher',
-            'managedCourses.courseId': { $in: enrolledCourseIds }
-        });
+            'managedCourses.name': { $in: courseNames }
+        }).select('firstName lastName managedCourses _id');
 
         const result = [];
         teachers.forEach(teacher => {
             teacher.managedCourses.forEach(mc => {
-                if (enrolledCourseIds.includes(mc.courseId.toString())) {
+                if (courseNames.includes(mc.name)) {
                     result.push({
                         teacherId: teacher._id,
                         teacherName: `Ustadh ${teacher.firstName} ${teacher.lastName}`,
@@ -71,37 +73,16 @@ router.get('/my-teachers', verifyToken, async (req, res) => {
             });
         });
 
-        res.json(result);
+        res.json({ success: true, teachers: result });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Server error fetching teachers" });
-    }
-});
-
-// Get list of teachers for the logged-in student
-router.get('/my-teachers', verifyToken, async (req, res) => {
-    try {
-        const student = await User.findById(req.user.id);
-        
-        // 1. Get the names of all courses the student is in
-        const courseNames = student.enrolledCourses.map(c => c.courseName);
-
-        // 2. Find teachers who manage those specific courses
-        const teachers = await User.find({
-            role: 'teacher',
-            'managedCourses.name': { $in: courseNames }
-        }).select('firstName lastName _id');
-
-        res.json({ success: true, teachers });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Error fetching teachers" });
+        console.error("Fetch Teachers Error:", err);
+        res.status(500).json({ success: false, error: "Server error fetching teachers" });
     }
 });
 
 // ==========================================
 // RESOURCE DOWNLOAD SYSTEM
 // ==========================================
-
 router.get('/my-resources', verifyToken, async (req, res) => {
     try {
         const student = await User.findById(req.user.id);
@@ -128,7 +109,6 @@ router.get('/resource/download/:id', verifyToken, studentController.downloadReso
 // ==========================================
 // ASSESSMENT & QUIZ SYSTEM
 // ==========================================
-
 router.get('/assessments', verifyToken, assessmentController.getAvailableAssessments);
 router.post('/submit-quiz/:id', verifyToken, assessmentController.submitQuiz);
 
@@ -171,9 +151,13 @@ router.post('/submit-assessment/:id', verifyToken, upload.single('file'), async 
             return assessmentController.submitQuiz(req, res);
         }
 
+        // FIXED: Safe dynamic fallback query if JWT payload missing firstName/lastName properties
+        const studentProfile = await User.findById(req.user.id);
+        const compiledName = studentProfile ? `${studentProfile.firstName} ${studentProfile.lastName}` : "Student Portal User";
+
         const submission = {
             studentId: req.user.id,
-            studentName: req.user.fullName || "Student", 
+            studentName: compiledName, 
             answerText: req.body.answerText,
             fileUrl: req.file ? `/uploads/${req.file.filename}` : req.body.fileUrl,
             submittedAt: new Date()
@@ -189,7 +173,6 @@ router.post('/submit-assessment/:id', verifyToken, upload.single('file'), async 
 // ==========================================
 // COURSE MANAGEMENT
 // ==========================================
-
 router.get('/courses', async (req, res) => {
     try {
         const courses = await Course.find({}).sort({ title: 1 });
@@ -270,7 +253,6 @@ router.delete('/drop', verifyToken, async (req, res) => {
 // ==========================================
 // PROFILE & ANNOUNCEMENT SYSTEM
 // ==========================================
-
 router.get('/profile', verifyToken, async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select('-password');
@@ -280,33 +262,24 @@ router.get('/profile', verifyToken, async (req, res) => {
     }
 });
 
-const mongoose = require('mongoose');
-
+// FIXED: Cleaned up inline require statements and string conversion mapping rules
 router.get('/announcements', verifyToken, async (req, res) => {
     try {
-        const mongoose = require('mongoose');
-        const studentId = req.user.id; // String from JWT
-        
-        // 1. Convert the studentId string into a real Mongoose ObjectId
+        const studentId = req.user.id; 
         const studentObjectId = new mongoose.Types.ObjectId(studentId);
 
         const student = await User.findById(studentId);
-        if (!student) return res.status(404).json({ success: false });
+        if (!student) return res.status(404).json({ success: false, message: "Student record dropped." });
 
-        // 2. Get all courses the student is in
         const enrolledCourseNames = student.enrolledCourses.map(c => c.courseName);
 
-        // 3. The Query
         const announcements = await Announcement.find({
             $and: [
-                // Match the course: must be 'All' OR one of the student's courses
                 { course: { $in: ['All', ...enrolledCourseNames] } },
-                
-                // Match the audience
                 {
                     $or: [
                         { isForAllStudents: true },
-                        { eligibleStudents: studentObjectId } // Match by ObjectId
+                        { eligibleStudents: studentObjectId } 
                     ]
                 }
             ]
@@ -319,28 +292,43 @@ router.get('/announcements', verifyToken, async (req, res) => {
     }
 });
 
+// Synced with standard logic mapping above to protect visual template layout parsing
+router.get('/my-announcements', verifyToken, async (req, res) => {
+    try {
+        const studentId = req.user.id;
+        const student = await User.findById(studentId);
+        if (!student) return res.status(404).json({ success: false, message: "Student record dropped." });
+        
+        const myCourses = student.enrolledCourses.map(c => c.courseName);
+        const studentObjectId = new mongoose.Types.ObjectId(studentId);
 
-// GET /api/student/active-session
-// This handles both General (all students) and Specified (selected students) attendance
+        const announcements = await Announcement.find({
+            course: { $in: [...myCourses, 'All'] },
+            $or: [
+                { isForAllStudents: true }, 
+                { eligibleStudents: studentObjectId } 
+            ]
+        }).sort({ createdAt: -1 });
+
+        res.json({ success: true, announcements });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// ==========================================
+// ATTENDANCE ENGINE
+// ==========================================
 router.get('/active-session', verifyToken, async (req, res) => {
     try {
         const studentId = req.user.id;
-
-        // 1. Fetch student to get their enrolled courses
         const student = await User.findById(studentId);
         if (!student) {
             return res.status(404).json({ success: false, message: "User not found" });
         }
 
-        // Get names of courses the student is actually enrolled in
         const enrolledCourseNames = student.enrolledCourses.map(c => c.courseName);
 
-        // 2. Find a session that matches:
-        // - Course name is in student's enrolled list
-        // - Status is 'active'
-        // - Expiry time is in the future
-        // - EITHER: eligibleStudents is empty (General Attendance)
-        // - OR: studentId is inside eligibleStudents (Specified Attendance)
         const session = await Attendance.findOne({
             courseName: { $in: enrolledCourseNames },
             status: 'active',
@@ -349,7 +337,7 @@ router.get('/active-session', verifyToken, async (req, res) => {
                 { eligibleStudents: { $exists: true, $size: 0 } }, 
                 { eligibleStudents: studentId }                  
             ]
-        }).sort({ createdAt: -1 }); // Get the most recently created session first
+        }).sort({ createdAt: -1 });
 
         if (!session) {
             return res.json({ 
@@ -358,7 +346,6 @@ router.get('/active-session', verifyToken, async (req, res) => {
             });
         }
 
-        // 3. Check if student has already marked attendance for this specific session
         const alreadyPresent = session.presentStudents.some(
             p => p.studentId.toString() === studentId
         );
@@ -370,7 +357,6 @@ router.get('/active-session', verifyToken, async (req, res) => {
             });
         }
 
-        // 4. Send back the data the frontend expects
         res.json({
             success: true,
             activeSession: {
@@ -386,43 +372,21 @@ router.get('/active-session', verifyToken, async (req, res) => {
     }
 });
 
-router.get('/my-announcements', verifyToken, async (req, res) => {
-    try {
-        const studentId = req.user.id;
-        const student = await User.findById(studentId);
-        const myCourses = student.enrolledCourses.map(c => c.courseName);
-
-        const announcements = await Announcement.find({
-            course: { $in: [...myCourses, 'All'] },
-            $or: [
-                { isForAllStudents: true }, 
-                { eligibleStudents: studentId } // Only show if this student is in the list
-            ]
-        }).sort({ createdAt: -1 });
-
-        res.json({ success: true, announcements });
-    } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
-    }
-});
-
 router.post('/mark-attendance', verifyToken, async (req, res) => {
     try {
         const { courseName } = req.body;
         const studentId = req.user.id;
 
-        // 1. Find the session with a STRIKE ELIGIBILITY CHECK
         const session = await Attendance.findOne({ 
             courseName, 
             status: 'active',
-            expiryTime: { $gt: new Date() }, // Ensure it hasn't expired
+            expiryTime: { $gt: new Date() },
             $or: [
-                { eligibleStudents: { $exists: true, $size: 0 } }, // Open to all students
-                { eligibleStudents: studentId }                  // Specific student is authorized
+                { eligibleStudents: { $exists: true, $size: 0 } }, 
+                { eligibleStudents: studentId }                  
             ]
         }).sort({ createdAt: -1 });
 
-        // 2. If no session is found, it's either expired or the student isn't authorized
         if (!session) {
             return res.status(403).json({ 
                 success: false, 
@@ -430,7 +394,6 @@ router.post('/mark-attendance', verifyToken, async (req, res) => {
             });
         }
 
-        // --- UPGRADE: TIME WINDOW CHECK ---
         if (session.sessionType === 'scheduled' && session.startTime) {
             const now = new Date();
             const [sHours, sMinutes] = session.startTime.split(':');
@@ -445,7 +408,6 @@ router.post('/mark-attendance', verifyToken, async (req, res) => {
             }
         }
 
-        // 3. Check if student already marked attendance to prevent duplicates
         const alreadyPresent = session.presentStudents.some(
             p => p.studentId.toString() === studentId
         );
@@ -457,18 +419,13 @@ router.post('/mark-attendance', verifyToken, async (req, res) => {
             });
         }
 
-        // 4. Record the attendance
         session.presentStudents.push({
             studentId: studentId,
             timestamp: new Date()
         });
 
         await session.save();
-
-        res.json({ 
-            success: true, 
-            message: "Attendance marked successfully!" 
-        });
+        res.json({ success: true, message: "Attendance marked successfully!" });
 
     } catch (err) {
         console.error("Mark Attendance Error:", err);
@@ -480,32 +437,31 @@ router.post('/mark-attendance', verifyToken, async (req, res) => {
     }
 });
 
-const Absence = require('../models/Absence');
-
-// routes/student.js
 router.post('/notify-absence', verifyToken, async (req, res) => {
     try {
         const { courseName, reason } = req.body;
-        
-        // Find the teacher by checking who started the last session for this course
         const session = await Attendance.findOne({ courseName }).sort({ createdAt: -1 });
 
         if (!session) {
             return res.status(404).json({ success: false, message: "No instructor found for this course." });
         }
 
+        // FIXED: Explicit structural verification to ensure layout elements do not populate as undefined 
+        const student = await User.findById(req.user.id);
+        const studentName = student ? `${student.firstName} ${student.lastName}` : "Unknown Student";
+
         const newAbsence = new Absence({
             studentId: req.user.id,
-            studentName: req.user.firstName + " " + req.user.lastName,
+            studentName: studentName,
             teacherId: session.teacherId,
             courseName,
             reason
         });
 
         await newAbsence.save();
-        res.json({ success: true, message: "Teacher notified." });
+        res.json({ success: true, message: "Teacher notified successfully." });
     } catch (err) {
-        res.status(500).json({ success: false, message: "Server error" });
+        res.status(500).json({ success: false, message: "Server error handling absence request notice log." });
     }
 });
 
