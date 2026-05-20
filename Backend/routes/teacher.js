@@ -17,6 +17,7 @@ const assessmentController = require('../controllers/assessmentController');
 const { verifyToken } = require('../middleware/authMiddleware');
 
 // --- MULTER CONFIGURATION ---
+// --- UPDATED MULTER CONFIGURATION ---
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const dir = 'uploads/';
@@ -32,8 +33,27 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
     storage: storage,
-    limits: { fileSize: 10 * 1024 * 1024 } 
+    limits: { fileSize: 100 * 1024 * 1024 } // Set to exactly 100MB
 });
+
+// --- SAFE MIDDLEWARE WRAPPER UPGRADE ---
+const handleUploadMiddleware = (req, res, next) => {
+    upload.single('file')(req, res, (err) => {
+        if (err instanceof multer.MulterError) {
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: "File is too large. Maximum allowed size is 100MB." 
+                });
+            }
+            return res.status(400).json({ success: false, message: err.message });
+        } else if (err) {
+            return res.status(500).json({ success: false, message: "File processing failed." });
+        }
+        next();
+    });
+};
+
 
 // ==========================================
 // DASHBOARD & STUDENT MANAGEMENT
