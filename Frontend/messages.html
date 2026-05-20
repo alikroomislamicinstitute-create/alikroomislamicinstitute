@@ -3600,7 +3600,7 @@ async function uploadFile(inputElement) {
     if (!file || !activeChatUser) return;
 
     // Direct structural validation checks
-    const maxBytes = 50 * 1024 * 1024; // 50MB Absolute Roof Limit
+    const maxBytes = 100 * 1024 * 1024; // 50MB Absolute Roof Limit
     if (file.size > maxBytes) {
         alert("Transmitting target exceeds standard platform limits (Max 50MB permitted).");
         inputElement.value = "";
