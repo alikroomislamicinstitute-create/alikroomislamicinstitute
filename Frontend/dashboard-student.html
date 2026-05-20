@@ -316,6 +316,37 @@
         frame.src = "";
         document.body.style.overflow = "auto";
     }
+  function getFileMeta(fileUrl) {
+    if (!fileUrl) return { icon: 'fa-file', type: 'unknown', isometric: false };
+    
+    const ext = fileUrl.split('.').pop().split(/[?#]/)[0].toLowerCase();
+    
+    const metaMap = {
+        // PDF
+        pdf: { icon: 'fa-file-pdf', type: 'pdf', color: '#ef4444' },
+        // Images
+        png: { icon: 'fa-file-image', type: 'image', color: '#3b82f6' },
+        jpg: { icon: 'fa-file-image', type: 'image', color: '#3b82f6' },
+        jpeg: { icon: 'fa-file-image', type: 'image', color: '#3b82f6' },
+        gif: { icon: 'fa-file-image', type: 'image', color: '#3b82f6' },
+        // Videos
+        mp4: { icon: 'fa-file-video', type: 'video', color: '#f59e0b' },
+        mkv: { icon: 'fa-file-video', type: 'video', color: '#f59e0b' },
+        mov: { icon: 'fa-file-video', type: 'video', color: '#f59e0b' },
+        // Documents
+        doc: { icon: 'fa-file-word', type: 'doc', color: '#2563eb' },
+        docx: { icon: 'fa-file-word', type: 'doc', color: '#2563eb' },
+        xls: { icon: 'fa-file-excel', type: 'excel', color: '#16a34a' },
+        xlsx: { icon: 'fa-file-excel', type: 'excel', color: '#16a34a' },
+        ppt: { icon: 'fa-file-powerpoint', type: 'powerpoint', color: '#ea580c' },
+        pptx: { icon: 'fa-file-powerpoint', type: 'powerpoint', color: '#ea580c' },
+        // Audio
+        mp3: { icon: 'fa-file-audio', type: 'audio', color: '#8b5cf6' },
+        wav: { icon: 'fa-file-audio', type: 'audio', color: '#8b5cf6' }
+    };
+
+    return metaMap[ext] || { icon: 'fa-file-lines', type: 'other', color: 'var(--primary-green)' };
+}
 
     function renderAssessments(assessments) {
         const list = document.getElementById('manageAssessmentsList');
@@ -539,19 +570,26 @@ async function fetchAnnouncements() {
             `;
         });
 
-        const resGrid = document.getElementById('resourceGrid');
+                const resGrid = document.getElementById('resourceGrid');
         const hasRes = data.resources && data.resources.length > 0;
         resGrid.innerHTML = hasRes ? "" : `<div class="glass-card" style="grid-column:1/-1; text-align:center; opacity:0.5; border:2px dashed var(--glass-border); background:none; padding: 20px;">${t.noResources}</div>`;
         if (hasRes) {
             data.resources.forEach(r => {
+                // Get dynamic meta data based on actual file URL extension
+                const fileMeta = getFileMeta(r.fileUrl);
+                
                 resGrid.innerHTML += `
                     <div class="glass-card" style="display:flex; gap:15px; align-items:center; padding:15px 20px;">
-                        <div style="font-size:1.4rem; color:var(--primary-green);"><i class="fa-solid fa-file-pdf"></i></div>
-                        <div style="flex-grow:1;">
-                            <div style="font-weight:700; font-size:0.9rem;">${r.title}</div>
+                        <div style="font-size:1.6rem; color:${fileMeta.color};">
+                            <i class="fa-solid ${fileMeta.icon}"></i>
+                        </div>
+                        <div style="flex-grow:1; min-width: 0;">
+                            <div style="font-weight:700; font-size:0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${r.title}</div>
                             <div style="font-size:0.75rem; opacity:0.6;">${r.course || 'General'}</div>
                             <div style="margin-top:5px; display:flex; gap:10px;">
-                                <a href="javascript:void(0)" onclick="openPdfModal('${r.fileUrl}')" style="color:var(--primary-green); font-size:0.7rem; font-weight:700; text-decoration:none;"><i class="fa-solid fa-eye"></i> ${t.view}</a>
+                                <a href="javascript:void(0)" onclick="openPreviewModal('${r.fileUrl}', '${fileMeta.type}')" style="color:var(--primary-green); font-size:0.7rem; font-weight:700; text-decoration:none;">
+                                    <i class="fa-solid fa-eye"></i> ${t.view}
+                                </a>
                             </div>
                         </div>
                         <a href="javascript:void(0)" onclick="downloadResource('${r._id}', '${r.title}')" style="color:var(--primary-green); font-size:1.2rem;"><i class="fa-solid fa-circle-down"></i></a>
@@ -559,10 +597,59 @@ async function fetchAnnouncements() {
                 `;
             });
         }
+
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         document.getElementById('themeText').innerText = isDark ? t.light : t.dark;
         document.querySelector('#themeToggle i').className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
     }
+  function openPreviewModal(url, type) {
+    const modal = document.getElementById('pdfModal'); // keeping your existing modal ID
+    const contentArea = document.querySelector('.modal-content');
+    const fullUrl = url.startsWith('http') ? url : `https://alikroomislamicinstitute.onrender.com${url}`;
+    
+    // Reset layout container inside modal wrapper
+    contentArea.innerHTML = '';
+    
+    if (type === 'pdf') {
+        contentArea.innerHTML = `<iframe src="${fullUrl}" style="border: none; width: 100%; height: 100%;"></iframe>`;
+    } else if (type === 'image') {
+        contentArea.innerHTML = `
+            <div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center; background:#111;">
+                <img src="${fullUrl}" style="max-width:100%; max-height:100%; object-fit:contain;">
+            </div>`;
+    } else if (type === 'video') {
+        contentArea.innerHTML = `
+            <div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center; background:#111;">
+                <video src="${fullUrl}" controls autoplay style="max-width:100%; max-height:100%;"></video>
+            </div>`;
+    } else if (type === 'audio') {
+        contentArea.innerHTML = `
+            <div style="width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; background:var(--card-bg);">
+                <i class="fa-solid fa-file-audio" style="font-size:4rem; color:var(--primary-green); margin-bottom:20px;"></i>
+                <audio src="${fullUrl}" controls autoplay style="width:80%;"></audio>
+            </div>`;
+    } else {
+        // Fallback for Word / Excel / PowerPoint docs that can't render raw inside browsers natively
+        contentArea.innerHTML = `
+            <div style="width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:20px; box-sizing:border-box;">
+                <i class="fa-solid fa-file-circle-exclamation" style="font-size:4rem; opacity:0.3; margin-bottom:15px;"></i>
+                <h3>Preview Unavailable</h3>
+                <p style="opacity:0.7; max-width:400px; font-size:0.9rem; margin-bottom:20px;">This document format cannot be viewed directly inside the dashboard app layout browser window.</p>
+                <a href="${fullUrl}" target="_blank" class="btn-submit" style="text-decoration:none; max-width:200px;">Open file directly</a>
+            </div>`;
+    }
+    
+    // Keep your close button accessible by appending it dynamically back to modal container window layout
+    const closeBtn = document.createElement('span');
+    closeBtn.className = 'close-modal';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.onclick = closePdfModal;
+    contentArea.appendChild(closeBtn);
+
+    modal.style.display = "block";
+    document.body.style.overflow = "hidden";
+}
+
 
     async function downloadResource(id, filename) {
         try {
